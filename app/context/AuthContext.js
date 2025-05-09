@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 
 // Create the context
 const AuthContext = createContext();
@@ -15,44 +15,126 @@ export const useAuth = () => {
 
 // Provider component
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
-  // Load stored auth data on app start
+  // Check active sessions and listen for auth changes
   useEffect(() => {
-    loadStoredAuth();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        // Fetch user role from profiles table
+        fetchUserRole(session.user.id);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        // Fetch user role from profiles table
+        await fetchUserRole(session.user.id);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Load stored authentication data
-  const loadStoredAuth = async () => {
+  // Function to fetch user role from profiles table
+  const fetchUserRole = async (userId) => {
     try {
-      const storedToken = await AsyncStorage.getItem('token');
-      const storedUser = await AsyncStorage.getItem('user');
-      
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-      }
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+      setUserRole(data.role);
     } catch (error) {
-      console.error('Error loading auth data:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching user role:', error);
+      setUserRole(null);
     }
   };
 
   // Login function
-  const login = async (userData, authToken) => {
+  const login = async (email, password) => {
     try {
-      // Store in AsyncStorage
-      await AsyncStorage.setItem('token', authToken);
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Update state
-      setToken(authToken);
-      setUser(userData);
+      if (error) throw error;
+
+      // Fetch user role after successful login
+      if (data.user) {
+        await fetchUserRole(data.user.id);
+      }
+
+      return data;
     } catch (error) {
-      console.error('Error storing auth data:', error);
+      console.error('Error during login:', error);
+      throw error;
+    }
+  };
+
+  // Signup function
+  const signup = async (email, password, userData = {}) => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        if (error.code === '23505' || error.message?.includes('already registered')) {
+          throw new Error('هذا البريد الإلكتروني مسجل بالفعل');
+        }
+        throw error;
+      }
+
+      // If user is created, insert profile
+      const userId = data?.user?.id;
+
+      if (userId && isAuthenticated) {
+        const { data, error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            username: userData.username || email,
+            phone: userData.phone || null,
+            full_name: userData.full_name || null,
+            updated_at: new Date(),
+            role: userData.role || 'client',
+          });
+
+        if (profileError) {
+          if (profileError.code === '23505') {
+            throw new Error('هذا البريد الإلكتروني مسجل بالفعل');
+          }
+          throw profileError;
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error during signup:', error);
       throw error;
     }
   };
@@ -60,15 +142,11 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Clear AsyncStorage
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
-      
-      // Clear state
-      setToken(null);
-      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUserRole(null);
     } catch (error) {
-      console.error('Error clearing auth data:', error);
+      console.error('Error during logout:', error);
       throw error;
     }
   };
@@ -76,8 +154,13 @@ export const AuthProvider = ({ children }) => {
   // Update user data
   const updateUser = async (newUserData) => {
     try {
-      await AsyncStorage.setItem('user', JSON.stringify(newUserData));
-      setUser(newUserData);
+      const { data, error } = await supabase.auth.updateUser({
+        data: newUserData,
+      });
+
+      if (error) throw error;
+      setUser(data.user);
+      return data;
     } catch (error) {
       console.error('Error updating user data:', error);
       throw error;
@@ -85,18 +168,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const value = {
-    token,
     user,
     loading,
+    isAuthenticated,
+    userRole,
     login,
+    signup,
     logout,
     updateUser,
-    isAuthenticated: !!token,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 }; 

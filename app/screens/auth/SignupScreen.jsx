@@ -4,333 +4,230 @@ import { Ionicons } from "@expo/vector-icons"
 import { StatusBar } from "expo-status-bar"
 import { useState } from "react"
 import {
-  Image,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native"
 import CustomText from "../../components/common/CustomText"
+import { useAuth } from "../../context/AuthContext"
+import { colors } from "../../styling/colors"
+import { globalStyles } from "../../styling/globalStyles"
 
-export default function SignupScreen({ navigation }) {
-  const [name, setName] = useState("")
-  const [phone, setPhone] = useState("")
+export default function SignUpScreen({ navigation }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const { signup } = useAuth()
 
-  const handleSignup = () => {
-    // Implement your signup logic here
-    console.log("Signup with:", name, phone, email, password)
-  }
+  const handleSignUp = async () => {
+    if (!email || !password || !confirmPassword) {
+      Alert.alert("خطأ", "الرجاء ملء جميع الحقول المطلوبة")
+      return
+    }
 
-  const handleLogin = () => {
-    // Navigate to login screen
-    navigation.navigate("Login")
-  }
+    if (password !== confirmPassword) {
+      Alert.alert("خطأ", "كلمات المرور غير متطابقة")
+      return
+    }
 
-  const handleBack = () => {
-    navigation.goBack()
+    setIsLoading(true)
+    try {
+      await signup(email, password, {
+        role: 'client', // Set default role as client
+        username: email,  
+      })
+
+      Alert.alert(
+        "تم التسجيل بنجاح",
+        "يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك",
+        [
+          {
+            text: "حسناً",
+            onPress: () => navigation.navigate("Login"),
+          },
+        ]
+      )
+    } catch (error) {
+      Alert.alert("خطأ", error.message || "حدث خطأ أثناء إنشاء الحساب")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-    {/* <SafeAreaView style={{flex:1, backgroundColor:"white"}}> */}
-
-      <StatusBar style="dark" translucent backgroundColor="transparent" />
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Blue header with curve */}
+    <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+      <StatusBar style="dark" />
+      <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         <View style={styles.header} />
-
-
         <View style={styles.curveContainer}>
           <View style={styles.curve} />
         </View>
+
         <View style={styles.content}>
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <View style={styles.backButtonCircle}>
-              <Ionicons name="chevron-forward" size={24} color="#333" />
-            </View>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            disabled={isLoading}
+          >
+            <Ionicons name="arrow-forward" size={24} color={colors.primary} />
           </TouchableOpacity>
 
-          {/* Signup Title */}
           <View style={styles.titleContainer}>
-            <CustomText type="bold" style={styles.title}>قم بإنشاء حساب</CustomText>
-            <CustomText type="bold" style={styles.title}>جديد</CustomText>
+            <CustomText type="bold" style={globalStyles.title}>إنشاء حساب جديد</CustomText>
           </View>
 
-          {/* Subtitle */}
-          <CustomText type="regular" style={styles.subtitle}>استمتع بخدمة توصيل المياه إلى باب منزلك بكل سهولة وراحة.</CustomText>
+          <CustomText style={globalStyles.subtitle}>قم بإنشاء حساب للوصول إلى خدماتنا</CustomText>
 
-          {/* Form */}
           <View style={styles.form}>
-            {/* Name Field */}
-            <CustomText type="medium" style={styles.inputLabel}>اسم المستخدم</CustomText>
-            <TextInput
-              style={styles.input}
-              placeholder="أدخل اسمك الكامل"
-              value={name}
-              onChangeText={setName}
-              textAlign="right"
-              />
-
-            {/* Phone Field */}
-            <CustomText type="medium" style={styles.inputLabel}>رقم الهاتف</CustomText>
-            <View style={styles.phoneContainer}>
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
               <TextInput
-                style={styles.phoneInput}
-                placeholder="رقم الهاتف"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                textAlign="right"
-                />
-              <TouchableOpacity style={styles.countryCodeButton}>
-                <Text style={styles.countryCodeText}>+966</Text>
-                <Image
-                  source={{ uri: "https://flagcdn.com/w40/sa.png" }}
-                  style={styles.flagIcon}
-                  resizeMode="contain"
-                  />
-                <Ionicons name="chevron-down" size={16} color="#666" />
-              </TouchableOpacity>
+                style={globalStyles.input}
+                placeholder="example@email.com"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={!isLoading}
+              />
             </View>
 
-            {/* Email Field */}
-            <CustomText type="medium" style={styles.inputLabel}>البريد الإلكتروني</CustomText>
-            <TextInput
-              style={styles.input}
-              placeholder="example@email.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              textAlign="right"
-              />
-
-            {/* Password Field */}
-            <CustomText type="medium" style={styles.inputLabel}>كلمة المرور</CustomText>
-            <View style={styles.passwordContainer}>
-              <TouchableOpacity style={styles.passwordVisibilityButton} onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color="#999" />
-              </TouchableOpacity>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="********"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                textAlign="right"
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>كلمة المرور</CustomText>
+              <View style={globalStyles.passwordContainer}>
+                <TouchableOpacity
+                  style={globalStyles.passwordVisibilityButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
+                </TouchableOpacity>
+                <TextInput
+                  style={globalStyles.passwordInput}
+                  placeholder="********"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
                 />
+              </View>
             </View>
 
-            {/* Signup Button */}
-            <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-              <CustomText type="bold" style={styles.signupButtonText}>إنشاء الحساب</CustomText>
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>تأكيد كلمة المرور</CustomText>
+              <View style={globalStyles.passwordContainer}>
+                <TouchableOpacity
+                  style={globalStyles.passwordVisibilityButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                >
+                  <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
+                </TouchableOpacity>
+                <TextInput
+                  style={globalStyles.passwordInput}
+                  placeholder="********"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showPassword}
+                  editable={!isLoading}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[globalStyles.button, isLoading && globalStyles.buttonDisabled]}
+              onPress={handleSignUp}
+              disabled={isLoading}
+            >
+              <CustomText type="bold" style={globalStyles.buttonText}>
+                {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
+              </CustomText>
             </TouchableOpacity>
 
-            {/* Login Prompt */}
             <View style={styles.loginContainer}>
-              <TouchableOpacity onPress={handleLogin}>
-                <CustomText type="bold" style={styles.loginLink}>قم بتسجيل الدخول</CustomText>
+              <TouchableOpacity onPress={() => navigation.navigate("Login")} disabled={isLoading}>
+                <CustomText type="bold" style={styles.loginLink}>تسجيل الدخول</CustomText>
               </TouchableOpacity>
-              <CustomText type="medium" style={styles.loginText}>لديك حساب؟</CustomText>
+              <CustomText style={styles.loginText}>لديك حساب بالفعل؟</CustomText>
             </View>
           </View>
         </View>
       </ScrollView>
-{/* </SafeAreaView> */}
     </KeyboardAvoidingView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "white",
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingBottom:50,
-    zIndex:2,
-    backgroundColor:"white"
-  },
   header: {
-    height: 450,
-    width:"100%",
-    backgroundColor: "#2196F3",
-    // position: "absolute",
-    // top:10,
-    // left: 0,
-    // right: 0,
-    marginTop:-300
+    height: 420,
+    backgroundColor: colors.primary,
+    position: "absolute",
+    top: -200,
+    left: 0,
+    right: 0,
   },
-  // curveContainer: {
-  //   height: 40,
-  //   marginTop: 120,
-  //   overflow: "hidden",
-  //   borderTopLeftRadius: 40,
-  //   borderTopRightRadius: 40,
-  //   zIndex:2
-  // },
-  // curve: {
-  //   height: 40,
-  //   width: "100%",
-  //   backgroundColor: "white",
-  //   borderTopLeftRadius: 40,
-  //   borderTopRightRadius: 40,
-  //   marginTop: -40,
-  // },
-  content: {
-    // flex: 1,
-    paddingHorizontal: 24,
+  curveContainer: {
+    height: 40,
+    marginTop: 120,
+    overflow: "hidden",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
-    paddingBottom: 40,
-    paddingTop: 30,
-    zIndex:2,
-    backgroundColor:"white",
+    zIndex: 2
+  },
+  curve: {
+    height: 80,
+    width: "100%",
+    backgroundColor: colors.background,
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     marginTop: -40,
   },
-  backButton: {
-    // position: "absolute",
-    // top: -80,
-    // right: 20,
-    // zIndex: 10,
-    justifyContent:"flex-end",
-    alignItems:"flex-end"
+  content: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
-  backButtonCircle: {
+  backButton: {
     width: 40,
     height: 40,
-    borderWidth:1,
-    borderColor:"#EEEEEE",
     borderRadius: 20,
-    backgroundColor: "white",
-    alignItems: "center",
-    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 20,
   },
   titleContainer: {
     alignItems: "flex-end",
     marginBottom: 10,
-    marginTop: 20,
-  },
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "#333",
-    textAlign: "right",
-  },
-  subtitle: {
-    fontSize: 15,
-    color: "#666",
-    marginBottom: 30,
-    textAlign: "right",
   },
   form: {
     width: "100%",
-  },
-  inputLabel: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-    textAlign: "right",
-  },
-  input: {
-    backgroundColor: "#F5F5F5",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-  },
-  phoneContainer: {
-    flexDirection: "row",
-    marginBottom: 20,
-
-    gap:10
-  },
-  phoneInput: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 10,
-    padding: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-  },
-  countryCodeButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    // marginRight: 10,
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-  },
-  countryCodeText: {
-    fontSize: 16,
-    color: "#333",
-    marginHorizontal: 5,
-  },
-  flagIcon: {
-    width: 24,
-    height: 16,
-    marginRight: 5,
-  },
-  passwordContainer: {
-    flexDirection: "row",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#EEEEEE",
-    marginBottom: 30,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 15,
-    fontSize: 16,
-  },
-  passwordVisibilityButton: {
-    padding: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  signupButton: {
-    backgroundColor: "#2196F3",
-    borderRadius: 30,
-    padding: 16,
-    alignItems: "center",
-    marginBottom: 30,
-  },
-  signupButtonText: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
   },
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 20,
   },
   loginText: {
     fontSize: 14,
-    color: "#666",
+    color: colors.textSecondary,
     marginLeft: 5,
   },
   loginLink: {
     fontSize: 14,
-    textDecorationLine:"underline",
-    color: "#2196F3",
+    textDecorationLine: "underline",
+    color: colors.primary,
     fontWeight: "bold",
   },
 })

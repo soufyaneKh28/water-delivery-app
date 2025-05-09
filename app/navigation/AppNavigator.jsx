@@ -1,10 +1,12 @@
 // import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // import { CardStyleInterpolators } from '@react-navigation/stack';
-import React, { useState } from 'react';
+import React from 'react';
 
 // Import navigators
 import { useNavigation } from '@react-navigation/native';
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
+import { useAuth } from '../context/AuthContext';
+import LoadingScreen from '../screens/LoadingScreen';
 import AdminNavigator from './AdminNavigator';
 import AuthNavigator from './AuthNavigator';
 import ClientNavigator from './ClientNavigator';
@@ -12,12 +14,13 @@ import ClientNavigator from './ClientNavigator';
 const Stack = createStackNavigator();
 
 export default function AppNavigator() {
-  // TODO: Replace with actual auth state management
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState(
-    "client"
-  );
   const navigation = useNavigation();
+  const { isAuthenticated, userRole, loading } = useAuth();
+
+  if (isAuthenticated && !userRole) {
+    return <LoadingScreen />;
+  }
+
   return (
     // <NavigationContainer>
       <>

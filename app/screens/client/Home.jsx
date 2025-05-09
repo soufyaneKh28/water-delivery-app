@@ -1,15 +1,33 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../../components/common/CustomText';
+import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../styling/colors';
 
 export default function HomeScreen() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <CustomText type="bold" style={styles.welcomeText}>مرحباً بعودتك!</CustomText>
-          <CustomText type="regular" style={styles.subtitle}>اطلب توصيل المياه</CustomText>
+          <View style={styles.headerContent}>
+            <CustomText type="bold" style={styles.welcomeText}>مرحباً بعودتك!</CustomText>
+            <CustomText type="regular" style={styles.subtitle}>اطلب توصيل المياه</CustomText>
+          </View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color={colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.quickActions}>
@@ -60,6 +78,12 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerContent: {
+    flex: 1,
   },
   welcomeText: {
     fontSize: 24,
@@ -69,6 +93,9 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 5,
   },
+  logoutButton: {
+    padding: 8,
+  },
   quickActions: {
     flexDirection: 'row',
     padding: 20,
@@ -76,7 +103,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#007AFF',
+    backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
@@ -84,14 +111,14 @@ const styles = StyleSheet.create({
   secondaryButton: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
   },
   actionButtonText: {
     color: '#fff',
     fontSize: 16,
   },
   secondaryButtonText: {
-    color: '#007AFF',
+    color: colors.primary,
   },
   section: {
     padding: 20,
@@ -132,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   productPrice: {
-    color: '#007AFF',
+    color: colors.primary,
     fontSize: 14,
     marginTop: 5,
   },

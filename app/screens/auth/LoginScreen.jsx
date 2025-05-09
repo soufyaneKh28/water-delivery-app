@@ -32,28 +32,19 @@ export default function LoginScreen({ navigation }) {
 
     setIsLoading(true)
     try {
-      // TODO: Replace this with your actual API call
-      const response = await fetch('YOUR_API_ENDPOINT/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'فشل تسجيل الدخول');
-      }
-
-      // Login successful
-      await login(data.user, data.token);
-      navigation.navigate("Admin", { screen: "Dashboard" });
+      await login(email, password)
     } catch (error) {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء تسجيل الدخول");
+      if (error.message.includes('Email not confirmed')) {
+        Alert.alert(
+          "البريد الإلكتروني غير مفعل",
+          "يرجى تفعيل بريدك الإلكتروني قبل تسجيل الدخول. تحقق من بريدك الإلكتروني واضغط على رابط التفعيل.",
+          [{ text: "حسناً" }]
+        )
+      } else {
+        Alert.alert("خطأ", error.message || "حدث خطأ أثناء تسجيل الدخول")
+      }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 

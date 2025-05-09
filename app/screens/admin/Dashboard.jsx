@@ -1,34 +1,54 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomText from '../../components/common/CustomText';
+import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../styling/colors';
 
 export default function AdminDashboard() {
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
-          <Text style={styles.title}>Admin Dashboard</Text>
+          <View style={styles.headerContent}>
+            <CustomText type="bold" style={styles.title}>لوحة التحكم</CustomText>
+            <CustomText type="regular" style={styles.subtitle}>مرحباً بك في لوحة التحكم</CustomText>
+          </View>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color={colors.primary} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>150</Text>
-            <Text style={styles.statLabel}>Total Orders</Text>
+            <CustomText type="bold" style={styles.statNumber}>150</CustomText>
+            <CustomText type="regular" style={styles.statLabel}>إجمالي الطلبات</CustomText>
           </View>
           
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>45</Text>
-            <Text style={styles.statLabel}>Active Customers</Text>
+            <CustomText type="bold" style={styles.statNumber}>45</CustomText>
+            <CustomText type="regular" style={styles.statLabel}>العملاء النشطين</CustomText>
           </View>
           
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Pending Orders</Text>
+            <CustomText type="bold" style={styles.statNumber}>12</CustomText>
+            <CustomText type="regular" style={styles.statLabel}>الطلبات المعلقة</CustomText>
           </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Orders</Text>
+          <CustomText type="semiBold" style={styles.sectionTitle}>الطلبات الأخيرة</CustomText>
           {/* Add your recent orders list here */}
         </View>
       </ScrollView>
@@ -47,12 +67,25 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  headerContent: {
+    flex: 1,
+  },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 5,
+  },
+  logoutButton: {
+    padding: 8,
   },
   statsContainer: {
     flexDirection: 'row',
@@ -76,8 +109,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#007AFF',
+    color: colors.primary,
   },
   statLabel: {
     fontSize: 12,
@@ -89,7 +121,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
     marginBottom: 15,
   },
 }); 
