@@ -68,6 +68,8 @@ export const globalStyles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
     // padding: 24,
+    backgroundColor:colors.background,
+    flex:1
   },
 
   // Common text styles
@@ -91,8 +93,8 @@ export const globalStyles = StyleSheet.create({
   },
   buttonText: {
     color: colors.white,
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    // fontWeight: 'bold',
   },
   buttonDisabled: {
     backgroundColor: colors.gray[300],

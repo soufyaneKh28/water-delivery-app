@@ -1,9 +1,20 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, I18nManager, Text, View } from 'react-native';
 import { FONTS } from './constants/fonts';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
+
+// Enable RTL layout direction
+I18nManager.forceRTL(true);
+// Allow RTL on Android (optional)
+I18nManager.allowRTL(true);
+// if (I18nManager.isRTL !== true) {
+//   I18nManager.forceRTL(true);
+//   RNRestart.Restart(); // Use the react-native-restart library for app restarts
+// }
+
+console.log('RTL enabled:', I18nManager.isRTL);
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -38,6 +49,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppNavigator />
+      <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text>
     </AuthProvider>
   );
 }

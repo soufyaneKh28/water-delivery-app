@@ -57,7 +57,7 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}>
+    <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         {/* Blue header with curve */}
@@ -121,7 +121,7 @@ export default function LoginScreen({ navigation }) {
               onPress={handleForgotPassword}
               disabled={isLoading}
             >
-              <Text style={styles.forgotPasswordText}>نسيت كلمة المرور؟</Text>
+              <CustomText  type="regular" style={styles.forgotPasswordText}>نسيت كلمة المرور؟</CustomText>
             </TouchableOpacity>
 
             {/* Login Button */}
@@ -147,7 +147,7 @@ export default function LoginScreen({ navigation }) {
               >
                 <CustomText type="bold" style={styles.signupLink}>قم بإنشاء حساب جديد الآن</CustomText>
               </TouchableOpacity>
-              <CustomText style={styles.signupText}>ليس لديك حساب؟</CustomText>
+              <CustomText type="bold" style={styles.signupText}>ليس لديك حساب؟</CustomText>
             </View>
           </View>
         </View>
@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "100%",
+    marginTop: 20,
   },
   forgotPasswordContainer: {
     alignItems: "flex-start",
@@ -208,14 +209,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   signupText: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.textSecondary,
     marginLeft: 5,
   },
   signupLink: {
-    fontSize: 14,
+    fontSize: 12,
     textDecorationLine:"underline",
     color: colors.primary,
-    fontWeight: "bold",
+    // fontWeight: "bold",
   },
 })
