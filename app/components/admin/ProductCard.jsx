@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { I18nManager, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ProductCard = ({ image, title, size, price, onMenuPress }) => {
   return (
@@ -23,9 +23,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 12,
-    marginBottom: 16,
+    // marginBottom: 16,
+    // height: 225,
     marginHorizontal: 4,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -38,14 +39,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     // RTL: left for RTL, right for LTR
-    left: I18nManager.isRTL ? 8 : undefined,
-    right: I18nManager.isRTL ? undefined : 8,
+    left:  8 ,
+    // :  8,
     zIndex: 2,
     padding: 4,
   },
   image: {
-    width: 70,
-    height: 90,
+    width: '100%',
+    height: 165,
+    objectFit: 'cover',
     marginBottom: 8,
   },
   title: {
@@ -53,7 +55,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222',
     marginBottom: 2,
-    textAlign: 'center',
+    textAlign: 'right',
   },
   row: {
     flexDirection: 'row-reverse',

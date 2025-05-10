@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React, { useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Animated, Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../../components/common/CustomText';
 
@@ -62,10 +62,29 @@ const statusLabels = {
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const filteredOrders = selectedStatus === 'all'
     ? mockOrders
     : mockOrders.filter(order => order.status === selectedStatus);
+
+  const handleFilterChange = (status) => {
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      // Change filter
+      setSelectedStatus(status);
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -116,7 +135,7 @@ const Orders = () => {
                   { width: "auto" },
                   selectedStatus === status.value && styles.filterChipActive,
                 ]}
-                onPress={() => setSelectedStatus(status.value)}
+                onPress={() => handleFilterChange(status.value)}
                 activeOpacity={0.7}
               >
                 <CustomText type='bold' style={[
@@ -136,25 +155,27 @@ const Orders = () => {
           {filteredOrders.length === 0 ? (
             <CustomText style={styles.emptyText}>لا توجد طلبات</CustomText>
           ) : (
-            filteredOrders.map((item) => (
-              <View style={styles.orderCard} key={item.id}>
-                <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <CustomText style={styles.orderId}>#{item.id}</CustomText>
-                  <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}> 
-                    <CustomText type='regular' style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}>{statusLabels[item.status]}</CustomText>
+            <Animated.View style={{ opacity: fadeAnim }}>
+              {filteredOrders.map((item) => (
+                <View style={styles.orderCard} key={item.id}>
+                  <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <CustomText style={styles.orderId}>#{item.id}</CustomText>
+                    <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}> 
+                      <CustomText type='regular' style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}>{statusLabels[item.status]}</CustomText>
+                    </View>
+                  </View>
+                  <CustomText type='bold' style={styles.orderTitle}>{item.title}</CustomText>
+                  <CustomText type='medium' style={styles.orderDate}>{item.date} - {item.time}</CustomText>
+                  <CustomText type='medium' style={styles.orderAddress}>{item.address}</CustomText>
+                  <View style={styles.orderFooter}>
+                    <TouchableOpacity style={styles.menuButton}>
+                      <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
+                    </TouchableOpacity>
+                    <CustomText type='bold' style={styles.orderPrice}>{item.price} دينار</CustomText>
                   </View>
                 </View>
-                <CustomText type='bold' style={styles.orderTitle}>{item.title}</CustomText>
-                <CustomText type='medium' style={styles.orderDate}>{item.date} - {item.time}</CustomText>
-                <CustomText type='medium' style={styles.orderAddress}>{item.address}</CustomText>
-                <View style={styles.orderFooter}>
-                  <TouchableOpacity style={styles.menuButton}>
-                    <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
-                  </TouchableOpacity>
-                  <CustomText type='bold' style={styles.orderPrice}>{item.price} دينار</CustomText>
-                </View>
-              </View>
-            ))
+              ))}
+            </Animated.View>
           )}
         </View>
       </ScrollView>
@@ -249,10 +270,12 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 1,
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.06,
+    // shadowRadius: 4,
+    // elevation: 1,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
   },
   orderId: {
     fontWeight: 'bold',
