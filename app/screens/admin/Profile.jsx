@@ -1,161 +1,192 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import CustomText from '../../components/common/CustomText';
+import { useAuth } from '../../context/AuthContext';
 
-const Profile = () => {
+const MENU_ITEMS = [
+  {
+    label: 'طلباتي',
+    icon: <MaterialCommunityIcons name="file-document-outline" size={22} color="#4B6CB7" />, // Orders
+    screen: 'Orders',
+  },
+  {
+    label: 'الأمان',
+    icon: <Ionicons name="lock-closed-outline" size={22} color="#4B6CB7" />, // Security
+    screen: 'Security',
+  },
+  {
+    label: 'الشروط والأحكام',
+    icon: <Ionicons name="document-text-outline" size={22} color="#4B6CB7" />, // Terms
+    screen: 'Terms',
+  },
+  {
+    label: 'الأسئلة الشائعة',
+    icon: <Ionicons name="help-circle-outline" size={22} color="#4B6CB7" />, // FAQ
+    screen: 'FAQ',
+  },
+  {
+    label: 'تواصل معنا',
+    icon: <Ionicons name="chatbubble-ellipses-outline" size={22} color="#4B6CB7" />, // Contact
+    screen: 'Contact',
+  },
+];
+
+export default function Profile() {
+  const { user, logout } = useAuth();
+  // For demo, you can fetch admin profile data if needed
+  const [profile] = useState({
+    full_name: 'اسم المدير',
+    avatar_url: null,
+  });
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Profile</Text>
-      </View>
-      
-      <ScrollView style={styles.content}>
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>A</Text>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={styles.headerRow}>
+          <View style={{ flexDirection: 'row-reverse', alignItems: 'center', flex: 1 }}>
+            <Image
+              source={profile.avatar_url ? { uri: profile.avatar_url } : require('../../../assets/images/avatar-placeholder.jpg')}
+              style={styles.avatar}
+            />
+            <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
+              <CustomText type="bold" style={styles.title}>حسابي</CustomText>
+              <CustomText style={styles.name}>{profile.full_name}</CustomText>
             </View>
-            <Text style={styles.name}>Admin Name</Text>
-            <Text style={styles.role}>Administrator</Text>
           </View>
         </View>
 
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>Contact Information</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email:</Text>
-              <Text style={styles.infoValue}>admin@example.com</Text>
+        <View style={styles.menuList}>
+          {MENU_ITEMS.map((item, idx) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => {/* navigation logic here */}}
+            >
+              <View style={styles.menuIcon}>{item.icon}</View>
+              <CustomText style={styles.menuLabel}>{item.label}</CustomText>
+              <Ionicons name="chevron-back" size={20} color="#B0B0B0" style={styles.menuArrow} />
+            </TouchableOpacity>
+          ))}
+          {/* Logout */}
+          <TouchableOpacity
+            style={[styles.menuItem, styles.logoutItem]}
+            activeOpacity={0.7}
+            onPress={logout}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
+              <Ionicons name="log-out-outline" size={22} color="#F44336" />
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Phone:</Text>
-              <Text style={styles.infoValue}>+1234567890</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.editButton}>
-            <Text style={styles.editButtonText}>Edit Profile</Text>
+            <CustomText style={styles.logoutLabel}>تسجيل الخروج</CustomText>
+            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.logoutButton}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
+          {/* Delete Account */}
+          <TouchableOpacity
+            style={[styles.menuItem, styles.deleteItem]}
+            activeOpacity={0.7}
+            onPress={() => {/* delete logic here */}}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
+              <Ionicons name="trash-outline" size={22} color="#F44336" />
+            </View>
+            <CustomText style={styles.deleteLabel}>حذف الحساب</CustomText>
+            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
           </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  header: {
-    padding: 16,
+  headerRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 32,
+    paddingBottom: 16,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  avatarContainer: {
-    alignItems: 'center',
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#2196F3',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginLeft: 12,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
   },
-  avatarText: {
-    fontSize: 40,
-    color: '#fff',
-    fontWeight: 'bold',
+  title: {
+    fontSize: 18,
+    color: '#222',
+    marginBottom: 2,
+    textAlign: 'right',
   },
   name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  role: {
     fontSize: 16,
-    color: '#666',
+    color: '#222',
+    textAlign: 'right',
   },
-  infoSection: {
+  menuList: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 16,
+    marginHorizontal: 12,
+    marginTop: 16,
+    paddingVertical: 8,
+    paddingBottom: 24,
+    elevation: 1,
   },
-  infoCard: {
-    marginBottom: 24,
+  menuItem: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F4F7',
   },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 16,
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F2F4F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
   },
-  infoRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  infoLabel: {
-    width: 80,
-    fontSize: 16,
-    color: '#666',
-  },
-  infoValue: {
+  menuLabel: {
     flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#222',
+    textAlign: 'right',
   },
-  editButton: {
-    backgroundColor: '#2196F3',
-    padding: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginBottom: 12,
+  menuArrow: {
+    marginRight: 8,
   },
-  editButtonText: {
-    color: '#fff',
+  logoutItem: {
+    backgroundColor: '#FDEAEA',
+    borderBottomWidth: 0,
+    marginTop: 8,
+  },
+  logoutLabel: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    color: '#F44336',
+    textAlign: 'right',
   },
-  logoutButton: {
-    backgroundColor: '#f44336',
-    padding: 12,
-    borderRadius: 6,
-    alignItems: 'center',
+  deleteItem: {
+    backgroundColor: '#fff',
+    borderBottomWidth: 0,
+    marginTop: 0,
   },
-  logoutButtonText: {
-    color: '#fff',
+  deleteLabel: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    color: '#F44336',
+    textAlign: 'right',
   },
-});
-
-export default Profile; 
+}); 

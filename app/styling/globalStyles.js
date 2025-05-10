@@ -64,6 +64,7 @@ export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+    // direction: 'rtl',
   },
   contentContainer: {
     flexGrow: 1,

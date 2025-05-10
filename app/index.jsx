@@ -1,6 +1,6 @@
 import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, I18nManager, Text, View } from 'react-native';
+import { ActivityIndicator, I18nManager, View } from 'react-native';
 import { FONTS } from './constants/fonts';
 import { AuthProvider } from './context/AuthContext';
 import AppNavigator from './navigation/AppNavigator';
@@ -49,7 +49,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppNavigator />
-      <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text>
+      {/* <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text> */}
     </AuthProvider>
   );
 }

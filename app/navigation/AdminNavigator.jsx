@@ -1,8 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { I18nManager } from 'react-native';
+import { I18nManager, Image, View } from 'react-native';
+import CustomText from '../components/common/CustomText';
 
 // Import admin screens
 import AdminDashboard from '../screens/admin/Dashboard';
@@ -18,33 +18,80 @@ export function AdminTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
           if (route.name === 'الرئيسية') {
-            iconName = focused ? 'home' : 'home-outline';
+            return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
+                <Image
+                  source={focused ? require('../../assets/icons/home_active.png') : require('../../assets/icons/home_inactive.png')}
+                  style={{ width: size, height: size, resizeMode: 'contain' }}
+                />
+                <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center', color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+                  الرئيسية
+                </CustomText>
+              </View>
+            );
           } else if (route.name === 'الطلبات') {
-            iconName = focused ? 'list' : 'list-outline';
+            return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20    }}>
+                <Image
+                  source={focused ? require('../../assets/icons/cart_active.png') : require('../../assets/icons/cart_inactive.png')}
+                  style={{ width: size, height: size, resizeMode: 'contain' }}
+                />
+                <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center', color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+                  الطلبات
+                </CustomText>
+              </View>
+            );
           } else if (route.name === 'المنتجات') {
-            iconName = focused ? 'cube' : 'cube-outline';
+            return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
+                <Image
+                  source={focused ? require('../../assets/icons/products_active.png') : require('../../assets/icons/products_inactive.png')}
+                  style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                />
+                <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center', color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+                  المنتجات
+                </CustomText>
+              </View>
+            );
           } else if (route.name === 'حسابي') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
+            return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
+                <Image
+                  source={focused ? require('../../assets/icons/profile_active.png') : require('../../assets/icons/profile_inactive.png')}
+                  style={{ width: 24, height: 24, resizeMode: 'contain' }}
+                />
+                <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center',  color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+                  حسابي
+                </CustomText>
+              </View>
+            );
+          } 
+          
         },
+        tabBarShowLabel: false,
         tabBarActiveTintColor: '#2196F3',
         tabBarInactiveTintColor: 'gray',
-        tabBarLabelStyle: { fontFamily: 'Cairo', fontSize: 13 },
-        tabBarStyle: { flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row' },
+        // tabBarLabelStyle: { fontFamily: 'Cairo', fontSize: 13, display: 'none' },
+        tabBarStyle: { 
+          flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
+          elevation: 0,
+          shadowOpacity: 0,
+          borderTopWidth: 1,
+          borderTopColor: '#E0E0E0',
+          // justifyContent: 'center',
+          // alignItems: 'center',
+          height: 100,
+          // paddingBottom: 70,     
+           position: 'absolute',
+          paddingTop: 30,
+        },
       })}
       initialRouteName="الرئيسية"
     >
       <Tab.Screen 
-        name="الرئيسية" 
-        component={AdminDashboard}
-        options={{ headerShown: false }}
-      />
-      <Tab.Screen 
-        name="الطلبات" 
-        component={Orders}
+        name="حسابي" 
+        component={Profile}
         options={{ headerShown: false }}
       />
       <Tab.Screen 
@@ -53,8 +100,13 @@ export function AdminTabs() {
         options={{ headerShown: false }}
       />
       <Tab.Screen 
-        name="حسابي" 
-        component={Profile}
+        name="الطلبات" 
+        component={Orders}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen 
+        name="الرئيسية" 
+        component={AdminDashboard}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
@@ -63,7 +115,12 @@ export function AdminTabs() {
 
 export default function AdminNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        animation: 'slide_from_right',
+        animationDuration: 200,
+      }}
+    >
       <Stack.Screen 
         name="AdminTabs" 
         component={AdminTabs} 
