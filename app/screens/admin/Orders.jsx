@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../../components/common/CustomText';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const FILTER_WIDTH = SCREEN_WIDTH * 0.33;
+// const FILTER_WIDTH = SCREEN_WIDTH * 0.33;
 
 const orderStatuses = [
   { label: 'كل الطلبات', value: 'all' },
@@ -36,7 +37,7 @@ const mockOrders = [
   },
   {
     id: '1236',
-    status: 'delivered',
+    status: 'cancelled',
     title: 'مياه معدنية نقية - 5 عبوات',
     date: '27 أبريل 2025',
     time: '14:35',
@@ -46,8 +47,8 @@ const mockOrders = [
 ];
 
 const statusColors = {
-  pending: '#E0E0E0',
-  delivered: '#4CAF50',
+  pending: '#EEEEEE',
+  delivered: '#9DFA9F',
   accepted: '#2196F3',
   cancelled: '#F44336',
 };
@@ -68,25 +69,40 @@ const Orders = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         {/* Top Card */}
-        <View style={styles.topCard}>
+        <View >
+        <LinearGradient
+        // Background Linear Gradient
+        colors={['#2196F3', '#1870B5']}
+        start={{ x: 1, y: 0.9 }}
+        end={{ x: 1, y: 0.1 }}
+        
+        style={[ styles.topCard]}
+      >
+        
           <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
               <CustomText style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
               <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
                 <CustomText style={styles.topCardNumber}>24</CustomText>
-                <View style={styles.topCardChange}><CustomText style={styles.topCardChangeText}>+15%</CustomText></View>
               </View>
+              <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
+
+                <View style={styles.topCardChange}><CustomText style={styles.topCardChangeText}>+15%</CustomText></View>
               <CustomText style={styles.topCardSubtitle}>من الأمس</CustomText>
+              </View>
             </View>
             {/* Placeholder for chart */}
-            <View style={styles.chartPlaceholder} />
+            {/* <View style={styles.chartPlaceholder} /> */}
           </View>
+            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:'100%',height:52 ,marginTop:12}}/>
+        </LinearGradient>
         </View>
 
         {/* Filters */}
-        <View style={{ marginTop: 16, marginBottom: 8 }}>
+        <View style={{ marginTop: 10, marginBottom: 8 }}>
+          <CustomText type='bold' style={styles.filterTitle}>أخر الطلبات</CustomText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -97,15 +113,15 @@ const Orders = () => {
                 key={status.value}
                 style={[
                   styles.filterChip,
-                  { width: FILTER_WIDTH },
+                  { width: "auto" },
                   selectedStatus === status.value && styles.filterChipActive,
                 ]}
                 onPress={() => setSelectedStatus(status.value)}
                 activeOpacity={0.7}
               >
-                <CustomText style={[
+                <CustomText type='bold' style={[
                   styles.filterText,
-                  { fontSize: 18 },
+                  { fontSize: 14 },
                   selectedStatus === status.value && styles.filterTextActive,
                 ]}>
                   {status.label}
@@ -122,20 +138,20 @@ const Orders = () => {
           ) : (
             filteredOrders.map((item) => (
               <View style={styles.orderCard} key={item.id}>
-                <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginBottom: 8 }}>
+                <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <CustomText style={styles.orderId}>#{item.id}</CustomText>
                   <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}> 
-                    <CustomText style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#fff' }]}>{statusLabels[item.status]}</CustomText>
+                    <CustomText type='regular' style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}>{statusLabels[item.status]}</CustomText>
                   </View>
                 </View>
-                <CustomText style={styles.orderTitle}>{item.title}</CustomText>
-                <CustomText style={styles.orderDate}>{item.date} - {item.time}</CustomText>
-                <CustomText style={styles.orderAddress}>{item.address}</CustomText>
+                <CustomText type='bold' style={styles.orderTitle}>{item.title}</CustomText>
+                <CustomText type='medium' style={styles.orderDate}>{item.date} - {item.time}</CustomText>
+                <CustomText type='medium' style={styles.orderAddress}>{item.address}</CustomText>
                 <View style={styles.orderFooter}>
                   <TouchableOpacity style={styles.menuButton}>
                     <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
                   </TouchableOpacity>
-                  <CustomText style={styles.orderPrice}>{item.price} دينار</CustomText>
+                  <CustomText type='bold' style={styles.orderPrice}>{item.price} دينار</CustomText>
                 </View>
               </View>
             ))
@@ -149,7 +165,7 @@ const Orders = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   topCard: {
     backgroundColor: '#2196F3',
@@ -188,6 +204,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'right',
   },
+  filterTitle:{
+    color: '#121212',
+    fontSize: 20,
+    // fontWeight: 'bold',
+    textAlign: 'right',
+    paddingHorizontal: 16,
+  },
   chartPlaceholder: {
     width: 90,
     height: 50,
@@ -201,9 +224,9 @@ const styles = StyleSheet.create({
   },
   filterChip: {
     backgroundColor: '#F2F4F7',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    borderRadius: 50,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
@@ -213,12 +236,12 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: '#888',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 14,
+    // fontWeight: 'bold',
   },
   filterTextActive: {
     color: '#fff',
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   orderCard: {
     backgroundColor: '#fff',
@@ -241,34 +264,36 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 2,
-    marginLeft: 8,
+    // marginLeft: 8,
     backgroundColor: '#E0E0E0',
   },
   statusBadgeText: {
     fontSize: 13,
     color: '#222',
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
+    paddingHorizontal: 10,
+
   },
   orderTitle: {
-    fontSize: 15,
+    fontSize: 18,
     color: '#222',
     marginBottom: 2,
     textAlign: 'right',
   },
   orderDate: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#888',
     marginBottom: 2,
     textAlign: 'right',
   },
   orderAddress: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#888',
     marginBottom: 8,
     textAlign: 'right',
   },
   orderFooter: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginTop: 8,
@@ -283,8 +308,8 @@ const styles = StyleSheet.create({
   },
   orderPrice: {
     color: '#2196F3',
-    fontWeight: 'bold',
-    fontSize: 18,
+    // fontWeight: 'bold',
+    fontSize: 20,
   },
   emptyText: {
     textAlign: 'center',

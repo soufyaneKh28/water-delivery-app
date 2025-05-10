@@ -1,11 +1,11 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // import Svg, { Path } from 'react-native-svg';
+import { LinearGradient } from 'expo-linear-gradient';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
-
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
       >
         {/* Welcome Section */}
         <View style={styles.welcomeRow}>
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+          <View style={{  }}>
             <CustomText type="bold" style={styles.welcomeTitle}>مرحباً بعودتك!</CustomText>
             <CustomText type="regular" style={styles.welcomeSubtitle}>{userName}</CustomText>
           </View>
@@ -53,11 +53,20 @@ export default function AdminDashboard() {
         </View>
 
         {/* Profit Card */}
-        <View style={styles.profitCard}>
-          <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
+   
+        <View style={{width:'100%'}} >
+        <LinearGradient
+        // Background Linear Gradient
+        colors={['#2196F3', '#1870B5']}
+        start={{ x: 1, y: 0.9 }}
+        end={{ x: 1, y: 0.1 }}
+        
+        style={[ styles.profitCard]}
+      >
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <CustomText type="bold" style={styles.profitAmount}>{profit} دينار</CustomText>
               <CustomText type="regular" style={styles.profitLabel}>مبلغ الربح</CustomText>
+              <CustomText type="bold" style={styles.profitAmount}>{profit} دينار</CustomText>
               <View style={styles.profitChangeRow}>
                 <CustomText type="regular" style={styles.profitChangeText}>من الشهر الماضي</CustomText>
                 <View style={styles.profitChangeBadge}>
@@ -66,16 +75,10 @@ export default function AdminDashboard() {
               </View>
             </View>
           </View>
-          {/* Simple Line Chart (SVG) */}
-          {/* <Svg height="40" width="100%" style={styles.chartSvg}>
-            <Path
-              d="M0,30 Q30,10 60,25 T120,20 T180,30 T240,15 T300,30"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="3"
-            />
-          </Svg> */}
+            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:"100%",height:50 , objectFit:"cover" , marginTop:15}}/>
+          </LinearGradient>
         </View>
+           
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -84,28 +87,28 @@ export default function AdminDashboard() {
               <MaterialIcons name="groups" size={28} color="#FFA726" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{customers}</CustomText>
-            <CustomText type="regular" style={styles.statLabel}>إجمالي العملاء</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>إجمالي العملاء</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#E3F0FF' }]}> 
               <Ionicons name="cart" size={28} color="#42A5F5" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{orders}</CustomText>
-            <CustomText type="regular" style={styles.statLabel}>إجمالي الطلبات</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>إجمالي الطلبات</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#E6F7EC' }]}> 
               <Ionicons name="checkmark-circle" size={28} color="#4CAF50" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{successRate}</CustomText>
-            <CustomText type="regular" style={styles.statLabel}>نسبة النجاح</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>نسبة النجاح</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#F3E6FF' }]}> 
               <FontAwesome5 name="box-open" size={24} color="#AB47BC" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{products}</CustomText>
-            <CustomText type="regular" style={styles.statLabel}>إجمالي المنتجات</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>إجمالي المنتجات</CustomText>
           </View>
         </View>
       </ScrollView>
@@ -127,18 +130,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
     alignItems: 'center',
     paddingHorizontal: 20,
+    justifyContent: "flex-end",
     paddingTop: 24,
     marginBottom: 16,
   },
   welcomeTitle: {
     fontSize: 18,
     color: colors.primary,
-    textAlign: 'right',
+    // textAlign: 'right',
   },
   welcomeSubtitle: {
     fontSize: 14,
     color: '#666',
-    textAlign: 'right',
+    // textAlign: 'right',
   },
   avatarCircle: {
     width: 40,
@@ -161,13 +165,13 @@ const styles = StyleSheet.create({
   profitAmount: {
     fontSize: 28,
     color: '#fff',
-    textAlign: 'right',
+    // textAlign: 'right',
   },
   profitLabel: {
     fontSize: 16,
     color: '#fff',
-    textAlign: 'right',
-    marginBottom: 8,
+    // textAlign: 'right',
+    // marginBottom: 8,
   },
   profitChangeRow: {
     flexDirection: 'row-reverse',
@@ -175,19 +179,21 @@ const styles = StyleSheet.create({
   },
   profitChangeText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 15,
     marginLeft: 8,
   },
   profitChangeBadge: {
-    backgroundColor: '#fff',
+    backgroundColor: "#FFFFFF4D",
+    justifyContent: "center",
+    alignItems: "center", 
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 6,
   },
   profitChangeBadgeText: {
-    color: colors.primary,
-    fontSize: 12,
+    color: colors.white,
+    fontSize: 13,
   },
   chartSvg: {
     position: 'absolute',
@@ -201,33 +207,40 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginHorizontal: 20,
     marginBottom: 24,
+    gap:10,
+    rowGap:15
   },
   statCard: {
-    width: '47%',
+    width: '48%',
+    // flex:1,
+    maxWidth: '50%',
     backgroundColor: '#fff',
     borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 10,
-    marginBottom: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    // marginBottom: 10,
+    alignItems: "flex-start",
+    justifyContent: "flex-end",
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.06,
+    // shadowRadius: 4,
+    // elevation: 2,
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
   },
   iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 45,
+    height: 45,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   statNumber: {
-    fontSize: 22,
+    fontSize: 23,
     color: '#222',
-    marginBottom: 2,
+    // marginBottom: 2,
   },
   statLabel: {
     fontSize: 13,
