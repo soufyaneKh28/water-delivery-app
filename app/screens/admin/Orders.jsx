@@ -208,14 +208,16 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   topCardChange: {
-    backgroundColor: '#fff',
+    backgroundColor: "#FFFFFF4D",
+    justifyContent: "center",
+    alignItems: "center", 
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,
     marginLeft: 6,
   },
   topCardChangeText: {
-    color: '#2196F3',
+    color: '#fff',
     fontWeight: 'bold',
     fontSize: 12,
   },

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Alert, Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
@@ -24,6 +25,7 @@ const mockProducts = [
     title: 'عبوة مياه كبيرة',
     size: '20 لتر',
     price: '$2',
+    category: 'large',
   },
   {
     id: '2',
@@ -31,19 +33,60 @@ const mockProducts = [
     title: 'عبوة مياه كبيرة',
     size: '20 لتر',
     price: '$2',
+    category: 'large',
   },
   {
     id: '3',
     image: require('../../../assets/images/bottle.png'),
-    title: 'عبوة مياه كبيرة',
+    title: 'عبوة مياه معبأة',
     size: '20 لتر',
     price: '$2',
+    category: 'bottled',
   },
 ];
 
 export default function Products() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const [productActionModalVisible, setProductActionModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const productActionOverlayOpacity = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    if (modalVisible) {
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [modalVisible]);
+
+  useEffect(() => {
+    if (productActionModalVisible) {
+      Animated.timing(productActionOverlayOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(productActionOverlayOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [productActionModalVisible]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -55,25 +98,35 @@ export default function Products() {
   }, []);
 
   const handleMenuPress = (product) => {
-    Alert.alert(
-      product.title,
-      'اختر إجراء',
-      [
-        { text: 'تعديل', onPress: () => Alert.alert('تعديل المنتج') },
-        { text: 'حذف', onPress: () => Alert.alert('حذف المنتج'), style: 'destructive' },
-        { text: 'إلغاء', style: 'cancel' },
-      ]
-    );
+    setSelectedProduct(product);
+    setProductActionModalVisible(true);
   };
 
-  // Filter logic (mock, all products for now)
-  const filteredProducts = mockProducts;
+  const handleFilterChange = (filterValue) => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedFilter(filterValue);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  // Filter logic
+  const filteredProducts = selectedFilter === 'all'
+    ? mockProducts
+    : mockProducts.filter(product => product.category === selectedFilter);
 
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
           <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
         <CustomText type='bold' style={styles.headerTitle}>المنتجات</CustomText>
@@ -95,7 +148,7 @@ export default function Products() {
                 { width: "auto" },
                 selectedFilter === filter.value && styles.filterChipActive,
               ]}
-              onPress={() => setSelectedFilter(filter.value)}
+              onPress={() => handleFilterChange(filter.value)}
               activeOpacity={0.7}
             >
               <CustomText type='bold' style={[
@@ -110,33 +163,93 @@ export default function Products() {
         </ScrollView>
       </View>
 
-      {/* Products Grid */}
-      <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        contentContainerStyle={styles.productsGrid}
-        columnWrapperStyle={styles.productsRow}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#2196F3']} // Android
-            tintColor="#2196F3" // iOS
-          />
-        }
-        renderItem={({ item }) => (
-          <View style={[styles.productWrapper]}>
-            <ProductCard
-              image={item.image}
-              title={item.title}
-              size={item.size}
-              price={item.price}
-              onMenuPress={() => handleMenuPress(item)}
+      {/* Products Grid with Fade Animation */}
+      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.productsGrid}
+          columnWrapperStyle={styles.productsRow}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#2196F3']} // Android
+              tintColor="#2196F3" // iOS
             />
+          }
+          renderItem={({ item }) => (
+            <View style={[styles.productWrapper]}>
+              <ProductCard
+                image={item.image}
+                title={item.title}
+                size={item.size}
+                price={item.price}
+                onMenuPress={() => handleMenuPress(item)}
+              />
+            </View>
+          )}
+        />
+      </Animated.View>
+
+      {/* Add Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
+          <View style={styles.modalContent}>
+            <CustomText type="bold" style={styles.modalTitle}>إضافة جديدة</CustomText>
+            <CustomText style={styles.modalSubtitle}>يرجى اختيار ما تريد إضافته.</CustomText>
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity style={styles.modalButton}>
+                <Ionicons name="grid-outline" size={28} color="#2196F3" />
+                <CustomText style={styles.modalButtonText}>إضافة قسم</CustomText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => {
+                  setModalVisible(false);
+                  navigation.navigate('AddProduct');
+                }}
+              >
+                <Ionicons name="pricetag-outline" size={28} color="#2196F3" />
+                <CustomText style={styles.modalButtonText}>إضافة منتج</CustomText>
+              </TouchableOpacity>
+            </View>
+            <Pressable onPress={() => setModalVisible(false)} style={styles.closeBar} />
           </View>
-        )}
-      />
+        </Animated.View>
+      </Modal>
+
+      {/* Product Action Modal */}
+      <Modal
+        visible={productActionModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProductActionModalVisible(false)}
+      >
+        <Animated.View style={[styles.modalOverlay, { opacity: productActionOverlayOpacity }]}> 
+          <View style={styles.modalContent}>
+            <CustomText type="bold" style={styles.modalTitle}>إدارة المنتج</CustomText>
+            <CustomText style={styles.modalSubtitle}>اختر الإجراء الذي تريد تنفيذه على هذا المنتج.</CustomText>
+            <View style={styles.modalButtonsRow}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#F2F4F7' }]}>
+                <Ionicons name="pencil-outline" size={28} color="#2196F3" />
+                <CustomText style={[styles.modalButtonText, { color: '#2196F3' }]}>تعديل المنتج</CustomText>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#FDEAEA' }]}>
+                <Ionicons name="trash-outline" size={28} color="#F44336" />
+                <CustomText style={[styles.modalButtonText, { color: '#F44336' }]}>حذف المنتج</CustomText>
+              </TouchableOpacity>
+            </View>
+            <Pressable onPress={() => setProductActionModalVisible(false)} style={styles.closeBar} />
+          </View>
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -213,5 +326,54 @@ const styles = StyleSheet.create({
   productWrapper: {
     width: CARD_WIDTH,
     marginBottom: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'flex-end',
+    // animationType:"slide"
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    color: '#888',
+    marginBottom: 24,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 16,
+  },
+  modalButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    marginHorizontal: 8,
+    backgroundColor: '#F2F4F7',
+    borderRadius: 12,
+  },
+  modalButtonText: {
+    marginTop: 8,
+    color: '#222',
+    fontWeight: 'bold',
+  },
+  closeBar: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 3,
+    alignSelf: 'center',
+    marginTop: 12,
   },
 }); 

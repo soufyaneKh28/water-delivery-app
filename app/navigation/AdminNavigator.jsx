@@ -5,6 +5,7 @@ import { I18nManager, Image, View } from 'react-native';
 import CustomText from '../components/common/CustomText';
 
 // Import admin screens
+import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
 import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
@@ -122,13 +123,19 @@ export default function AdminNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        animation: 'slide_from_right',
+        // animation: 'slide_from_left',
+        animation:"ios_from_left",
         animationDuration: 200,
       }}
     >
       <Stack.Screen 
         name="AdminTabs" 
         component={AdminTabs} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="AddProduct" 
+        component={AddProduct} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

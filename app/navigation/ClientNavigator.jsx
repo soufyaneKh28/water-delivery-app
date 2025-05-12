@@ -5,6 +5,8 @@ import React from 'react';
 import { Image } from 'react-native';
 
 // Import client screens
+import CartScreen from '../screens/client/CartScreen';
+import CouponsScreen from '../screens/client/CouponsScreen';
 import EditProfileScreen from '../screens/client/EditProfileScreen';
 import HomeScreen from '../screens/client/Home';
 import ProfileScreen from '../screens/client/ProfileScreen';
@@ -28,6 +30,15 @@ export function ClientTabs() {
           } else if (route.name === 'Profile') {
             const iconName = focused ? 'person' : 'person-outline';
             return <Ionicons name={iconName} size={size} color={color} />;
+          } else if (route.name === 'Cart') {
+            return (
+              <Image
+                source={focused ? require('../../assets/icons/cart_active.png') : require('../../assets/icons/cart_inactive.png')}
+                style={{ width: size, height: size, resizeMode: 'contain' }}
+              />
+            );
+          } else if (route.name === 'Coupons') {
+            return <Ionicons name="pricetags-outline" size={size} color={color} />;
           }
         },
         tabBarActiveTintColor: colors.primary,
@@ -56,13 +67,27 @@ export function ClientTabs() {
           title: 'الملف الشخصي',
         }}
       />
-        <Tab.Screen 
-          name="Home" 
-          component={HomeScreen}
-          options={{
-            title: 'الرئيسية',
-          }}
-        />
+      <Tab.Screen 
+        name="Cart" 
+        component={CartScreen}
+        options={{
+          title: 'السلة',
+        }}
+      />
+      <Tab.Screen 
+        name="Coupons" 
+        component={CouponsScreen}
+        options={{
+          title: 'كوبونات',
+        }}
+      />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen}
+        options={{
+          title: 'الرئيسية',
+        }}
+      />
     </Tab.Navigator>
   );
 }

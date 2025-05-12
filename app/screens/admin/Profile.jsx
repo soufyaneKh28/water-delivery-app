@@ -4,6 +4,7 @@ import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../styling/colors';
 
 
 const MENU_ITEMS = [
@@ -104,7 +105,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.white,
   },
   headerRow: {
     flexDirection: 'row-reverse',
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingVertical: 8,
     paddingBottom: 24,
-    elevation: 1,
+    // elevation: 1,
   },
   menuItem: {
     flexDirection: 'row-reverse',
