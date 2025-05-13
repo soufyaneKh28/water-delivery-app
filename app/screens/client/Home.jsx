@@ -1,13 +1,52 @@
-import { Ionicons } from '@expo/vector-icons';
+// import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSharedValue } from 'react-native-reanimated';
+import Carousel from 'react-native-reanimated-carousel';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
+// import { useFocusEffect } from '@react-navigation/native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 
+// import * as React from "react";
 export default function HomeScreen() {
   const { user, logout } = useAuth();
+
+
+
+  const defaultDataWith6Colors = [
+    "#B0604D",
+    "#899F9C",
+    "#B3C680",
+    "#5C6265",
+    "#F5D399",
+    "#F1F1F1",
+  ];
+
+  const progress = useSharedValue(0);
+const { width } = Dimensions.get('window');
+
+const images = [
+  'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
+  'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
+  'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
+];
+
+  // Sample offers data - you can replace this with your actual offers data
+  const offers = [
+    { id: 1, image: require('../../../assets/images/offer1.png') },
+    { id: 2, image: require('../../../assets/images/offer1.png') },
+    { id: 3, image: require('../../../assets/images/offer1.png') },
+  ];
+
+  const categories = [
+    { id: 1, title: 'مياه معدنية', image: require('../../../assets/images/category-1.png') },
+    { id: 2, title: 'مياه نقية', image: require('../../../assets/images/category-1.png') },
+    // { id: 3, title: 'مياه غازية', image: require('../../../assets/images/offer1.png') },
+    // { id: 4, title: 'مياه فوارة', image: require('../../../assets/images/offer1.png') },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -19,71 +58,136 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+     <StatusBar style="light" backgroundColor="#1B7CC8" />
       <ScrollView style={styles.scrollView}>
+        <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -150, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <CustomText type="bold" style={styles.welcomeText}>مرحباً بعودتك!</CustomText>
-            <CustomText type="regular" style={styles.subtitle}>اطلب توصيل المياه</CustomText>
-          </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={24} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton}>
-            <CustomText type="medium" style={styles.actionButtonText}>طلب جديد</CustomText>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.actionButton, styles.secondaryButton]}>
-            <CustomText type="medium" style={[styles.actionButtonText, styles.secondaryButtonText]}>عرض الطلبات</CustomText>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <CustomText type="semiBold" style={styles.sectionTitle}>الطلبات الأخيرة</CustomText>
-          <View style={styles.orderCard}>
-            <CustomText type="medium" style={styles.orderTitle}>طلب #1234</CustomText>
-            <CustomText type="regular" style={styles.orderStatus}>تم التوصيل</CustomText>
-            <CustomText type="light" style={styles.orderDate}>15 مارس 2024</CustomText>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <CustomText type="semiBold" style={styles.sectionTitle}>منتجات المياه</CustomText>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.productsScroll}>
-            <View style={styles.productCard}>
-              <CustomText type="medium" style={styles.productTitle}>عبوة 5 جالون</CustomText>
-              <CustomText type="regular" style={styles.productPrice}>5.99 ريال</CustomText>
+         <TouchableOpacity style={styles.locationButton}>
+            <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24 , objectFit: 'cover'}} />
+            <View style={{flex: 1 , textAlign: 'right' , alignItems: 'flex-end'}}>
+              <CustomText type="regular" style={styles.locationText}>تسليم إلى</CustomText>
+              <CustomText type="bold" style={styles.locationTextMain}>759 Ashcraft Court San Diego</CustomText>
             </View>
-            <View style={styles.productCard}>
-              <CustomText type="medium" style={styles.productTitle}>عبوة 3 جالون</CustomText>
-              <CustomText type="regular" style={styles.productPrice}>3.99 ريال</CustomText>
-            </View>
+            <Image source={require('../../../assets/icons/arrow-down.png')} style={{width: 24, height: 24 , objectFit: 'cover'}} />
+         </TouchableOpacity>
+        </View>
+
+        {/* Offers Carousel */}
+        <View style={styles.offersContainer}>
+          {/* <CustomText type="semiBold" style={styles.offersTitle}>العروض الحالية</CustomText> */}
+      
+            <View
+			id="carousel-component"
+			dataSet={{ kind: "basic-layouts", name: "parallax" }}
+		>
+			<Carousel
+				autoPlayInterval={2000}
+				data={images}
+				height={220}
+				loop={true}
+				pagingEnabled={true}
+				snapEnabled={true}
+				width={width}
+				style={{
+					// backgroundColor: 'red',
+				}}
+				mode="parallax"
+				modeConfig={{
+					parallaxScrollingScale: 0.9,
+					parallaxScrollingOffset: 50,
+				}}
+				onProgressChange={progress}
+        renderItem={({ item }) => (
+          // <TouchableOpacity style={{width: '100%', height: '100%'}}>
+
+          <Image source={{ uri: item }} style={[styles.image, { width: '100%', height: '100%' }]} />
+          // </TouchableOpacity>
+        )}
+			/>
+		</View>
+          {/* </View> */}
+        </View>
+
+        {/* Categories Section */}
+        <View style={styles.categoriesContainer}>
+          <CustomText type="bold" style={styles.categoriesTitle}>الفئات</CustomText>
+          <ScrollView
+            horizontal
+            // invertStickyHeaders
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesScrollContent}
+            style={styles.categoriesScroll}
+          >
+            {categories.map((category) => (
+              <TouchableOpacity key={category.id} style={styles.categoryCard}>
+                <View style={styles.categoryImage}>
+                  <Image source={category.image} style={{width: 37, height: 37 , borderRadius: 50}} />
+                </View>  
+                <CustomText type="medium" style={styles.categoryTitle}>{category.title}</CustomText>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
+
+        {/* Order Status */}
+        {/* <View style={styles.orderStatusContainer}>
+          <View style={styles.orderStatusItem}>
+            <CustomText type="semiBold" style={styles.orderStatusText}>الطلبات المعلقة</CustomText>
+          </View>
+        </View> */}
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  _container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    // flexDirectionro
+    backgroundColor: colors.white,
+    
+  },
+  get container() {
+    return this._container;
+  },
+  set container(value) {
+    this._container = value;
   },
   scrollView: {
     flex: 1,
+    backgroundColor: colors.white
   },
   header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginTop: 20,
+
+  },
+  locationButton: {
+    width: "100%",
+    // height: 40,
+    paddingHorizontal: 13,
+    paddingVertical: 7,
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    flexDirection: 'row-reverse',
     alignItems: 'center',
+    gap: 10,
+  },
+  locationText: {
+    fontSize: 13,
+    color: "#9DB2CE",
+  },
+  locationTextMain: {
+    fontSize: 16,
+    color: colors.secondary,
   },
   headerContent: {
     flex: 1,
+  },
+  image: {
+    borderRadius: 10,
+    resizeMode: 'cover',
   },
   welcomeText: {
     fontSize: 24,
@@ -126,6 +230,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     marginBottom: 15,
+    textAlign: 'right',
   },
   orderCard: {
     backgroundColor: '#fff',
@@ -162,5 +267,60 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 14,
     marginTop: 5,
+  },
+  offersContainer: {
+    // paddingHorizontal: 50,
+    // marginTop: 20,
+    // flexDirection: 'row-reverse',
+  },
+  offersTitle: {
+    fontSize: 18,
+    // marginBottom: 15,
+    textAlign: 'right',
+    marginHorizontal: 20,
+    color: colors.secondary,
+  },
+
+  categoriesContainer: {
+    // marginTop: 10,
+    paddingHorizontal: 20,
+  },
+  categoriesTitle: {
+    fontSize: 20,
+    // marginBottom: 15,
+    textAlign: 'right',
+    // marginHorizontal: 20,
+    color: colors.black,
+  },
+  categoriesScroll: {
+    // marginHorizontal: -20,
+    flexDirection: 'row-reverse',
+  },
+  categoriesScrollContent: {
+    // paddingHorizontal: 20,
+    // flexDirection: 'row-reverse',
+    // marginEnd: -150,
+    gap: 25,
+  },
+  categoryCard: {
+    // width: 120,
+    alignItems: 'center',
+    // backgroundColor: colors.white,
+    borderRadius: 12,
+
+  },
+  categoryImage: {
+    width: 69,
+    height: 69,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 40,
+    marginBottom: 8,
+    backgroundColor: colors.primaryLight,
+  },
+  categoryTitle: {
+    fontSize: 14,
+    color: colors.secondary,
+    textAlign: 'center',
   },
 }); 

@@ -1,17 +1,17 @@
 export const colors = {
   // Primary colors
   primary: '#2196F3',
-  primaryLight: '#64B5F6',
+  primaryLight: '#E5F1FF',
   primaryDark: '#1976D2',
 
   // Secondary colors
-  secondary: '#FFC107',
+  secondary: '#071F5D',
   secondaryLight: '#FFD54F',
   secondaryDark: '#FFA000',
 
   // Neutral colors
   white: '#FFFFFF',
-  black: '#000000',
+  black: '#121212',
   gray: {
     50: '#FAFAFA',
     100: '#F5F5F5',

@@ -5,6 +5,7 @@ import React from 'react';
 // Import navigators
 import { useNavigation } from '@react-navigation/native';
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
+import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../context/AuthContext';
 import LoadingScreen from '../screens/LoadingScreen';
 import AdminNavigator from './AdminNavigator';
@@ -24,7 +25,7 @@ export default function AppNavigator() {
   return (
     // <NavigationContainer>
       <>
-      {/* <StatusBar style="dark" /> */}
+      <StatusBar style="dark" backgroundColor='transparent' translucent />
       <Stack.Navigator   screenOptions={{
         headerShown:false,
         cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // default (right-to-left)

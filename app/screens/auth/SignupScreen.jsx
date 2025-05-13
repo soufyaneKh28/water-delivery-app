@@ -63,7 +63,7 @@ export default function SignUpScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <StatusBar style="dark" />
+   <StatusBar style="light" backgroundColor={colors.primary}/>
       <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         <View style={styles.header} />
         <View style={styles.curveContainer}>

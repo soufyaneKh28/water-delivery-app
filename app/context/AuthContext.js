@@ -23,8 +23,13 @@ export const AuthProvider = ({ children }) => {
   // Check active sessions and listen for auth changes
   useEffect(() => {
     // Check for existing session
+    // logout();
+    console.log("check for existing user",user);
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        console.log("session user",session.user);
+        
         setUser(session.user);
         setIsAuthenticated(true);
         // Fetch user role from profiles table
@@ -61,9 +66,9 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', userId)
+        .eq('id', userId) // or use supabase.auth.getUser().user.id if dynamic
         .single();
-
+    
       if (error) throw error;
       setUserRole(data.role);
     } catch (error) {
@@ -83,6 +88,8 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       // Fetch user role after successful login
+      console.log("data after login",data);
+      
       if (data.user) {
         await fetchUserRole(data.user.id);
       }
@@ -100,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+      
       });
 
       if (error) {
@@ -112,27 +120,27 @@ export const AuthProvider = ({ children }) => {
       // If user is created, insert profile
       const userId = data?.user?.id;
 
-      if (userId && isAuthenticated) {
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            username: userData.username || email,
-            phone: userData.phone || null,
-            full_name: userData.full_name || null,
-            updated_at: new Date(),
-            role: userData.role || 'client',
-          });
+      // if (userId && isAuthenticated) {
+      //   const { data, error: profileError } = await supabase
+      //     .from('profiles')
+      //     .upsert({
+      //       id: userId,
+      //       username: userData.username || email,
+      //       phone: userData.phone || null,
+      //       full_name: userData.full_name || null,
+      //       updated_at: new Date(),
+      //       role: userData.role || 'client',
+      //     });
 
-        if (profileError) {
-          if (profileError.code === '23505') {
-            throw new Error('هذا البريد الإلكتروني مسجل بالفعل');
-          }
-          throw profileError;
-        }
-      }
+      //   if (profileError) {
+      //     if (profileError.code === '23505') {
+      //       throw new Error('هذا البريد الإلكتروني مسجل بالفعل');
+      //     }
+      //     throw profileError;
+      //   }
+      // }
 
-      return data;
+      // return data;
     } catch (error) {
       console.error('Error during signup:', error);
       throw error;

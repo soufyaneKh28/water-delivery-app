@@ -58,7 +58,7 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" backgroundColor={colors.primary}/>
       <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         {/* Blue header with curve */}
         <View style={styles.header} />

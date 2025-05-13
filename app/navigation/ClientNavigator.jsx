@@ -1,10 +1,10 @@
-import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { Image } from 'react-native';
+import { Image, View } from 'react-native';
 
 // Import client screens
+import CustomText from '../components/common/CustomText';
 import CartScreen from '../screens/client/CartScreen';
 import CouponsScreen from '../screens/client/CouponsScreen';
 import EditProfileScreen from '../screens/client/EditProfileScreen';
@@ -19,26 +19,57 @@ export function ClientTabs() {
   return (
     <Tab.Navigator initialRouteName="Home"
       screenOptions={({ route }) => ({
+        tabBarShowLabel: false,
         tabBarIcon: ({ focused, color, size }) => {
           if (route.name === 'Home') {
             return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
               <Image
                 source={focused ? require('../../assets/icons/home_active.png') : require('../../assets/icons/home_inactive.png')}
-                style={{ width: size, height: size, resizeMode: 'contain' }}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
               />
+              <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center',  color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+              الرئيسية
+              </CustomText>
+            </View>
             );
           } else if (route.name === 'Profile') {
             const iconName = focused ? 'person' : 'person-outline';
-            return <Ionicons name={iconName} size={size} color={color} />;
+            return(
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
+              <Image
+                source={focused ? require('../../assets/icons/profile_active.png') : require('../../assets/icons/profile_inactive.png')}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+              />
+              <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center',  color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+                حسابي
+              </CustomText>
+            </View>
+            );
           } else if (route.name === 'Cart') {
             return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
               <Image
                 source={focused ? require('../../assets/icons/cart_active.png') : require('../../assets/icons/cart_inactive.png')}
-                style={{ width: size, height: size, resizeMode: 'contain' }}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
               />
+              <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center',  color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+              السلة
+              </CustomText>
+            </View>
             );
           } else if (route.name === 'Coupons') {
-            return <Ionicons name="pricetags-outline" size={size} color={color} />;
+            return (
+              <View style={{ alignItems: 'center', justifyContent: 'center' , height: 20 }}>
+              <Image
+                source={focused ? require('../../assets/icons/coupons_active.png') : require('../../assets/icons/coupons_inactive.png')}
+                style={{ width: 24, height: 24, resizeMode: 'contain' }}
+              />
+              <CustomText type='bold' style={{ fontSize: 12, width: '100%', textAlign: 'center',  color: focused ? '#2196F3' : '#9DB2CE', marginTop: 2 }}>
+              كوبونات
+              </CustomText>
+            </View>
+            )
           }
         },
         tabBarActiveTintColor: colors.primary,
@@ -48,11 +79,11 @@ export function ClientTabs() {
         tabBarStyle: {
           elevation: 0,
           shadowOpacity: 0,
-          borderTopWidth: 1,
-          borderTopColor: colors.gray[200],
-          height: 70,
-          paddingBottom: 20,
-          paddingTop: 8,
+          // borderTopWidth: 1,
+          // borderTopColor: colors.gray[200],
+          height: 90,
+          // paddingBottom: 20,
+          paddingTop: 18,
         },
         tabBarLabelStyle: {
           fontSize: 12,
