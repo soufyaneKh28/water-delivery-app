@@ -217,7 +217,13 @@ export default function ProfileScreen() {
               key={item.label}
               style={styles.menuItem}
               activeOpacity={0.7}
-              onPress={() => {/* navigation logic here */}}
+              onPress={() => {
+                if (item.screen === 'FAQ') {
+                  navigation.navigate('ClientFAQ');
+                } else {
+                  // navigation logic for other items
+                }
+              }}
             >
               <View style={styles.menuIcon}>
                 <Image source={item.icon} style={{ width: 18, height: 18 }} />

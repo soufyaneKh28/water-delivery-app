@@ -7,7 +7,7 @@ const BackButton = ({ color = '#222', size = 28, style = {} }) => {
   return (
     <TouchableOpacity
       onPress={() => navigation.goBack()}
-      style={[{ padding: 6 , borderWidth: 1 , borderColor: '#D2D2D2' }, style]}
+      style={[{ padding: 8 , borderWidth: 1 , borderColor: '#D2D2D2' , borderRadius: 100 ,  }, style]}
       accessibilityLabel="Back"
     //   style={{backgroundColor: 'red'}}
     >
