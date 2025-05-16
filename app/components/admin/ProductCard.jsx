@@ -8,7 +8,7 @@ const ProductCard = ({ image, title, size, price, onMenuPress }) => {
       <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
         <Ionicons name="ellipsis-horizontal" size={22} color="#888" />
       </TouchableOpacity>
-      <Image source={image} style={styles.image} resizeMode="contain" />
+      <Image source={image} style={styles.image} resizeMode="cover" />
       <Text style={styles.title}>{title}</Text>
       <View style={styles.row}>
         <Text style={styles.price}>{price}</Text>
@@ -25,11 +25,11 @@ const styles = StyleSheet.create({
     padding: 12,
     // marginBottom: 16,
     // height: 225,
-    marginHorizontal: 4,
+    // marginHorizontal: 4,
     alignItems: 'flex-start',
     borderWidth: 1,
     borderColor: '#EEEEEE',
-    width: '100%',
+    width: '48%',
     position: 'relative',
   },
   menuButton: {

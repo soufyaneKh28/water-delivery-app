@@ -4,6 +4,7 @@ import React from 'react';
 import { Dimensions, Image, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import ProductCard from '../../components/client/ProductCard';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
@@ -29,7 +30,7 @@ export default function HomeScreen() {
 const { width } = Dimensions.get('window');
 
 const images = [
-  'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
+  'https://i.ibb.co/4wxK0XKn/offer1.png',
   'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
   'https://fastly.picsum.photos/id/74/4288/2848.jpg?hmac=q02MzzHG23nkhJYRXR-_RgKTr6fpfwRgcXgE0EKvNB8',
 ];
@@ -59,7 +60,7 @@ const images = [
   return (
     <SafeAreaView style={styles.container}>
      <StatusBar style="light" backgroundColor="#1B7CC8" />
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -150, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
          <TouchableOpacity style={styles.locationButton}>
@@ -100,7 +101,7 @@ const images = [
         renderItem={({ item }) => (
           // <TouchableOpacity style={{width: '100%', height: '100%'}}>
 
-          <Image source={{ uri: item }} style={[styles.image, { width: '100%', height: '100%' }]} />
+          <Image source={{ uri: item }} style={[styles.image, { width: '100%', height: '100%' , objectFit: "cover" }]} />
           // </TouchableOpacity>
         )}
 			/>
@@ -113,7 +114,6 @@ const images = [
           <CustomText type="bold" style={styles.categoriesTitle}>الفئات</CustomText>
           <ScrollView
             horizontal
-            // invertStickyHeaders
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesScrollContent}
             style={styles.categoriesScroll}
@@ -127,6 +127,34 @@ const images = [
               </TouchableOpacity>
             ))}
           </ScrollView>
+        </View>
+
+        {/* Products Section */}
+        <View style={styles.productsSection}>
+          <CustomText type="bold" style={styles.productsTitle}>المنتجات</CustomText>
+          <View style={styles.productsRow}>
+            <ProductCard
+              image={require('../../../assets/images/bottle.png')}
+              title="عبوة مياه كبيرة"
+              size="20 لتر"
+              price={"$2"}
+              onMenuPress={() => {}}
+            />
+            <ProductCard
+              image={require('../../../assets/images/bottle.png')}
+              title="عبوة مياه صغيرة"
+              size="10 لتر"
+              price={"$1"}
+              onMenuPress={() => {}}
+            />
+            <ProductCard
+              image={require('../../../assets/images/bottle.png')}
+              title="عبوة مياه صغيرة"
+              size="10 لتر"
+              price={"$1"}
+              onMenuPress={() => {}}
+            />
+          </View>
         </View>
 
         {/* Order Status */}
@@ -156,7 +184,8 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: colors.white
+    backgroundColor: colors.white,
+    // paddingBottom: 50,
   },
   header: {
     paddingHorizontal: 20,
@@ -188,6 +217,7 @@ const styles = StyleSheet.create({
   image: {
     borderRadius: 10,
     resizeMode: 'cover',
+    // objectFit: 'cover',
   },
   welcomeText: {
     fontSize: 24,
@@ -323,4 +353,24 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     textAlign: 'center',
   },
+  productsSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    justifyContent: 'center',
+  },
+  productsTitle: {
+    fontSize: 20,
+    color: colors.black,
+    marginBottom: 15,
+    textAlign: 'right',
+  },
+  productsRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    gridRowGap:20,
+    rowGap:15,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
 }); 
+

@@ -1,7 +1,8 @@
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { colors } from '../../constants/theme';
+import { ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { colors } from '../../styling/colors';
+import CustomText from './CustomText';
 
-export function PrimaryButton({
+export default function PrimaryButton({
   title,
   onPress,
   isLoading = false,
@@ -22,7 +23,7 @@ export function PrimaryButton({
       {isLoading ? (
         <ActivityIndicator color="white" size="small" />
       ) : (
-        <Text style={styles.buttonText}>{title}</Text>
+        <CustomText type="semiBold" style={styles.buttonText}>{title}</CustomText>
       )}
     </TouchableOpacity>
   );

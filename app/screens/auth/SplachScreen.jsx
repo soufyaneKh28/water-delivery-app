@@ -16,7 +16,7 @@ export default function SplashScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-  <StatusBar backgroundColor="#0A0A0A" barStyle="light-content" translucent={true} />
+  <StatusBar backgroundColor='#0078D7' style="light" translucent={true} />
       <Image source={require("../../../assets/images/logo.png")} style={styles.logo} resizeMode="contain" />
       {/* <Text style={styles.title}>AL-JUNAIDI WATER</Text>
       <Text style={styles.arabicTitle}>مياه الجنيدي</Text> */}

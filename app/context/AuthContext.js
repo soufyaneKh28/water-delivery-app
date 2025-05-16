@@ -32,6 +32,8 @@ export const AuthProvider = ({ children }) => {
         
         setUser(session.user);
         setIsAuthenticated(true);
+        console.log("user after set",user);
+        
         // Fetch user role from profiles table
         fetchUserRole(session.user.id);
       } else {
@@ -62,15 +64,17 @@ export const AuthProvider = ({ children }) => {
 
   // Function to fetch user role from profiles table
   const fetchUserRole = async (userId) => {
+    console.log("userId", userId);
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
-        .eq('id', userId) // or use supabase.auth.getUser().user.id if dynamic
-        .single();
-    
+        .select('role_name')
+        .single()
       if (error) throw error;
-      setUserRole(data.role);
+
+      console.log("data after fetchUserRole", data);
+      setUserRole(data.role_name);
     } catch (error) {
       console.error('Error fetching user role:', error);
       setUserRole(null);
@@ -91,6 +95,8 @@ export const AuthProvider = ({ children }) => {
       console.log("data after login",data);
       
       if (data.user) {
+        console.log("data.user.id",data.user.id);
+        
         await fetchUserRole(data.user.id);
       }
 
@@ -107,7 +113,13 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-      
+      options:{
+        data: {
+          username: "soufyane",
+          phone: '01234567890',
+      }
+
+      }
       });
 
       if (error) {
@@ -117,6 +129,8 @@ export const AuthProvider = ({ children }) => {
         throw error;
       }
 
+      console.log(data);
+      
       // If user is created, insert profile
       const userId = data?.user?.id;
 
