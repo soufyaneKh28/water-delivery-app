@@ -220,6 +220,10 @@ export default function ProfileScreen() {
               onPress={() => {
                 if (item.screen === 'FAQ') {
                   navigation.navigate('ClientFAQ');
+                } else if (item.screen === 'Security') {
+                  navigation.navigate('ResetPassword');
+                } else if (item.screen === 'Contact') {
+                  navigation.navigate('Contact');
                 } else {
                   // navigation logic for other items
                 }

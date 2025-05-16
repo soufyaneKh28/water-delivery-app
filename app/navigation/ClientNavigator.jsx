@@ -6,12 +6,14 @@ import { Image, View } from 'react-native';
 // Import client screens
 import CustomText from '../components/common/CustomText';
 import CartScreen from '../screens/client/CartScreen';
+import ContactScreen from '../screens/client/ContactScreen';
 import CouponsScreen from '../screens/client/CouponsScreen';
 import EditProfileScreen from '../screens/client/EditProfileScreen';
 import FAQScreen from '../screens/client/FAQScreen';
 import HomeScreen from '../screens/client/Home';
 import ProductDetailsScreen from '../screens/client/ProductDetailsScreen';
 import ProfileScreen from '../screens/client/ProfileScreen';
+import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
 import { colors } from '../styling/colors';
 
 const Stack = createNativeStackNavigator();
@@ -156,6 +158,16 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="ClientFAQ"
         component={FAQScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Contact"
+        component={ContactScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
