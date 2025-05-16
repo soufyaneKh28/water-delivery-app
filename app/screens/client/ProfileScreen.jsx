@@ -1,14 +1,15 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -19,27 +20,27 @@ import { globalStyles } from '../../styling/globalStyles';
 const MENU_ITEMS = [
   {
     label: 'طلباتي',
-    icon: <MaterialCommunityIcons name="file-document-outline" size={22} color="#4B6CB7" />, // Orders
+    icon: require('../../../assets/icons/orders.png'), // Orders
     screen: 'Orders',
   },
   {
     label: 'الأمان',
-    icon: <Ionicons name="lock-closed-outline" size={22} color="#4B6CB7" />, // Security
+    icon: require('../../../assets/icons/security.png'), // Security
     screen: 'Security',
   },
   {
     label: 'الشروط والأحكام',
-    icon: <Ionicons name="document-text-outline" size={22} color="#4B6CB7" />, // Terms
+    icon: require('../../../assets/icons/terms.png'), // Terms
     screen: 'Terms',
   },
   {
     label: 'الأسئلة الشائعة',
-    icon: <Ionicons name="help-circle-outline" size={22} color="#4B6CB7" />, // FAQ
+    icon: require('../../../assets/icons/faq.png'), // FAQ
     screen: 'FAQ',
   },
   {
     label: 'تواصل معنا',
-    icon: <Ionicons name="chatbubble-ellipses-outline" size={22} color="#4B6CB7" />, // Contact
+    icon: require('../../../assets/icons/contact.png'), // Contact
     screen: 'Contact',
   },
 ];
@@ -48,6 +49,8 @@ export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -70,6 +73,15 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    setShowDeleteModal(false);
+  };
+
+  const handleLogout = async () => {
+    setShowLogoutModal(false);
+    logout();
+  };
+
   if (loading) {
     return (
       <View style={[globalStyles.container, styles.loadingContainer]}>
@@ -79,59 +91,168 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView style={globalStyles.container} contentContainerStyle={{ flexGrow: 1 }}>
-      <View style={styles.headerRow}>
-        <View style={{ flexDirection: 'row-reverse', alignItems: 'center', flex: 1 }}>
-          <Image
-            source={profile?.avatar_url ? { uri: profile.avatar_url } : require('../../../assets/images/avatar-placeholder.jpg')}
-            style={styles.avatar}
-          />
-          <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
-            <CustomText type="bold" style={styles.title}>حسابي</CustomText>
-            <CustomText style={styles.name}>{profile?.full_name || 'اسم المستخدم'}</CustomText>
+    <>
+      <Modal
+        visible={showDeleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            padding: 24,
+            width: '85%',
+            alignItems: 'center'
+          }}>
+            <CustomText type="bold" style={{ fontSize: 18, marginBottom: 12, color: '#222' }}>
+              حذف الحساب
+            </CustomText>
+            <CustomText style={{ textAlign: 'center', color: '#222', marginBottom: 24 }}>
+              هل أنت متأكد أنك تريد حذف حسابك؟ سيؤدي هذا الإجراء إلى حذف جميع بياناتك بشكل دائم ولن تتمكن من استعادتها لاحقًا.
+            </CustomText>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#F44336',
+                borderRadius: 12,
+                width: '100%',
+                paddingVertical: 12,
+                marginBottom: 12
+              }}
+              onPress={handleDeleteAccount}
+            >
+              <CustomText style={{ color: '#fff', textAlign: 'center', fontSize: 16 }}>حذف</CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#F2F4F7',
+                borderRadius: 12,
+                width: '100%',
+                paddingVertical: 12
+              }}
+              onPress={() => setShowDeleteModal(false)}
+            >
+              <CustomText style={{ color: '#222', textAlign: 'center', fontSize: 16 }}>إلغاء</CustomText>
+            </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </Modal>
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          justifyContent: 'center',
+          alignItems: 'center'
+        }}>
+          <View style={{
+            backgroundColor: '#fff',
+            borderRadius: 16,
+            padding: 24,
+            width: '85%',
+            alignItems: 'center'
+          }}>
+            <CustomText type="bold" style={{ fontSize: 18, marginBottom: 12, color: '#222' }}>
+              تسجيل الخروج
+            </CustomText>
+            <CustomText style={{ textAlign: 'center', color: '#222', marginBottom: 24 }}>
+              هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟
+            </CustomText>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#F44336',
+                borderRadius: 12,
+                width: '100%',
+                paddingVertical: 12,
+                marginBottom: 12
+              }}
+              onPress={handleLogout}
+            >
+              <CustomText style={{ color: '#fff', textAlign: 'center', fontSize: 16 }}>تسجيل الخروج</CustomText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                backgroundColor: '#F2F4F7',
+                borderRadius: 12,
+                width: '100%',
+                paddingVertical: 12
+              }}
+              onPress={() => setShowLogoutModal(false)}
+            >
+              <CustomText style={{ color: '#222', textAlign: 'center', fontSize: 16 }}>إلغاء</CustomText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+      <ScrollView style={globalStyles.container} contentContainerStyle={{ flexGrow: 1 }}>
+        <TouchableOpacity style={''}>
+          <View style={styles.headerRow}>
+            <View style={{ flexDirection: 'row-reverse', alignItems: 'center', flex: 1 }}>
+              <Image
+                source={profile?.avatar_url ? { uri: profile.avatar_url } : require('../../../assets/images/avatar-placeholder.jpg')}
+                style={styles.avatar}
+              />
+              <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
+                <CustomText type="bold" style={styles.title}>حسابي</CustomText>
+                <CustomText style={styles.name}>{profile?.full_name || 'اسم المستخدم'}</CustomText>
+              </View>
+              <Ionicons name="chevron-back" size={20} color="#292D32" style={styles.menuArrow} />
+            </View>
+          </View>
+        </TouchableOpacity>
 
-      <View style={styles.menuList}>
-        {MENU_ITEMS.map((item, idx) => (
+        <View style={styles.menuList}>
+          {MENU_ITEMS.map((item, idx) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuItem}
+              activeOpacity={0.7}
+              onPress={() => {/* navigation logic here */}}
+            >
+              <View style={styles.menuIcon}>
+                <Image source={item.icon} style={{ width: 18, height: 18 }} />
+              </View>
+              <CustomText type="medium" style={styles.menuLabel}>{item.label}</CustomText>
+              <Ionicons name="chevron-back" size={20} color="#292D32" style={styles.menuArrow} />
+            </TouchableOpacity>
+          ))}
+          {/* Logout */}
           <TouchableOpacity
-            key={item.label}
-            style={styles.menuItem}
+            style={[styles.menuItem, styles.logoutItem]}
             activeOpacity={0.7}
-            onPress={() => {/* navigation logic here */}}
+            onPress={() => setShowLogoutModal(true)}
           >
-            <View style={styles.menuIcon}>{item.icon}</View>
-            <CustomText style={styles.menuLabel}>{item.label}</CustomText>
-            <Ionicons name="chevron-back" size={20} color="#B0B0B0" style={styles.menuArrow} />
+            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
+              <Image source={require('../../../assets/icons/logout.png')} style={{ width: 18, height: 18 }} />
+            </View>
+            <CustomText type="medium" style={styles.logoutLabel}>تسجيل الخروج</CustomText>
+            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
           </TouchableOpacity>
-        ))}
-        {/* Logout */}
-        <TouchableOpacity
-          style={[styles.menuItem, styles.logoutItem]}
-          activeOpacity={0.7}
-          onPress={logout}
-        >
-          <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
-            <Ionicons name="log-out-outline" size={22} color="#F44336" />
-          </View>
-          <CustomText style={styles.logoutLabel}>تسجيل الخروج</CustomText>
-          <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
-        </TouchableOpacity>
-        {/* Delete Account */}
-        <TouchableOpacity
-          style={[styles.menuItem, styles.deleteItem]}
-          activeOpacity={0.7}
-          onPress={() => {/* delete logic here */}}
-        >
-          <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
-            <Ionicons name="trash-outline" size={22} color="#F44336" />
-          </View>
-          <CustomText style={styles.deleteLabel}>حذف الحساب</CustomText>
-          <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/* Delete Account */}
+          <TouchableOpacity
+            style={[styles.menuItem, styles.deleteItem]}
+            activeOpacity={0.7}
+            onPress={() => setShowDeleteModal(true)}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
+              <Image source={require('../../../assets/icons/trash.png')} style={{ width: 18, height: 18 }} />
+            </View>
+            <CustomText style={styles.deleteLabel}>حذف الحساب</CustomText>
+            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </>
   );
 }
 
@@ -171,11 +292,9 @@ const styles = StyleSheet.create({
   menuList: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    marginHorizontal: 12,
     marginTop: 16,
     paddingVertical: 8,
     paddingBottom: 24,
-    elevation: 1,
   },
   menuItem: {
     flexDirection: 'row-reverse',
@@ -189,7 +308,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F2F4F7',
+    backgroundColor: '#E5F1FF',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
@@ -206,7 +325,7 @@ const styles = StyleSheet.create({
   logoutItem: {
     backgroundColor: '#FDEAEA',
     borderBottomWidth: 0,
-    marginTop: 8,
+    marginVertical: 20,
   },
   logoutLabel: {
     flex: 1,
