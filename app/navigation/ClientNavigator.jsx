@@ -14,6 +14,7 @@ import HomeScreen from '../screens/client/Home';
 import ProductDetailsScreen from '../screens/client/ProductDetailsScreen';
 import ProfileScreen from '../screens/client/ProfileScreen';
 import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
+import TermsScreen from '../screens/client/TermsScreen';
 import { colors } from '../styling/colors';
 
 const Stack = createNativeStackNavigator();
@@ -168,6 +169,11 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="Contact"
         component={ContactScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Terms"
+        component={TermsScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

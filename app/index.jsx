@@ -1,3 +1,4 @@
+import 'react-native-reanimated';
 import '../gesture-handler';
 
 import * as Font from 'expo-font';

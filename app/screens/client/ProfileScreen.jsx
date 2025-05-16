@@ -195,7 +195,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
       <ScrollView style={globalStyles.container} contentContainerStyle={{ flexGrow: 1 }}>
-        <TouchableOpacity style={''}>
+        <TouchableOpacity style={''} onPress={() => navigation.navigate('EditProfile')}>
           <View style={styles.headerRow}>
             <View style={{ flexDirection: 'row-reverse', alignItems: 'center', flex: 1 }}>
               <Image
@@ -224,6 +224,8 @@ export default function ProfileScreen() {
                   navigation.navigate('ResetPassword');
                 } else if (item.screen === 'Contact') {
                   navigation.navigate('Contact');
+                } else if (item.screen === 'Terms') {
+                  navigation.navigate('Terms');
                 } else {
                   // navigation logic for other items
                 }

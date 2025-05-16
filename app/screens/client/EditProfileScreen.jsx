@@ -1,17 +1,17 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
+import BackButton from "../../components/common/BackButton";
 import CustomText from "../../components/common/CustomText";
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../styling/colors";
@@ -24,6 +24,7 @@ export default function EditProfileScreen({ navigation }) {
   const [formData, setFormData] = useState({
     full_name: "",
     phone: "",
+    email: "",
   });
 
   useEffect(() => {
@@ -45,9 +46,10 @@ export default function EditProfileScreen({ navigation }) {
       setFormData({
         full_name: data.full_name || "",
         phone: data.phone || "",
+        email: data.email || "",
       });
     } catch (error) {
-      Alert.alert("Error", "Failed to load profile data");
+      Alert.alert("خطأ", "تعذر تحميل بيانات الحساب");
       console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
@@ -56,10 +58,9 @@ export default function EditProfileScreen({ navigation }) {
 
   const handleSave = async () => {
     if (!formData.full_name.trim()) {
-      Alert.alert("Error", "Full name is required");
+      Alert.alert("خطأ", "اسم المستخدم مطلوب");
       return;
     }
-
     setSaving(true);
     try {
       const { error } = await supabase
@@ -67,102 +68,107 @@ export default function EditProfileScreen({ navigation }) {
         .update({
           full_name: formData.full_name.trim(),
           phone: formData.phone.trim(),
+          email: formData.email.trim(),
           updated_at: new Date(),
         })
         .eq("id", user.id);
-
       if (error) {
         throw error;
       }
-
-      Alert.alert(
-        "Success",
-        "Profile updated successfully",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      Alert.alert("تم التحديث", "تم تحديث المعلومات بنجاح", [
+        { text: "حسناً", onPress: () => navigation.goBack() },
+      ]);
     } catch (error) {
-      Alert.alert("Error", "Failed to update profile");
+      Alert.alert("خطأ", "تعذر تحديث المعلومات");
       console.error("Error updating profile:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  if (loading) {
-    return (
-      <View style={[globalStyles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={[globalStyles.container, styles.loadingContainer]}>
+  //       <ActivityIndicator size="large" color={colors.primary} />
+  //     </View>
+  //   );
+  // }
 
   return (
     <KeyboardAvoidingView
       style={globalStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color={colors.white} />
-          </TouchableOpacity>
-          <CustomText type="bold" style={styles.headerTitle}>
-            Edit Profile
-          </CustomText>
-        </View>
+        <BackButton />
+        <CustomText type="bold" style={styles.headerTitle}>حسابي</CustomText>
+        <View style={{ width: 40 }} />
+      </View>
+        <CustomText type="bold" style={styles.title}>المعلومات الشخصية</CustomText>
 
-        <View style={styles.content}>
-          <View style={styles.section}>
-            <View style={styles.inputContainer}>
-              <CustomText style={styles.inputLabel}>Full Name</CustomText>
+        <View style={styles.form}>
+          {/* Username */}
+          <View style={globalStyles.inputContainer}>
+            <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
+            <TextInput
+              style={globalStyles.input}
+              value={formData.full_name}
+              onChangeText={text => setFormData(prev => ({ ...prev, full_name: text }))}
+              placeholder="اسم المستخدم"
+              placeholderTextColor={colors.gray[400]}
+              textAlign="right"
+            />
+          </View>
+          {/* Phone with static country picker */}
+          <View style={globalStyles.inputContainer}>
+            <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {/* <TouchableOpacity style={[styles.flagPicker, { marginBottom: 0 }]} activeOpacity={0.7}>
+                <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/commons/5/59/Flag_of_Lebanon.svg'}} style={styles.flag} />
+                <Ionicons name="chevron-down" size={18} color={colors.gray[500]} style={{marginHorizontal: 2}} />
+                <CustomText style={styles.countryCode}>+90</CustomText>
+              </TouchableOpacity> */}
               <TextInput
-                style={styles.input}
-                value={formData.full_name}
-                onChangeText={(text) =>
-                  setFormData((prev) => ({ ...prev, full_name: text }))
-                }
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.gray[400]}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <CustomText style={styles.inputLabel}>Phone Number</CustomText>
-              <TextInput
-                style={styles.input}
+                style={[globalStyles.input, { flex: 1}]}
                 value={formData.phone}
-                onChangeText={(text) =>
-                  setFormData((prev) => ({ ...prev, phone: text }))
-                }
-                placeholder="Enter your phone number"
+                onChangeText={text => setFormData(prev => ({ ...prev, phone: text }))}
+                placeholder="5356577288"
                 placeholderTextColor={colors.gray[400]}
                 keyboardType="phone-pad"
+                textAlign="right"
               />
             </View>
           </View>
-
-          <TouchableOpacity
-            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <CustomText type="bold" style={styles.saveButtonText}>
-                Save Changes
-              </CustomText>
-            )}
-          </TouchableOpacity>
+          {/* Email */}
+          <View style={globalStyles.inputContainer}>
+            <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
+            <TextInput
+              style={globalStyles.input}
+              value={formData.email}
+              onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
+              placeholder="البريد الإلكتروني"
+              placeholderTextColor={colors.gray[400]}
+              textAlign="right"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
         </View>
+
+        <TouchableOpacity
+          style={styles.saveButton}
+          onPress={handleSave}
+          disabled={saving}
+          activeOpacity={0.8}
+        >
+          {saving ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <CustomText type="bold" style={styles.saveButtonText}>تعديل المعلومات</CustomText>
+          )}
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -176,64 +182,100 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  header: {
-    backgroundColor: colors.primary,
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
-    paddingTop: 40,
-    flexDirection: "row",
-    alignItems: "center",
+    backgroundColor: colors.white,
   },
-  backButton: {
-    marginRight: 15,
+  header: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 24,
+    paddingBottom: 18,
+    backgroundColor: colors.white,
+  },
+  headerBtn: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    color: colors.white,
+    fontSize: 18,
+    color: colors.textPrimary,
+    flex: 1,
+    textAlign: 'center',
   },
-  content: {
-    padding: 20,
+  title: {
+    fontSize: 22,
+    color: colors.textPrimary,
+    textAlign: 'right',
+    marginBottom: 24,
+    marginTop: 20,
+    // fontWeight: 'bold',
   },
-  section: {
-    backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    shadowColor: colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  inputContainer: {
-    marginBottom: 20,
+  form: {
+    marginBottom: 32,
   },
   inputLabel: {
-    fontSize: 16,
-    color: colors.gray[700],
-    marginBottom: 8,
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginBottom: 6,
+    marginTop: 10,
+    textAlign: 'right',
   },
   input: {
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.gray[300],
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: colors.gray[800],
+    borderColor: colors.gray[200],
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  phoneRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  flagPicker: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginLeft: -1,
+    zIndex: 2,
+  },
+  flag: {
+    width: 24,
+    height: 18,
+    borderRadius: 4,
+    marginLeft: 4,
+    resizeMode: 'cover',
+  },
+  countryCode: {
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginHorizontal: 4,
   },
   saveButton: {
     backgroundColor: colors.primary,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  saveButtonDisabled: {
-    opacity: 0.7,
+    borderRadius: 50,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 24,
   },
   saveButtonText: {
     color: colors.white,
     fontSize: 16,
+    textAlign: 'center',
   },
 }); 
