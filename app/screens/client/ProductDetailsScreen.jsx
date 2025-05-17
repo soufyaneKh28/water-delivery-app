@@ -14,9 +14,9 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Top bar with share and back */}
       <View style={styles.topBar}>
         <TouchableOpacity style={styles.iconButton}>
-          <Feather name="share-2" size={22} color="#222" />
+          <Feather name="share-2" size={22} color={colors.secondary}/>
         </TouchableOpacity>
-        <BackButton style={styles.iconButton} color="#222" size={22} />
+        <BackButton/>
       </View>
       {/* Product Image */}
       <Image source={image} style={styles.productImage} resizeMode="contain" />
@@ -34,7 +34,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         </View>
         {/* Description */}
         <TouchableOpacity>
-          <Text style={styles.link}>الوصف</Text>
+          <CustomText type="medium" style={styles.link}>الوصف</CustomText>
         </TouchableOpacity>
         <CustomText type="regular" style={styles.description}>
           لوريم إيبسوم دولار سيت أميت، كونسيكتيتور أديبيسيسينغ إيليت. نونك كونسيكتيتور فيليت آت ماسا فيهيكولا، كويز فريجيدأ أونا غرافيدا.
@@ -43,11 +43,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
         <View style={styles.addRow}>
           <View style={styles.qtyControl}>
             <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => Math.max(1, q - 1))}>
-              <AntDesign name="minus" size={20} color="#222" />
+              <AntDesign name="minus" size={20} color="#fff" />
             </TouchableOpacity>
             <CustomText type="semiBold" style={styles.qtyText}>{quantity}</CustomText>
             <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => q + 1)}>
-              <AntDesign name="plus" size={20} color="#222" />
+              <AntDesign name="plus" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
           {/* <TouchableOpacity style={styles.addToCartBtn}>
@@ -79,7 +79,9 @@ const styles = StyleSheet.create({
   iconButton: {
     backgroundColor: '#fff',
     borderRadius: 50,
-    padding: 8,
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -138,19 +140,19 @@ const styles = StyleSheet.create({
     textAlign: 'left',
   },
   link: {
-    color: colors.secondary,
-    fontWeight: 'bold',
+    color: colors.primary,
+    // fontWeight: 'bold',
     fontSize: 15,
     marginTop: 10,
-    marginBottom: 2,
+    marginBottom: 5,
     textAlign: 'right',
   },
   description: {
     color: '#888',
-    fontSize: 14,
+    fontSize: 15,
     marginBottom: 50,
     textAlign: 'right',
-    lineHeight: 22,
+    lineHeight: 27,
   },
   addRow: {
     flexDirection: 'row',
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
   qtyControl: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: '#F2F4F7',
+    backgroundColor: '#F7F7F7',
     borderRadius: 50,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -169,9 +171,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   qtyBtn: {
-    backgroundColor: '#fff',
+    backgroundColor: '#071F5D',
     borderRadius: 50,
-    padding: 4,
+    padding: 10,
     marginHorizontal: 2,
     borderWidth: 1,
     borderColor: '#E0E0E0',
