@@ -274,11 +274,11 @@ export default function CouponsScreen() {
               
             </View>
             <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
-            <View style={modalStyles.summaryRow}>
+            <View style={modalStyles.summaryRow2}>
               <CustomText>X{bottleCount}</CustomText>
               <CustomText>عدد القارورات</CustomText>
             </View>
-            <View style={modalStyles.summaryRow}>
+            <View style={modalStyles.summaryRow2}>
               <CustomText type="bold" style={{color: colors.primary}}>{bottleCount} كوبونات</CustomText>
               <CustomText>عدد الكوبونات المراد سحبها</CustomText>
             </View>
@@ -518,6 +518,11 @@ const modalStyles = StyleSheet.create({
     textAlign: 'right',
   },
   summaryRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryRow2: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
