@@ -1,76 +1,344 @@
-import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { Image, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
+import { globalStyles } from '../../styling/globalStyles';
 
 export default function CouponsScreen() {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null); // 25 or 50
+  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
+  const [note, setNote] = useState('');
+  const [noteError, setNoteError] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCVV, setCardCVV] = useState('');
+  const [cardErrors, setCardErrors] = useState({});
+  const [refillModalVisible, setRefillModalVisible] = useState(false);
+  const [bottleCount, setBottleCount] = useState(1);
+
+  const openModal = (book) => {
+    setSelectedBook(book);
+    setModalVisible(true);
+    setPaymentMethod('card');
+    setNote('');
+    setNoteError('');
+    setCardName('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCVV('');
+    setCardErrors({});
+  };
+  const closeModal = () => {
+    setModalVisible(false);
+    setSelectedBook(null);
+    setNote('');
+    setNoteError('');
+    setCardName('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCVV('');
+    setCardErrors({});
+  };
+
+  const handleConfirm = () => {
+    if (paymentMethod === 'delivery' && note.trim() === '') {
+      setNoteError('يرجى إدخال ملاحظة');
+      return;
+    }
+    if (paymentMethod === 'card') {
+      let errors = {};
+      if (!cardName.trim()) errors.cardName = 'مطلوب';
+      if (!cardNumber.trim()) errors.cardNumber = 'مطلوب';
+      if (!cardExpiry.trim()) errors.cardExpiry = 'مطلوب';
+      if (!cardCVV.trim()) errors.cardCVV = 'مطلوب';
+      setCardErrors(errors);
+      if (Object.keys(errors).length > 0) return;
+    }
+    // handle order confirmation logic here
+    closeModal();
+  };
+
+  const incrementBottle = () => setBottleCount(count => count + 1);
+  const decrementBottle = () => setBottleCount(count => (count > 1 ? count - 1 : 1));
+
   return (
-    <View style={styles.container}>
-      {/* Balance Section */}
-      <View style={styles.balanceCard}>
-        <CustomText type="regular" style={styles.balanceLabel}>رصيدي</CustomText>
-        <CustomText type="bold" style={styles.balanceValue}>50</CustomText>
-        <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
-      </View>
+    <>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom:100 }} showsVerticalScrollIndicator={true} >
+        {/* Balance Section */}
 
-      {/* Buy Coupon Book Section */}
-      <CustomText type="bold" style={styles.sectionTitle}>شراء دفتر كوبونات</CustomText>
-      <View style={styles.couponBookList}>
-        <View style={styles.couponBookCard}>
-          <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => {}} />
-          <CustomText type="regular" style={styles.couponBookText}>دفتر 25 كوبون</CustomText>
-          <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+          <CustomText type="medium" style={styles.balanceLabel}>رصيدي</CustomText>
+        <View style={styles.balanceCard}>
+          <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
+          <CustomText type="bold" style={styles.balanceValue}>50</CustomText>
         </View>
-        <View style={styles.couponBookCard}>
-          <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => {}} />
-          <CustomText type="regular" style={styles.couponBookText}>دفتر 50 كوبون</CustomText>
-          <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
-        </View>
-      </View>
 
-      {/* Bottle Refill Section */}
-      <CustomText type="bold" style={styles.sectionTitle}>تعبئة قارورة</CustomText>
-      <View style={styles.bottleCard}>
-        <Image source={require('../../../assets/images/bottle.png')} style={styles.bottleImage} />
-        <View style={styles.bottleInfo}>
-          <CustomText type="bold" style={styles.bottleTitle}>عبوة مياه كبيرة</CustomText>
-          <CustomText type="regular" style={styles.bottleSize}>20 لتر</CustomText>
-          <CustomText type="regular" style={styles.bottleCoupon}>1 كوبون</CustomText>
+        {/* Buy Coupon Book Section */}
+        <CustomText type="bold" style={styles.sectionTitle}>شراء دفتر كوبونات</CustomText>
+        <View style={styles.couponBookList}>
+          <View style={styles.couponBookCard}>
+            <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => openModal(25)} />
+            <CustomText type="medium" style={styles.couponBookText}>دفتر 25 كوبون</CustomText>
+            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+          </View>
+          <View style={styles.couponBookCard}>
+            <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => openModal(50)} />
+            <CustomText type="medium" style={styles.couponBookText}>دفتر 50 كوبون</CustomText>
+            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+          </View>
         </View>
-        <PrimaryButton title="طلب اعادة تعبئة" style={styles.refillButton} onPress={() => {}} />
-      </View>
-    </View>
+
+        {/* Bottle Refill Section */}
+        <CustomText type="bold" style={styles.sectionTitle}>تعبئة قارورة</CustomText>
+        <View style={styles.bottleCard}>
+          <Image source={require('../../../assets/images/bottle.png')} style={styles.bottleImage} />
+          <View style={styles.bottleInfo}>
+            <View>
+            <CustomText type="bold" style={styles.bottleTitle}>عبوة مياه كبيرة</CustomText>
+              
+            <CustomText type="regular" style={styles.bottleSize}>20 لتر</CustomText>
+            </View>
+            <CustomText type="bold" style={styles.bottleCoupon}>1 كوبون</CustomText>
+          </View>
+          <PrimaryButton title="طلب اعادة تعبئة" style={styles.refillButton} onPress={() => setRefillModalVisible(true)} />
+        </View>
+      </ScrollView>
+
+      {/* Coupon Purchase Modal */}
+      <View>
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModal}
+        >
+        <View style={modalStyles.overlay}>
+          <ScrollView style={modalStyles.modalContainer} contentContainerStyle={{ paddingBottom: 70 ,  }}>
+          <TouchableOpacity  style={{position: 'absolute', top: 10, left: 10 , width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={closeModal}>
+            <Ionicons name="close" size={22} color={colors.black} />
+          </TouchableOpacity>
+            <CustomText type="bold" style={modalStyles.title}>
+              شراء دفتر كوبونات {selectedBook}
+            </CustomText>
+            {/* Delivery Address */}
+            <CustomText type="bold" style={modalStyles.label}>عنوان التسليم</CustomText>
+            <View style={modalStyles.addressBox}>
+              <CustomText style={{textAlign:'right'}} type="bold">759 Ashcraft Court San Diego</CustomText>
+              <CustomText style={{ fontSize: 12, color: '#888' , textAlign:'right' ,maxWidth:'80%'}}>759 Ashcraft Court San Diego\nIstanbul 34010,Floor:11</CustomText>
+              {/* <Image source={require('../../../assets/images/map.png')} style={modalStyles.mapImage} /> */}
+            </View>
+            {/* Payment Method */}
+            <CustomText type="bold" style={modalStyles.label}>طريقة الدفع</CustomText>
+            <View style={modalStyles.paymentBox}>
+              <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('card')}>
+                <CustomText>بطاقة ائتمان</CustomText>
+                <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
+                <View style={[modalStyles.radioCircle, paymentMethod === 'card' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
+              </TouchableOpacity>
+              <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('delivery')}>
+                <CustomText>الدفع عند التسليم</CustomText>
+                <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
+                <View style={[modalStyles.radioCircle, paymentMethod === 'delivery' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
+              </TouchableOpacity>
+            </View>
+            {/* Card Details or Note */}
+            {paymentMethod === 'card' ? (
+              <>
+                <CustomText type="bold" style={modalStyles.label}>اسم حامل البطاقة</CustomText>
+                <TextInput
+                  style={[modalStyles.input,globalStyles.input, cardErrors.cardName ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                  placeholder="ادخل اسم حامل البطاقة"
+                  value={cardName}
+                  onChangeText={text => { setCardName(text); setCardErrors(e => ({ ...e, cardName: undefined })); }}
+                />
+                {cardErrors.cardName ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardName}</CustomText> : null}
+                <CustomText type="bold" style={modalStyles.label}>رقم البطاقة</CustomText>
+                <TextInput
+                  style={[modalStyles.input,globalStyles.input, cardErrors.cardNumber ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                  placeholder="1111 1111 1111 1111"
+                  keyboardType="numeric"
+                  value={cardNumber}
+                  onChangeText={text => { setCardNumber(text); setCardErrors(e => ({ ...e, cardNumber: undefined })); }}
+                />
+                {cardErrors.cardNumber ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardNumber}</CustomText> : null}
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <View style={{ flex: 1 }}>
+                    <CustomText type="bold"   style={modalStyles.label}>تاريخ انتهاء الصلاحية</CustomText>
+                    <TextInput
+                      style={[modalStyles.input,globalStyles.input, cardErrors.cardExpiry ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                      placeholder="MM/YY"
+                      value={cardExpiry}
+                      onChangeText={text => { setCardExpiry(text); setCardErrors(e => ({ ...e, cardExpiry: undefined })); }}
+                    />
+                    {cardErrors.cardExpiry ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardExpiry}</CustomText> : null}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <CustomText type="bold" style={modalStyles.label}>رمز CVV</CustomText>
+                    <TextInput
+                      style={[globalStyles.input, cardErrors.cardCVV ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                      placeholder="123"
+                      keyboardType="numeric"
+                      value={cardCVV}
+                      // focusable={true}
+                      onChangeText={text => { setCardCVV(text); setCardErrors(e => ({ ...e, cardCVV: undefined })); }}
+                    />
+                    {cardErrors.cardCVV ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardCVV}</CustomText> : null}
+                  </View>
+                </View>
+              </>
+            ) : (
+              <View style={{flex:1 ,alignItems:'flex-end'}}>
+                <CustomText type="bold" style={[modalStyles.label , {maxWidth:'70%'}]}>هل تريد طلب تعبئة قارورات مع الدفتر وكم عدد القارورات ؟ <CustomText style={{color:'red'}}>*</CustomText></CustomText>
+                <TextInput
+                  style={[modalStyles.input , globalStyles.input, noteError ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                  placeholder="أدخل ملاحظة للتوصيل (مطلوب)"
+                  value={note}
+                  onChangeText={text => { setNote(text); setNoteError(''); }}
+                  multiline
+                />
+                {noteError ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{noteError}</CustomText> : null}
+              </View>
+            )}
+            {/* Payment Summary */}
+            <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
+            <View style={modalStyles.summaryRow}>
+              <CustomText>دفتر {selectedBook} كوبون</CustomText>
+              <CustomText>23 دينار</CustomText>
+            </View>
+            <View style={modalStyles.summaryRow}>
+              <CustomText>رسوم الشحن</CustomText>
+              <CustomText>2 دينار</CustomText>
+            </View>
+            <View style={modalStyles.summaryRow}>
+              <CustomText type="bold">الإجمالي</CustomText>
+              <CustomText type="bold" style={{ color: colors.primary }}>{selectedBook === 25 ? '25 دينار' : '50 دينار'}</CustomText>
+            </View>
+            <PrimaryButton
+              title="تأكيد الطلب"
+              style={modalStyles.confirmButton}
+              onPress={handleConfirm}
+              disabled={
+                (paymentMethod === 'card' && (
+                  !cardName.trim() ||
+                  !cardNumber.trim() ||
+                  !cardExpiry.trim() ||
+                  !cardCVV.trim()
+                )) ||
+                (paymentMethod === 'delivery' && !note.trim())
+              }
+            />
+          </ScrollView>
+        </View>
+      </Modal>
+        </View>
+
+      {/* Refill Modal */}
+      <View>
+
+      <Modal
+        visible={refillModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setRefillModalVisible(false)}
+        >
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.modalContainer, {paddingBottom: 30}]}>    
+            <TouchableOpacity style={{position: 'absolute', top: 10, left: 10, width:30, height:30, zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setRefillModalVisible(false)}>
+              <Ionicons name="close" size={22} color={colors.black} />
+            </TouchableOpacity>
+            <CustomText type="bold" style={modalStyles.title}>الرصيد الحالي</CustomText>
+            <View style={[styles.balanceCard, {marginBottom: 16}]}>        
+              <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
+              <CustomText type="bold" style={styles.balanceValue}>50</CustomText>
+            </View>
+            <CustomText type="bold" style={modalStyles.label}>عدد القارورات</CustomText>
+            <View style={{flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 16 , }}>
+              <Image source={require('../../../assets/images/bottle.png')} style={{width: 93, height: 145, marginHorizontal: 12 , resizeMode: 'cover'}} />
+              <View style={{alignItems: 'flex-end'}}>
+                <CustomText type="bold" style={{fontSize: 16}}>عبوة مياه كبيرة</CustomText>
+                <CustomText type="regular" style={{fontSize: 14}}>20 لتر</CustomText>
+                <View style={{flexDirection: 'row', alignItems: 'center' , marginTop: 15 , backgroundColor: "#F7F7F7", borderRadius: 50}}>
+                <TouchableOpacity onPress={incrementBottle} style={{backgroundColor: colors.secondary, borderRadius: 20, width: 35, height: 35, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4}}>
+                  <CustomText style={{color: '#fff', fontSize: 22}}>+</CustomText>
+                </TouchableOpacity>
+                <CustomText type="bold" style={{fontSize: 16, marginHorizontal: 8}}>{bottleCount}</CustomText>
+                <TouchableOpacity onPress={decrementBottle} style={{backgroundColor: colors.secondary, borderRadius: 20, width: 35, height: 35, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4}}>
+                  <CustomText style={{color: '#fff', fontSize: 22}}>-</CustomText>
+                </TouchableOpacity>
+              </View>
+              </View>
+              
+            </View>
+            <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
+            <View style={modalStyles.summaryRow}>
+              <CustomText>X{bottleCount}</CustomText>
+              <CustomText>عدد القارورات</CustomText>
+            </View>
+            <View style={modalStyles.summaryRow}>
+              <CustomText type="bold" style={{color: colors.primary}}>{bottleCount} كوبونات</CustomText>
+              <CustomText>عدد الكوبونات المراد سحبها</CustomText>
+            </View>
+            <PrimaryButton
+              title="طلب اعادة تعبئة"
+              style={modalStyles.confirmButton}
+              onPress={() => {
+                // handle refill logic here
+                setRefillModalVisible(false);
+              }}
+              />
+          </View>
+        </View>
+      </Modal>
+</View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  _container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
-    padding: 16,
-    direction: 'rtl',
+    // flexDirectionro
+    backgroundColor: colors.white,
+    // alignItems: 'center',
+    paddingHorizontal: 16,
+    
+  },
+  get container() {
+    return this._container;
+  },
+  set container(value) {
+    this._container = value;
   },
   balanceCard: {
     backgroundColor: colors.primaryLight,
     borderRadius: 16,
     alignItems: 'center',
+    flexDirection: 'row', 
+    justifyContent: 'center',
     paddingVertical: 24,
     marginBottom: 24,
   },
   balanceLabel: {
-    color: colors.textSecondary,
+    color: colors.black,
     fontSize: 16,
+    textAlign: 'right',
     marginBottom: 4,
+    marginTop: 20,
   },
   balanceValue: {
-    color: colors.primary,
+    color: colors.secondary,
     fontSize: 48,
     marginBottom: 2,
   },
   balanceUnit: {
-    color: colors.textSecondary,
+    color: colors.secondary,
     fontSize: 16,
+    marginRight: 5,
+    marginTop: 5,
   },
   sectionTitle: {
     fontSize: 18,
@@ -85,7 +353,7 @@ const styles = StyleSheet.create({
   couponBookCard: {
     backgroundColor: colors.white,
     borderRadius: 12,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     marginBottom: 12,
@@ -93,9 +361,11 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   buyButton: {
-    width: 100,
+    // width: 100,
     height: 40,
     marginLeft: 12,
+    paddingHorizontal: 20,
+    borderRadius: 50,
   },
   couponBookText: {
     flex: 1,
@@ -119,32 +389,143 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   bottleImage: {
-    width: 100,
-    height: 120,
+    width: "100%",
+    height: 166,
     resizeMode: 'contain',
     marginBottom: 12,
   },
   bottleInfo: {
     alignItems: 'center',
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     marginBottom: 12,
+    width: '100%',
   },
   bottleTitle: {
     fontSize: 16,
     color: colors.textPrimary,
     marginBottom: 2,
+    textAlign: 'right',
   },
   bottleSize: {
     fontSize: 14,
     color: colors.textSecondary,
     marginBottom: 2,
+    textAlign: 'right',
   },
   bottleCoupon: {
-    fontSize: 15,
+    fontSize: 18,
     color: colors.primary,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   refillButton: {
     width: '100%',
-    height: 44,
+    height: 45,
+    borderRadius: 50,
+  },
+}); 
+
+const modalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+    // alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: colors.white,
+    padding: 20,
+    borderRadius: 10,
+    // alignItems: "flex-end",
+    // width: '100%',
+    // flex:1,
+    // maxHeight: '100%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  title: {
+    fontSize: 18,
+    color: colors.textPrimary,
+    marginBottom: 20,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  label: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    marginBottom: 8,
+    marginTop: 12,  marginBottom:10,
+    textAlign: 'right',
+    // maxWidth: '80%',
+  },
+  addressBox: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'flex-end',
+    marginBottom: 20,
+  },
+  mapImage: {
+    width: '100%',
+    height: 100,
+    resizeMode: 'contain',
+    marginTop: 12,
+  },
+  paymentBox: {
+    // flexDirection: 'row',
+    // justifyContent: 'space-between',
+    alignItems: "flex-end",
+    marginBottom: 20,
+  },
+  radioRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: "flex-end",
+    paddingVertical: 15,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 15,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: colors.textPrimary,
+    marginRight: 8,
+  },
+  input: {
+    backgroundColor: colors.primaryLight,
+    padding: 30,
+    borderRadius: 8,
+    marginBottom: 12,
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    color: colors.textPrimary,
+    marginBottom: 12,
+    marginTop: 20,
+    textAlign: 'right',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  confirmButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 50,
+    marginTop: 20,
   },
 }); 
