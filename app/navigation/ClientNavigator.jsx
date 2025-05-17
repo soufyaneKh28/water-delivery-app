@@ -5,6 +5,7 @@ import { Image, View } from 'react-native';
 
 // Import client screens
 import CustomText from '../components/common/CustomText';
+import AddLocationScreen from '../screens/client/AddLocationScreen';
 import CartScreen from '../screens/client/CartScreen';
 import ContactScreen from '../screens/client/ContactScreen';
 import CouponsScreen from '../screens/client/CouponsScreen';
@@ -174,6 +175,11 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="Terms"
         component={TermsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="AddLocation"
+        component={AddLocationScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
