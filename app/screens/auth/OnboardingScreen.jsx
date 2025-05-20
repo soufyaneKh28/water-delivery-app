@@ -9,10 +9,10 @@ import {
   Image,
   PanResponder,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View
 } from "react-native"
+import CustomText from "../../components/common/CustomText"
 
 const { width, height } = Dimensions.get("window")
 const statusBarHeight = Constants.statusBarHeight
@@ -226,8 +226,8 @@ export default function OnboardingScreen({ navigation }) {
             },
           ]}
         >
-          <Text style={styles.title}>{currentItem.title}</Text>
-          <Text style={styles.description}>{currentItem.description}</Text>
+          <CustomText type="bold" style={styles.title}>{currentItem.title}</CustomText>
+          <CustomText style={styles.description}>{currentItem.description}</CustomText>
 
           <View style={styles.paginationContainer}>
             {onboardingData.map((_, idx) => (
@@ -248,18 +248,18 @@ export default function OnboardingScreen({ navigation }) {
                 onPress={handlePrevious}
                 disabled={isAnimating}
               >
-                <Text style={styles.navButtonText}>السابق</Text>
+                <CustomText type="bold" style={styles.navButtonText}>السابق</CustomText>
               </TouchableOpacity>
             )}
 
             <TouchableOpacity style={[styles.navButton, styles.nextButton]} onPress={handleNext} disabled={isAnimating}>
-              <Text style={styles.buttonText}>{currentItem.buttonText}</Text>
+              <CustomText type="bold" style={styles.buttonText}>{currentItem.buttonText}</CustomText>
             </TouchableOpacity>
           </View>
 
           {currentItem.skipText ? (
             <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={isAnimating}>
-              <Text style={styles.skipText}>{currentItem.skipText}</Text>
+              <CustomText type="bold" style={styles.skipText}>{currentItem.skipText}</CustomText>
             </TouchableOpacity>
           ) : null}
 
@@ -298,12 +298,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     marginTop: -20,
     paddingHorizontal: 30,
-    paddingTop: 30,
+    paddingTop: 20,
     alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    // fontWeight: "bold",
     marginBottom: 15,
     textAlign: "center",
     color: "#333",
@@ -334,7 +334,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#E0E0E0",
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: "row-reverse",
+    gap: 10,
     justifyContent: "space-between",
     width: "100%",
     marginBottom: 15,
@@ -359,12 +360,12 @@ const styles = StyleSheet.create({
   navButtonText: {
     color: "#333",
     fontSize: 18,
-    fontWeight: "bold",
+    // fontWeight: "bold",
   },
   buttonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "bold",
+    // fontWeight: "bold",
   },
   skipButton: {
     paddingVertical: 15,
@@ -378,7 +379,7 @@ const styles = StyleSheet.create({
   skipText: {
     color: "#0078D7",
     fontSize: 18,
-    fontWeight: "bold",
+    // fontWeight: "bold",
   },
   bottomIndicator: {
     width: 100,
