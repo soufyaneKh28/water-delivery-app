@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   Modal,
@@ -14,7 +13,6 @@ import {
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
-import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 const MENU_ITEMS = [
@@ -82,13 +80,13 @@ export default function ProfileScreen() {
     logout();
   };
 
-  if (loading) {
-    return (
-      <View style={[globalStyles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <View style={[globalStyles.container, styles.loadingContainer]}>
+  //       <ActivityIndicator size="large" color={colors.primary} />
+  //     </View>
+  //   );
+  // }
 
   return (
     <>
