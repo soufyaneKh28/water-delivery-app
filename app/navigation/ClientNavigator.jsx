@@ -7,17 +7,20 @@ import { Image, View } from 'react-native';
 import CustomText from '../components/common/CustomText';
 import AddLocationScreen from '../screens/client/AddLocationScreen';
 import CartScreen from '../screens/client/CartScreen';
+import CategoryScreen from '../screens/client/CategoryScreen';
+import CheckoutScreen from '../screens/client/CheckoutScreen';
 import ContactScreen from '../screens/client/ContactScreen';
 import CouponsScreen from '../screens/client/CouponsScreen';
 import EditProfileScreen from '../screens/client/EditProfileScreen';
 import FAQScreen from '../screens/client/FAQScreen';
 import HomeScreen from '../screens/client/Home';
+import MapScreen from '../screens/client/MapScreen';
+import MyOrdersScreen from '../screens/client/MyOrdersScreen';
 import ProductDetailsScreen from '../screens/client/ProductDetailsScreen';
 import ProfileScreen from '../screens/client/ProfileScreen';
 import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
 import TermsScreen from '../screens/client/TermsScreen';
 import { colors } from '../styling/colors';
-import MapScreen from '../screens/client/MapScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -184,8 +187,23 @@ export default function ClientNavigator() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="Category"
+        component={CategoryScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="MapAddLocation"
         component={MapScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Checkout"
+        component={CheckoutScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MyOrders"
+        component={MyOrdersScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

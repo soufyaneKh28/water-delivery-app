@@ -14,10 +14,16 @@ import { colors } from '../../styling/colors';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
 // import * as React from "react";
+
+const addresses = [
+  { label: 'New Home', address: '759 Ashcraft Court San Diego\nSan Diego' , id: 1},
+  { label: 'Work', address: '759 Ashcraft Court San Diego\nSan Diego' , id: 2},
+];
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState('New Home');
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
   const navigation = useNavigation();
 
   const defaultDataWith6Colors = [
@@ -52,10 +58,7 @@ const images = [
     // { id: 4, title: 'مياه فوارة', image: require('../../../assets/images/offer1.png') },
   ];
 
-  const addresses = [
-    { label: 'New Home', address: '759 Ashcraft Court San Diego\nSan Diego' },
-    { label: 'Work', address: '759 Ashcraft Court San Diego\nSan Diego' },
-  ];
+
 
   const handleLogout = async () => {
     try {
@@ -66,7 +69,11 @@ const images = [
   };
 
   const handleLocationButtonPress = () => {
-    setAddressModalVisible(true);
+    if ( savedAddresses?.length > 0) {
+      setAddressModalVisible(true);
+    } else {
+      navigation.navigate('MapAddLocation');
+    }
   };
 
   const handleSelectAddress = (label) => {
@@ -79,20 +86,47 @@ const images = [
     navigation.navigate('MapAddLocation');
   };
 
+  const handleCategoryPress = (category) => {
+    navigation.navigate('Category', { category });
+  };
+
+  const renderLocationButton = () => {
+    if (savedAddresses?.length === 0) {
+      return (
+        <TouchableOpacity 
+          style={[styles.locationButton, styles.addLocationButton]} 
+          onPress={() => navigation.navigate('MapAddLocation')}
+        >
+          <View style={styles.addLocationContent}>
+            <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24, objectFit: 'cover'}} />
+            <CustomText type="bold" style={styles.addLocationText}>أضف عنوان التوصيل</CustomText>
+            <Ionicons name="add-circle" size={24} color={colors.primary} />
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity style={styles.locationButton} onPress={handleLocationButtonPress}>
+        <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24, objectFit: 'cover'}} />
+        <View style={{flex: 1, textAlign: 'right', alignItems: 'flex-end'}}>
+          <CustomText type="regular" style={styles.locationText}>تسليم إلى</CustomText>
+          <CustomText type="bold" style={styles.locationTextMain}>
+            {selectedAddress ? selectedAddress.address : 'اختر عنوان التوصيل'}
+          </CustomText>
+        </View>
+        <Image source={require('../../../assets/icons/arrow-down.png')} style={{width: 24, height: 24, objectFit: 'cover'}} />
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
      <StatusBar style="light" backgroundColor="#1B7CC8" />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
         <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -150, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
-         <TouchableOpacity style={styles.locationButton} onPress={handleLocationButtonPress}>
-            <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24 , objectFit: 'cover'}} />
-            <View style={{flex: 1 , textAlign: 'right' , alignItems: 'flex-end'}}>
-              <CustomText type="regular" style={styles.locationText}>تسليم إلى</CustomText>
-              <CustomText type="bold" style={styles.locationTextMain}>{selectedAddress === 'New Home' ? '759 Ashcraft Court San Diego' : '759 Ashcraft Court San Diego'}</CustomText>
-            </View>
-            <Image source={require('../../../assets/icons/arrow-down.png')} style={{width: 24, height: 24 , objectFit: 'cover'}} />
-         </TouchableOpacity>
+          {renderLocationButton()}
         </View>
 
         {/* Offers Carousel */}
@@ -141,7 +175,11 @@ const images = [
             style={styles.categoriesScroll}
           >
             {categories.map((category) => (
-              <TouchableOpacity key={category.id} style={styles.categoryCard}>
+              <TouchableOpacity 
+                key={category.id} 
+                style={styles.categoryCard}
+                onPress={() => handleCategoryPress(category)}
+              >
                 <View style={styles.categoryImage}>
                   <Image source={category.image} style={{width: 37, height: 37 , borderRadius: 50}} />
                 </View>  
@@ -206,19 +244,22 @@ const images = [
             {/* <View style={{ width: 40, height: 4, backgroundColor: '#ccc', borderRadius: 2, marginBottom: 8 }} /> */}
             <CustomText type="bold" style={{ fontSize: 18 }}>عنوان التوصيل</CustomText>
           </View>
-          {addresses.map((item, idx) => (
+          {savedAddresses.map((address) => (
             <TouchableOpacity
-            key={item.label}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress === item.label ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10 }}
-            onPress={() => handleSelectAddress(item.label)}
+            key={address.id}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10 }}
+            onPress={() => {
+              setSelectedAddress(address);
+              setAddressModalVisible(false);
+            }}
             >
               <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 12 }} />
               <View style={{ flex: 1  , alignItems: 'flex-end'}}>
-                <CustomText type="bold" style={{ fontSize: 16  , textAlign: 'right'}}>{item.label}</CustomText>
-                <CustomText type="regular" style={{ fontSize: 13, color: '#888' , textAlign: 'right'}}>{item.address}</CustomText>
+                <CustomText type="bold" style={{ fontSize: 16  , textAlign: 'right'}}>{address.label}</CustomText>
+                <CustomText type="regular" style={{ fontSize: 13, color: '#888' , textAlign: 'right'}}>{address.address}</CustomText>
               </View>
               <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#BFD6F6', alignItems: 'center', justifyContent: 'center', marginLeft: 8 }}>
-                {selectedAddress === item.label && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#BFD6F6' }} />}
+                {selectedAddress?.id === address.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#BFD6F6' }} />}
               </View>
             </TouchableOpacity>
           ))}
@@ -261,7 +302,7 @@ const styles = StyleSheet.create({
     width: "100%",
     // height: 40,
     paddingHorizontal: 13,
-    paddingVertical: 7,
+    paddingVertical: 10,
     backgroundColor: colors.white,
     borderRadius: 10,
     flexDirection: 'row-reverse',
@@ -436,6 +477,19 @@ const styles = StyleSheet.create({
     rowGap:15,
     flexWrap: 'wrap',
     alignItems: 'center',
+  },
+  addLocationButton: {
+    backgroundColor: colors.primaryLight,
+  },
+  addLocationContent: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  addLocationText: {
+    color: colors.primary,
+    fontSize: 16,
   },
 }); 
 

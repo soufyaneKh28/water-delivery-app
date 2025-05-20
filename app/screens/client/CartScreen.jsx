@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import CustomText from '../../components/common/CustomText';
@@ -33,6 +34,7 @@ const cartDataInit = [
 
 export default function CartScreen() {
   const [cart, setCart] = useState(cartDataInit);
+  const navigation = useNavigation();
 
   const handleQuantity = (id, delta) => {
     setCart(prev => prev.map(item =>
@@ -100,7 +102,7 @@ export default function CartScreen() {
           <CustomText style={[styles.summaryLabel, { color: colors.primary }]}>الإجمالي</CustomText>
           <CustomText style={[styles.summaryValue, { color: colors.primary }]}>${total.toFixed(0)}</CustomText>
         </View>
-        <PrimaryButton title="تأكيد السلة" style={styles.confirmBtn} onPress={() => {}} />
+        <PrimaryButton title="تأكيد السلة" style={styles.confirmBtn} onPress={() => navigation.navigate('Checkout', { cart, subtotal, shipping, total })} />
       </View>
     </View>
   );

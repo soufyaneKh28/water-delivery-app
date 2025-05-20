@@ -2,14 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -218,7 +218,9 @@ export default function ProfileScreen() {
               style={styles.menuItem}
               activeOpacity={0.7}
               onPress={() => {
-                if (item.screen === 'FAQ') {
+                if (item.label === 'طلباتي') {
+                  navigation.navigate('MyOrders');
+                } else if (item.screen === 'FAQ') {
                   navigation.navigate('ClientFAQ');
                 } else if (item.screen === 'Security') {
                   navigation.navigate('ResetPassword');
