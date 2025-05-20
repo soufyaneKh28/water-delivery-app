@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 // import BackButton from '../../components/common/BackButton';
 // import BackButton from '../../components/common/BackButton';
 import BackBtn from '../../components/common/BackButton';
@@ -24,6 +24,8 @@ const statusLabels = {
 export default function OrderDetails({ route, navigation }) {
   const { order } = route.params;
   const [isUpdating, setIsUpdating] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState(order.status);
 
   const handleStatusChange = (newStatus) => {
     setIsUpdating(true);
@@ -75,12 +77,65 @@ export default function OrderDetails({ route, navigation }) {
         <View style={styles.divider} />
         <View style={styles.statusRow}>
           <CustomText style={styles.detailLabel}>حالة الطلب</CustomText>
-          <TouchableOpacity style={styles.statusButton}>
+          <TouchableOpacity style={styles.statusButton} onPress={() => setModalVisible(true)}>
             <Ionicons name="chevron-down" size={20} color="#262626" style={{ marginLeft: 8 }} />
             <CustomText style={styles.statusButtonText}>{statusLabels[order.status] || 'غير معروف'}</CustomText>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      {/* Modal for changing order status */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHandle} />
+            <CustomText type="bold" style={styles.modalTitle}>حالة الطلب</CustomText>
+            {Object.entries(statusLabels).map(([key, label]) => (
+              <Pressable
+                key={key}
+                style={[
+                  styles.statusOption,
+                  key === selectedStatus && styles.selectedStatusOption,
+                  key === 'delivered' && styles.deliveredStatus,
+                  key === 'pending' && styles.pendingStatus,
+                  key === 'accepted' && styles.acceptedStatus,
+                  key === 'cancelled' && styles.cancelledStatus,
+                ]}
+                onPress={() => setSelectedStatus(key)}
+              >
+                <CustomText style={[
+                  styles.statusOptionText,
+                  key === selectedStatus && styles.selectedStatusOptionText,
+                  key === 'delivered' && { color: '#2E7D32' },
+                  key === 'pending' && { color: '#FF9800' },
+                  key === 'accepted' && { color: '#2196F3' },
+                  key === 'cancelled' && { color: '#F44336' },
+                ]}>
+                  {label}
+                </CustomText>
+              </Pressable>
+            ))}
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={() => {
+                setModalVisible(false);
+                handleStatusChange(selectedStatus);
+              }}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <CustomText style={styles.updateButtonText}>تعديل حالة الطلب</CustomText>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -158,5 +213,81 @@ const styles = StyleSheet.create({
     color: '#262626',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 32,
+    alignItems: 'center',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statusOption: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#eee',
+    marginBottom: 10,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  selectedStatusOption: {
+    borderWidth: 2,
+    borderColor: '#2196F3',
+    backgroundColor: '#E3F2FD',
+  },
+  statusOptionText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  deliveredStatus: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E9',
+  },
+  pendingStatus: {
+    borderColor: '#FF9800',
+    backgroundColor: '#FFF3E0',
+  },
+  acceptedStatus: {
+    borderColor: '#2196F3',
+    backgroundColor: '#E3F2FD',
+  },
+  cancelledStatus: {
+    borderColor: '#F44336',
+    backgroundColor: '#FFEBEE',
+  },
+  updateButton: {
+    width: '100%',
+    backgroundColor: '#2196F3',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  updateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
