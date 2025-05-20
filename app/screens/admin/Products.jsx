@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -123,7 +122,7 @@ export default function Products() {
     : mockProducts.filter(product => product.category === selectedFilter);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View  style={styles.container}>
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
@@ -250,7 +249,7 @@ export default function Products() {
           </View>
         </Animated.View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 

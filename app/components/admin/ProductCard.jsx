@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     borderWidth: 1,
     borderColor: '#EEEEEE',
-    width: '48%',
+    width: '100%',
     position: 'relative',
   },
   menuButton: {

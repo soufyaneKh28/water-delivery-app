@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Animated, Dimensions, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import CustomText from '../../components/common/CustomText';
+import { colors } from '../../styling/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // const FILTER_WIDTH = SCREEN_WIDTH * 0.33;
@@ -62,7 +62,17 @@ const statusLabels = {
 
 const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Simulate a network request
+    setTimeout(() => {
+      // Here you would typically fetch new orders data
+      setRefreshing(false);
+    }, 2000);
+  }, []);
 
   const filteredOrders = selectedStatus === 'all'
     ? mockOrders
@@ -87,8 +97,19 @@ const Orders = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <ScrollView 
+        contentContainerStyle={{ paddingBottom: 100 }} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} // Android
+            tintColor={colors.primary} // iOS
+          />
+        }
+      >
         {/* Top Card */}
         <View >
         <LinearGradient
@@ -179,7 +200,7 @@ const Orders = () => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
