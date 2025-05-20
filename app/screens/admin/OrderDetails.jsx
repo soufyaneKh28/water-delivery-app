@@ -37,52 +37,42 @@ export default function OrderDetails({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
-
         <BackBtn/>
         <CustomText type="bold" style={styles.headerTitle}>تفاصيل الطلب</CustomText>
-        <View style={{ width: 28 }} /> {/* Placeholder for symmetry */}
+        <View style={{ width: 28 }} />
       </View>
-
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>رقم الطلب</CustomText>
           <CustomText style={styles.detailValue}>#{order.id || 'غير معروف'}</CustomText>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>تاريخ الطلب</CustomText>
           <CustomText style={styles.detailValue}>{order.date || 'غير معروف'} - {order.time || 'غير معروف' }</CustomText>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>الطلب</CustomText>
           <CustomText style={styles.detailValue}>{order.title || 'غير معروف' }</CustomText>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>اسم العميل</CustomText>
           <CustomText style={styles.detailValue}>{order.customerName || 'غير معروف'}</CustomText>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>الموقع</CustomText>
           <CustomText style={styles.detailValue}>{order.address || 'غير معروف'}</CustomText>
         </View>
         <View style={styles.divider} />
-
         <View style={styles.detailRow}>
-          <CustomText style={styles.detailLabel}>المبلغ الإجمالي</CustomText>
-          <CustomText style={styles.detailValue}>{order.price || 'غير معروف'} دولار</CustomText>
+           <CustomText style={styles.detailLabel}>المبلغ الإجمالي</CustomText>
+          <CustomText style={styles.detailValue}>{order.price || 'غير معروف'} دولار</CustomText> 
         </View>
         <View style={styles.divider} />
-
-        {/* Status Button */}
         <View style={styles.statusRow}>
           <CustomText style={styles.detailLabel}>حالة الطلب</CustomText>
           <TouchableOpacity style={styles.statusButton}>
@@ -127,7 +117,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: '#fff',
   },
   detailLabel: {
@@ -151,6 +141,7 @@ const styles = StyleSheet.create({
   statusRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 24,
     marginTop: 12,
