@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
@@ -79,7 +79,7 @@ export default function AddLocationScreen({ route, navigation }) {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <BackButton />
+          <BackBtn />
           <CustomText type="bold" style={styles.headerTitle}>إضافة عنوان جديد</CustomText>
           <View style={{ width: 40 }} />
         </View>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -44,7 +44,7 @@ export default function OrderDetailsScreen({ route, navigation }) {
       >
         {/* Header */}
         <View style={styles.headerRow}>
-          <BackButton />
+          <BackBtn />
           <CustomText type="bold" style={styles.title}>تفاصيل الطلب</CustomText>
           <View style={{ width: 42 }} />
         </View>

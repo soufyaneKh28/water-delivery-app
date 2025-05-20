@@ -1,7 +1,7 @@
 import { AntDesign, Feather } from '@expo/vector-icons';
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
@@ -16,7 +16,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         <TouchableOpacity style={styles.iconButton}>
           <Feather name="share-2" size={22} color={colors.secondary}/>
         </TouchableOpacity>
-        <BackButton/>
+        <BackBtn/>
       </View>
       {/* Product Image */}
       <Image source={image} style={styles.productImage} resizeMode="contain" />

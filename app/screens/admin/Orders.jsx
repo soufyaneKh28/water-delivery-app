@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -61,6 +62,7 @@ const statusLabels = {
 };
 
 const Orders = () => {
+  const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -94,6 +96,10 @@ const Orders = () => {
         useNativeDriver: true,
       }).start();
     });
+  };
+
+  const handleOrderPress = (order) => {
+    navigation.navigate('OrderDetails', { order });
   };
 
   return (
@@ -189,7 +195,10 @@ const Orders = () => {
                   <CustomText type='medium' style={styles.orderDate}>{item.date} - {item.time}</CustomText>
                   <CustomText type='medium' style={styles.orderAddress}>{item.address}</CustomText>
                   <View style={styles.orderFooter}>
-                    <TouchableOpacity style={styles.menuButton}>
+                    <TouchableOpacity 
+                      style={styles.menuButton}
+                      onPress={() => handleOrderPress(item)}
+                    >
                       <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
                     </TouchableOpacity>
                     <CustomText type='bold' style={styles.orderPrice}>{item.price} دينار</CustomText>

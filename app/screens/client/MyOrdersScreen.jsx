@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import OrderCard from '../../components/client/OrderCard';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -45,7 +45,7 @@ export default function MyOrdersScreen({ navigation }) {
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.headerRow}>
-          <BackButton />
+          <BackBtn />
           <CustomText type="bold" style={styles.title}>طلباتي</CustomText>
           <View style={{ width: 42 }} />
         </View>

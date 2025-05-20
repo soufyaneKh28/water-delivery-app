@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -13,7 +13,7 @@ export default function TermsScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <BackButton />
+        <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>الشروط والأحكام</CustomText>
         <View style={{ width: 40 }} />
       </View>

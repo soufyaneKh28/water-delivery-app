@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
-import BackButton from "../../components/common/BackButton";
+import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../styling/colors";
@@ -102,7 +102,7 @@ export default function EditProfileScreen({ navigation }) {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
-        <BackButton />
+        <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>حسابي</CustomText>
         <View style={{ width: 40 }} />
       </View>

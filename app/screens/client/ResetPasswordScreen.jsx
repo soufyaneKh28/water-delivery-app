@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
@@ -24,7 +24,7 @@ export default function ResetPasswordScreen({ navigation }) {
         {/* Header */}
          {/* Header */}
       <View style={styles.header}>
-       <BackButton />
+       <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>الأمان</CustomText>
         <View style={{  width: 40 , height: 40}} />
       </View>

@@ -7,6 +7,7 @@ import CustomText from '../components/common/CustomText';
 // Import admin screens
 import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
+import OrderDetails from '../screens/admin/OrderDetails';
 import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
 import Profile from '../screens/admin/Profile';
@@ -136,6 +137,11 @@ export default function AdminNavigator() {
       <Stack.Screen 
         name="AddProduct" 
         component={AddProduct} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="OrderDetails" 
+        component={OrderDetails} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

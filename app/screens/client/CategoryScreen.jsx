@@ -2,7 +2,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import ProductCard from '../../components/client/ProductCard';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -41,7 +41,7 @@ const CategoryScreen = () => {
       <View style={styles.header}>
         <CustomText type="bold" style={styles.title}>{category.title}</CustomText>
       
-         <BackButton />
+         <BackBtn />
        
       </View>
 

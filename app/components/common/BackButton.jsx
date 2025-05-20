@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, TouchableOpacity } from 'react-native';
 
-const BackButton = ({ color = '#222', size = 28, style = {} }) => {
+const BackBtn = ({ color = '#222', size = 28, style = {} }) => {
   const navigation = useNavigation();
   return (
     <TouchableOpacity
@@ -16,4 +16,4 @@ const BackButton = ({ color = '#222', size = 28, style = {} }) => {
   );
 };
 
-export default BackButton; 
+export default BackBtn; 

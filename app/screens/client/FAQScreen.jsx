@@ -1,17 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -107,7 +107,7 @@ export default function FAQScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <BackButton />
+        <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>
           الأسئلة الشائعة
         </CustomText>

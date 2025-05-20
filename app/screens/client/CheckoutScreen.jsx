@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import BackButton from '../../components/common/BackButton';
+import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
@@ -44,7 +44,7 @@ export default function CheckoutScreen({ route, navigation }) {
           {/* <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="chevron-back" size={26} color={colors.textPrimary} />
           </TouchableOpacity> */}
-          <BackButton />
+          <BackBtn />
           <CustomText type="bold" style={styles.title}>إتمام الدفع</CustomText>
           <View style={{ width: 42 }} />
         </View>
