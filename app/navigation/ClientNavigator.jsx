@@ -17,6 +17,7 @@ import ProfileScreen from '../screens/client/ProfileScreen';
 import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
 import TermsScreen from '../screens/client/TermsScreen';
 import { colors } from '../styling/colors';
+import MapScreen from '../screens/client/MapScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -180,6 +181,11 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="AddLocation"
         component={AddLocationScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="MapAddLocation"
+        component={MapScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

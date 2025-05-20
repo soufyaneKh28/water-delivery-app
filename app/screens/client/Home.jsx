@@ -76,7 +76,7 @@ const images = [
 
   const handleAddLocation = () => {
     setAddressModalVisible(false);
-    navigation.navigate('AddLocation');
+    navigation.navigate('MapAddLocation');
   };
 
   return (
