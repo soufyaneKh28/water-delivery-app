@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import OrderCard from '../../components/client/OrderCard';
 import BackButton from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -35,6 +36,10 @@ const statusMap = {
 };
 
 export default function MyOrdersScreen({ navigation }) {
+  const handleOrderPress = (order) => {
+    navigation.navigate('OrderDetails', { orderId: order.id });
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
@@ -46,22 +51,11 @@ export default function MyOrdersScreen({ navigation }) {
         </View>
         <CustomText type="bold" style={styles.sectionTitle}>سجل الطلبات</CustomText>
         {orders.map(order => (
-          <View key={order.id} style={styles.orderCard}>
-            <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between' }}>
-              <TouchableOpacity>
-                <CustomText style={styles.arrow}>{'<'}</CustomText>
-              </TouchableOpacity>
-              <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <CustomText type="bold" style={styles.orderTitle}>{order.title}</CustomText>
-                <CustomText style={styles.orderDate}>تم الطلب بتاريخ: {order.date} - {order.time}</CustomText>
-              </View>
-            </View>
-            <View style={{ alignItems: 'flex-end', marginTop: 8 }}>
-              <View style={[styles.statusBtn, { backgroundColor: statusMap[order.status].color }] }>
-                <CustomText style={styles.statusText}>{statusMap[order.status].label}</CustomText>
-              </View>
-            </View>
-          </View>
+          <OrderCard 
+            key={order.id}
+            order={order}
+            onPress={() => handleOrderPress(order)}
+          />
         ))}
       </ScrollView>
     </View>
@@ -92,42 +86,5 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginBottom: 16,
     textAlign: 'right',
-  },
-  orderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    padding: 16,
-    marginBottom: 16,
-  },
-  orderTitle: {
-    fontSize: 16,
-    color: colors.textPrimary,
-    marginBottom: 4,
-    textAlign: 'right',
-  },
-  orderDate: {
-    fontSize: 13,
-    color: '#888',
-    textAlign: 'right',
-  },
-  statusBtn: {
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 18,
-    alignSelf: 'flex-end',
-  },
-  statusText: {
-    color: '#222',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-  arrow: {
-    fontSize: 22,
-    color: '#888',
-    marginLeft: 8,
-    marginRight: 8,
   },
 }); 
