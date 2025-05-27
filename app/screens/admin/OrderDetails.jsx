@@ -107,7 +107,7 @@ export default function OrderDetails({ route, navigation }) {
                 ]}
                 onPress={() => setSelectedStatus(key)}
               >
-                <CustomText style={[
+                <CustomText type='bold' style={[
                   styles.statusOptionText,
                   key === selectedStatus && styles.selectedStatusOptionText,
                   key === 'delivered' && { color: '#2E7D32' },
@@ -130,7 +130,7 @@ export default function OrderDetails({ route, navigation }) {
               {isUpdating ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <CustomText style={styles.updateButtonText}>تعديل حالة الطلب</CustomText>
+                <CustomText type='bold' style={styles.updateButtonText}>تعديل حالة الطلب</CustomText>
               )}
             </TouchableOpacity>
           </View>
@@ -255,27 +255,23 @@ const styles = StyleSheet.create({
   selectedStatusOption: {
     borderWidth: 2,
     borderColor: '#2196F3',
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#E5F1FF',
   },
   statusOptionText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   deliveredStatus: {
     borderColor: '#4CAF50',
-    backgroundColor: '#E8F5E9',
   },
   pendingStatus: {
     borderColor: '#FF9800',
-    backgroundColor: '#FFF3E0',
   },
   acceptedStatus: {
     borderColor: '#2196F3',
-    backgroundColor: '#E3F2FD',
   },
   cancelledStatus: {
     borderColor: '#F44336',
-    backgroundColor: '#FFEBEE',
   },
   updateButton: {
     width: '100%',
@@ -288,6 +284,6 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
 }); 

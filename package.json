@@ -26,6 +26,7 @@
     "expo-font": "^13.0.4",
     "expo-haptics": "^14.0.1",
     "expo-image": "^2.0.7",
+    "expo-image-picker": "~16.0.6",
     "expo-linear-gradient": "~14.0.2",
     "expo-linking": "^7.0.5",
     "expo-localization": "~16.0.1",
@@ -48,7 +49,8 @@
     "react-native-svg": "^15.11.2",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "^0.19.13",
-    "react-native-webview": "^13.12.5"
+    "react-native-webview": "^13.12.5",
+    "@react-native-picker/picker": "2.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

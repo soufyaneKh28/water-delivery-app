@@ -2,10 +2,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
@@ -23,8 +24,9 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [savedAddresses, setSavedAddresses] = useState(addresses);
   const navigation = useNavigation();
+  const [categories, setCategories] = useState([]);
 
   const defaultDataWith6Colors = [
     "#B0604D",
@@ -50,15 +52,6 @@ const images = [
     { id: 2, image: require('../../../assets/images/offer1.png') },
     { id: 3, image: require('../../../assets/images/offer1.png') },
   ];
-
-  const categories = [
-    { id: 1, title: 'مياه معدنية', image: require('../../../assets/images/category-1.png') },
-    { id: 2, title: 'مياه نقية', image: require('../../../assets/images/category-1.png') },
-    // { id: 3, title: 'مياه غازية', image: require('../../../assets/images/offer1.png') },
-    // { id: 4, title: 'مياه فوارة', image: require('../../../assets/images/offer1.png') },
-  ];
-
-
 
   const handleLogout = async () => {
     try {
@@ -89,6 +82,23 @@ const images = [
   const handleCategoryPress = (category) => {
     navigation.navigate('Category', { category });
   };
+
+  const getCategories = async () => {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .select('*')
+      .order('created_at', { ascending: false }); // Optional: order by created_at
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return;
+    }
+    setCategories(data);
+  };
+
+  useEffect(() => {
+    getCategories();
+  }, []);
 
   const renderLocationButton = () => {
     if (savedAddresses?.length === 0) {

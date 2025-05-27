@@ -202,9 +202,15 @@ export default function Products() {
         <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
           <View style={styles.modalContent}>
             <CustomText type="bold" style={styles.modalTitle}>إضافة جديدة</CustomText>
-            <CustomText style={styles.modalSubtitle}>يرجى اختيار ما تريد إضافته.</CustomText>
+            <CustomText type='regular' style={styles.modalSubtitle}>يرجى اختيار ما تريد إضافته.</CustomText>
             <View style={styles.modalButtonsRow}>
-              <TouchableOpacity style={styles.modalButton}>
+              <TouchableOpacity 
+                style={styles.modalButton}
+                onPress={() => {
+                  setModalVisible(false);
+                  navigation.navigate('AddCategory');
+                }}
+              >
                 <Ionicons name="grid-outline" size={28} color="#2196F3" />
                 <CustomText style={styles.modalButtonText}>إضافة قسم</CustomText>
               </TouchableOpacity>
@@ -269,7 +275,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     color: '#222',
   },
   addButton: {
@@ -341,7 +347,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     marginBottom: 8,
   },
   modalSubtitle: {
@@ -365,7 +371,7 @@ const styles = StyleSheet.create({
   modalButtonText: {
     marginTop: 8,
     color: '#222',
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   closeBar: {
     width: 40,

@@ -5,12 +5,15 @@ import { I18nManager, Image, View } from 'react-native';
 import CustomText from '../components/common/CustomText';
 
 // Import admin screens
+import AddCategory from '../screens/admin/AddCategory';
 import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
+import EditProfile from '../screens/admin/EditProfile';
 import OrderDetails from '../screens/admin/OrderDetails';
 import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
 import Profile from '../screens/admin/Profile';
+import Security from '../screens/admin/Security';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -142,6 +145,21 @@ export default function AdminNavigator() {
       <Stack.Screen 
         name="OrderDetails" 
         component={OrderDetails} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="AddCategory" 
+        component={AddCategory} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="EditProfile" 
+        component={EditProfile} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Security" 
+        component={Security} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

@@ -11,7 +11,7 @@ export const globalStyles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 8,
     
-    textAlign: 'right',
+    textAlign: 'left',
   },
   input: {
     backgroundColor: colors.white,
