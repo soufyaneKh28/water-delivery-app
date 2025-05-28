@@ -3,6 +3,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -66,19 +67,35 @@ const Orders = () => {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const [orders, setOrders] = useState([]);
 
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      *,
+      location_id:locations (*)
+    `)
+    .order('created_at', { ascending: false });
+  
+
+    console.log("orders",data);
+    if (!error) setOrders(data || []);
+  };
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  console.log(orders);
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Simulate a network request
-    setTimeout(() => {
-      // Here you would typically fetch new orders data
-      setRefreshing(false);
-    }, 2000);
+    fetchOrders().finally(() => setRefreshing(false));
   }, []);
 
   const filteredOrders = selectedStatus === 'all'
-    ? mockOrders
-    : mockOrders.filter(order => order.status === selectedStatus);
+    ? orders
+    : orders.filter(order => order.status === selectedStatus);
 
   const handleFilterChange = (status) => {
     // Fade out

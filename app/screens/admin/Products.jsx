@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -11,11 +12,6 @@ const CARD_GAP = 15;
 const CARD_PADDING = 24; // 12px padding on each side
 const CARD_WIDTH = (SCREEN_WIDTH - CARD_GAP - CARD_PADDING) / 2;
 
-const filters = [
-  { label: 'كل المنتجات', value: 'all' },
-  { label: 'عبوات كبيرة', value: 'large' },
-  { label: 'مياه معبأة', value: 'bottled' },
-];
 
 const mockProducts = [
   {
@@ -54,7 +50,20 @@ export default function Products() {
   const productActionOverlayOpacity = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const navigation = useNavigation();
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [products, setProducts] = useState([]);
 
+
+  const filters = [
+    { label: 'كل المنتجات', value: 'all' },
+    ...categories.map(cat => ({
+      label: cat.title,
+      value: cat.id,
+      image_url: cat.image_url, // if you want to use images
+    })),
+  ];
+  
   useEffect(() => {
     if (modalVisible) {
       Animated.timing(overlayOpacity, {
@@ -87,13 +96,14 @@ export default function Products() {
     }
   }, [productActionModalVisible]);
 
+  useEffect(() => {
+    getCategories();
+    getProducts();
+  }, []);
+
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Simulate a network request
-    setTimeout(() => {
-      // Here you would typically fetch new data
-      setRefreshing(false);
-    }, 2000);
+    Promise.all([getCategories(), getProducts()]).finally(() => setRefreshing(false));
   }, []);
 
   const handleMenuPress = (product) => {
@@ -116,10 +126,36 @@ export default function Products() {
     });
   };
 
+  const getCategories = async () => {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching categories:', error);
+      return;
+    }
+    setCategories(data);
+  };
+
+  const getProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching products:', error);
+      return;
+    }
+    setProducts(data);
+  };
+
   // Filter logic
   const filteredProducts = selectedFilter === 'all'
-    ? mockProducts
-    : mockProducts.filter(product => product.category === selectedFilter);
+    ? products
+    : products.filter(product => product.category === selectedFilter);
 
   return (
     <View  style={styles.container}>
@@ -181,7 +217,7 @@ export default function Products() {
           renderItem={({ item }) => (
             <View style={[styles.productWrapper]}>
               <ProductCard
-                image={item.image}
+                image={item.image_url}
                 title={item.title}
                 size={item.size}
                 price={item.price}
@@ -242,7 +278,10 @@ export default function Products() {
             <CustomText type="bold" style={styles.modalTitle}>إدارة المنتج</CustomText>
             <CustomText style={styles.modalSubtitle}>اختر الإجراء الذي تريد تنفيذه على هذا المنتج.</CustomText>
             <View style={styles.modalButtonsRow}>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#F2F4F7' }]}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#F2F4F7' }]} onPress={() => {
+                setProductActionModalVisible(false);
+                navigation.navigate('AddProduct', { product: selectedProduct });
+              }}>
                 <Ionicons name="pencil-outline" size={28} color="#2196F3" />
                 <CustomText style={[styles.modalButtonText, { color: '#2196F3' }]}>تعديل المنتج</CustomText>
               </TouchableOpacity>

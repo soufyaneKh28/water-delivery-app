@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const [savedAddresses, setSavedAddresses] = useState(addresses);
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
 
   const defaultDataWith6Colors = [
     "#B0604D",
@@ -96,8 +97,21 @@ const images = [
     setCategories(data);
   };
 
+  const getProducts = async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching products:', error);
+      return;
+    }
+    setProducts(data);
+  };
+
   useEffect(() => {
     getCategories();
+    getProducts();
   }, []);
 
   const renderLocationButton = () => {
@@ -130,6 +144,7 @@ const images = [
     );
   };
 
+  console.log("products", products);
   return (
     <SafeAreaView style={styles.container}>
      <StatusBar style="light" backgroundColor="#1B7CC8" />
@@ -203,27 +218,17 @@ const images = [
         <View style={styles.productsSection}>
           <CustomText type="bold" style={styles.productsTitle}>المنتجات</CustomText>
           <View style={styles.productsRow}>
-            <ProductCard
-              image={require('../../../assets/images/bottle.png')}
-              title="عبوة مياه كبيرة"
-              size="20 لتر"
-              price={"$2"}
-              onMenuPress={() => {}}
-            />
-            <ProductCard
-              image={require('../../../assets/images/bottle.png')}
-              title="عبوة مياه صغيرة"
-              size="10 لتر"
-              price={"$1"}
-              onMenuPress={() => {}}
-            />
-            <ProductCard
-              image={require('../../../assets/images/bottle.png')}
-              title="عبوة مياه صغيرة"
-              size="10 لتر"
-              price={"$1"}
-              onMenuPress={() => {}}
-            />
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
+                title={product.title}
+                size={product.size}
+                price={`$${product.price}`}
+                oldPrice={product.old_price ? `$${product.old_price}` : undefined}
+                onMenuPress={() => {}}
+              />
+            ))}
           </View>
         </View>
 

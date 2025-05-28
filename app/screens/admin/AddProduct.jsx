@@ -1,15 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
+import { useRoute } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 export default function AddProduct({ navigation }) {
+  const route = useRoute();
+  const editingProduct = route.params?.product;
+
   const [image, setImage] = useState(null);
   const [productName, setProductName] = useState('');
   const [productCategory, setProductCategory] = useState('');
@@ -17,15 +22,35 @@ export default function AddProduct({ navigation }) {
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
   const [productExample, setProductExample] = useState('');
+  const [categories, setCategories] = useState([]);
 
-  // Product categories
-  const categories = [
-    { id: '1', name: 'مياه معدنية' },
-    { id: '2', name: 'مياه غازية' },
-    { id: '3', name: 'عصائر' },
-    { id: '4', name: 'مشروبات طاقة' },
-    { id: '5', name: 'مشروبات ساخنة' },
-  ];
+  // Prefill fields if editing
+  useEffect(() => {
+    if (editingProduct) {
+      setImage(editingProduct.image_url || null);
+      setProductName(editingProduct.title || '');
+      setProductCategory(editingProduct.category || '');
+      setProductSize(editingProduct.size || '');
+      setProductDescription(editingProduct.description || '');
+      setProductPrice(editingProduct.price ? String(editingProduct.price) : '');
+      setProductExample(editingProduct.example || '');
+    }
+  }, [editingProduct]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return;
+      }
+      setCategories(data);
+    };
+    fetchCategories();
+  }, []);
 
   const pickImage = async () => {
     // Request permission
@@ -52,7 +77,6 @@ export default function AddProduct({ navigation }) {
   };
 
   const handleSave = async () => {
-    // TODO: Implement save functionality with image upload
     if (!image) {
       alert('الرجاء اختيار صورة للمنتج');
       return;
@@ -61,11 +85,37 @@ export default function AddProduct({ navigation }) {
       alert('الرجاء ملء جميع الحقول المطلوبة');
       return;
     }
-    // Here you would typically:
-    // 1. Upload the image to your storage
-    // 2. Get the image URL
-    // 3. Save the product details with the image URL
-    console.log('Saving product with image:', image);
+    // TODO: handle image upload if needed
+    const productData = {
+      title: productName,
+      category: productCategory,
+      size: productSize,
+      description: productDescription,
+      price: parseFloat(productPrice),
+      image_url: image,
+      example: productExample,
+    };
+    try {
+      if (editingProduct) {
+        // Update product
+        const { error } = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', editingProduct.id);
+        if (error) throw error;
+        alert('تم تحديث المنتج بنجاح');
+      } else {
+        // Add new product
+        const { error } = await supabase
+          .from('products')
+          .insert([productData]);
+        if (error) throw error;
+        alert('تمت إضافة المنتج بنجاح');
+      }
+      navigation.goBack();
+    } catch (err) {
+      alert('حدث خطأ: ' + err.message);
+    }
   };
 
   return (
@@ -76,7 +126,9 @@ export default function AddProduct({ navigation }) {
         </TouchableOpacity> */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackBtn/>
-          <CustomText type="bold" style={styles.title}>إضافة منتج</CustomText> 
+          <CustomText type="bold" style={styles.title}>
+            {editingProduct ? 'تعديل منتج' : 'إضافة منتج'}
+          </CustomText>
           <View style={{ width: 28 }} />
         </View>
         {/* <CustomText type="bold" style={styles.title}>إضافة منتج</CustomText> */}
@@ -114,9 +166,9 @@ export default function AddProduct({ navigation }) {
             >
               <Picker.Item label="اختر فئة المنتج" value="" color={colors.textDisabled} />
               {categories.map((category) => (
-                <Picker.Item 
-                  key={category.id} 
-                  label={category.name} 
+                <Picker.Item
+                  key={category.id}
+                  label={category.title}
                   value={category.id}
                   color={colors.textPrimary}
                 />

@@ -8,7 +8,7 @@ const ProductCard = ({ image, title, size, price, onMenuPress }) => {
       <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
         <Ionicons name="ellipsis-horizontal" size={22} color="#888" />
       </TouchableOpacity>
-      <Image source={image} style={styles.image} resizeMode="cover" />
+      <Image source={{uri: image}} style={styles.image} resizeMode="cover" />
       <Text style={styles.title}>{title}</Text>
       <View style={styles.row}>
         <Text style={styles.price}>{price}</Text>

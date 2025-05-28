@@ -2,27 +2,45 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
 
-const ProductCard = ({ image, title, size, price, onMenuPress }) => {
+const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress }) => {
   const navigation = useNavigation();
+  const { addToCart } = useCart();
+
   const handlePress = () => {
     navigation.push('ProductDetails', {
       image,
       title,
       size,
       price,
+      oldPrice,
     });
   };
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation(); // Prevent navigation when clicking the add button
+    const product = {
+      id: Math.random().toString(), // Generate a unique ID
+      name: title,
+      image,
+      price: parseFloat(price.replace('$', '')),
+      size,
+      quantity: 1, // Explicitly set quantity to 1 for quick add
+    };
+    addToCart(product);
+  };
+
   return (
     <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.85}>
       <Image source={image} style={styles.image} resizeMode="cover" />
-      <CustomText type="semiBold"   style={styles.title}>{title}</CustomText>
+      <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
       <CustomText type="regular" style={styles.size}>{size}</CustomText>
       <View style={styles.row}>
         <CustomText type="bold" style={styles.price}>{price}</CustomText>
-        <TouchableOpacity style={styles.button} onPress={onMenuPress}>
+        <TouchableOpacity style={styles.button} onPress={handleAddToCart}>
           <AntDesign name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>

@@ -70,6 +70,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('role_name')
+        .eq('id', userId)
         .single()
       if (error) throw error;
 

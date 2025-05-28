@@ -3,28 +3,57 @@ import React, { useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 // import Svg, { Path } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
+
 export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [clientsCount, setClientsCount] = useState(0);
+  const [productsCount, setProductsCount] = useState(0);
+
+  const fetchOrdersCount = async () => {
+    const { count, error } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true });
+    if (!error) setOrdersCount(count || 0);
+  };
+
+  const fetchClientsCount = async () => {
+    const { count, error } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true });
+    if (!error) setClientsCount(count || 0);
+  };
+
+  const fetchProductsCount = async () => {
+    const { count, error } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true });
+    if (!error) setProductsCount(count || 0);
+  };
+
+  React.useEffect(() => {
+    fetchOrdersCount();
+    fetchClientsCount();
+    fetchProductsCount();
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Simulate a network request
-    setTimeout(() => {
-      // Here you would typically fetch new data
-      setRefreshing(false);
-    }, 2000);
+    Promise.all([
+      fetchOrdersCount(),
+      fetchClientsCount(),
+      fetchProductsCount(),
+    ]).finally(() => setRefreshing(false));
   }, []);
 
   // Example data
   const userName = 'سفيان خلف الله';
   const profit = '14.000';
   const profitChange = '+15%';
-  const orders = 1555;
-  const customers = 566;
   const successRate = '90%';
-  const products = 14;
 
   return (
     <View style={styles.container}>
@@ -85,14 +114,14 @@ export default function AdminDashboard() {
             <View style={[styles.iconCircle, { backgroundColor: '#FFEAD1' }]}> 
               <MaterialIcons name="groups" size={28} color="#FFA726" />
             </View>
-            <CustomText type="bold" style={styles.statNumber}>{customers}</CustomText>
+            <CustomText type="bold" style={styles.statNumber}>{clientsCount}</CustomText>
             <CustomText type="medium" style={styles.statLabel}>إجمالي العملاء</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#E3F0FF' }]}> 
               <Ionicons name="cart" size={28} color="#42A5F5" />
             </View>
-            <CustomText type="bold" style={styles.statNumber}>{orders}</CustomText>
+            <CustomText type="bold" style={styles.statNumber}>{ordersCount}</CustomText>
             <CustomText type="medium" style={styles.statLabel}>إجمالي الطلبات</CustomText>
           </View>
           <View style={styles.statCard}>
@@ -106,7 +135,7 @@ export default function AdminDashboard() {
             <View style={[styles.iconCircle, { backgroundColor: '#F3E6FF' }]}> 
               <FontAwesome5 name="box-open" size={24} color="#AB47BC" />
             </View>
-            <CustomText type="bold" style={styles.statNumber}>{products}</CustomText>
+            <CustomText type="bold" style={styles.statNumber}>{productsCount}</CustomText>
             <CustomText type="medium" style={styles.statLabel}>إجمالي المنتجات</CustomText>
           </View>
         </View>

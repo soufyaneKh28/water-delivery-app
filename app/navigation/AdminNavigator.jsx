@@ -9,6 +9,7 @@ import AddCategory from '../screens/admin/AddCategory';
 import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
 import EditProfile from '../screens/admin/EditProfile';
+import Offers from '../screens/admin/Offers';
 import OrderDetails from '../screens/admin/OrderDetails';
 import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
@@ -160,6 +161,11 @@ export default function AdminNavigator() {
       <Stack.Screen 
         name="Security" 
         component={Security} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="Offers" 
+        component={Offers} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

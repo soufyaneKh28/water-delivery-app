@@ -4,10 +4,25 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
+
 export default function ProductDetailsScreen({ route, navigation }) {
-  const { image, title, size, price } = route.params;
+  const { image, title, size, price, oldPrice } = route.params;
   const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    const product = {
+      id: Math.random().toString(), // Generate a unique ID
+      name: title,
+      image,
+      price: parseFloat(price.replace('$', '')),
+      size,
+      quantity, // Include the selected quantity
+    };
+    addToCart(product);
+  };
 
   return (
     <View style={styles.container}>
@@ -24,7 +39,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
       <View style={styles.card}>
         <View style={styles.rowBetween}>
           <View>
-            <Text style={styles.oldPrice}>$34.99</Text>
+            <Text style={styles.oldPrice}>{oldPrice}</Text>
             <Text style={styles.price}>{price}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
@@ -50,10 +65,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
               <AntDesign name="plus" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
-          {/* <TouchableOpacity style={styles.addToCartBtn}>
-            <CustomText type="semiBold" style={styles.addToCartText}>أضف إلى السلة</CustomText>
-          </TouchableOpacity> */}
-          <PrimaryButton style={styles.addToCartBtn} title="أضف إلى السلة" />
+          <PrimaryButton 
+            style={styles.addToCartBtn} 
+            title="أضف إلى السلة" 
+            onPress={handleAddToCart}
+          />
         </View>
       </View>
     </View>

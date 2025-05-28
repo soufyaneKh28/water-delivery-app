@@ -1,54 +1,35 @@
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
+import React from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import SuccessModal from '../../components/common/SuccessModal';
+import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
-const cartDataInit = [
-  {
-    id: '1',
-    name: 'عبوة مياه كبيرة',
-    image: require('../../../assets/images/bottle.png'),
-    price: 4.99,
-    oldPrice: 34.99,
-    quantity: 1,
-  },
-  {
-    id: '2',
-    name: 'عبوة مياه كبيرة',
-    image: require('../../../assets/images/bottle.png'),
-    price: 4.99,
-    oldPrice: 34.99,
-    quantity: 1,
-  },
-  {
-    id: '3',
-    name: 'عبوة مياه كبيرة',
-    image: require('../../../assets/images/bottle.png'),
-    price: 4.99,
-    oldPrice: 34.99,
-    quantity: 1,
-  },
-];
-
 export default function CartScreen() {
-  const [cart, setCart] = useState(cartDataInit);
   const navigation = useNavigation();
+  const { 
+    cart, 
+    removeFromCart, 
+    updateQuantity, 
+    getCartTotal,
+    showSuccessModal,
+    addedProduct,
+    addToCart
+  } = useCart();
+
+  const shipping = 4;
+  const subtotal = getCartTotal();
+  const total = subtotal + shipping;
 
   const handleQuantity = (id, delta) => {
-    setCart(prev => prev.map(item =>
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-    ));
+    updateQuantity(id, delta);
   };
 
   const handleDelete = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+    removeFromCart(id);
   };
-
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 4;
-  const total = subtotal + shipping;
 
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -78,32 +59,60 @@ export default function CartScreen() {
     </View>
   );
 
+  const EmptyCart = () => (
+    <View style={styles.emptyContainer}>
+      <Image 
+        source={require('../../../assets/images/empty-cart.png')} 
+        style={styles.emptyImage}
+        resizeMode="contain"
+      />
+      <CustomText type="bold" style={styles.emptyTitle}>سلة المشتريات فارغة</CustomText>
+      <CustomText style={styles.emptyText}>لم تقم بإضافة أي منتجات إلى سلة المشتريات بعد</CustomText>
+      <PrimaryButton 
+        title="تصفح المنتجات" 
+        style={styles.browseButton}
+        onPress={() => navigation.navigate('Home')}
+      />
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      <CustomText type="bold" style={styles.sectionTitle}>عناصر السلة:</CustomText>
-      <FlatList
-        data={cart}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{ paddingBottom: 16 }}
-        showsVerticalScrollIndicator={false}
-      />
-      <View style={styles.summaryBox}>
-        <CustomText style={styles.summaryTitle}>ملخص الدفع</CustomText>
-        <View style={styles.summaryRow}>
-          <CustomText style={styles.summaryLabel}>المجموع الفرعي</CustomText>
-          <CustomText style={styles.summaryValue}>${subtotal.toFixed(0)}</CustomText>
-        </View>
-        <View style={styles.summaryRow}>
-          <CustomText style={styles.summaryLabel}>رسوم الشحن</CustomText>
-          <CustomText style={styles.summaryValue}>${shipping}</CustomText>
-        </View>
-        <View style={styles.summaryRow}>
-          <CustomText style={[styles.summaryLabel, { color: colors.primary }]}>الإجمالي</CustomText>
-          <CustomText style={[styles.summaryValue, { color: colors.primary }]}>${total.toFixed(0)}</CustomText>
-        </View>
-        <PrimaryButton title="تأكيد السلة" style={styles.confirmBtn} onPress={() => navigation.navigate('Checkout', { cart, subtotal, shipping, total })} />
-      </View>
+      <SuccessModal visible={showSuccessModal} product={addedProduct} />
+      {cart.length === 0 ? (
+        <EmptyCart />
+      ) : (
+        <>
+          <CustomText type="bold" style={styles.sectionTitle}>عناصر السلة:</CustomText>
+          <FlatList
+            data={cart}
+            renderItem={renderItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={{ paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+          />
+          <View style={styles.summaryBox}>
+            <CustomText style={styles.summaryTitle}>ملخص الدفع</CustomText>
+            <View style={styles.summaryRow}>
+              <CustomText style={styles.summaryLabel}>المجموع الفرعي</CustomText>
+              <CustomText style={styles.summaryValue}>${subtotal.toFixed(0)}</CustomText>
+            </View>
+            <View style={styles.summaryRow}>
+              <CustomText style={styles.summaryLabel}>رسوم الشحن</CustomText>
+              <CustomText style={styles.summaryValue}>${shipping}</CustomText>
+            </View>
+            <View style={styles.summaryRow}>
+              <CustomText style={[styles.summaryLabel, { color: colors.primary }]}>الإجمالي</CustomText>
+              <CustomText style={[styles.summaryValue, { color: colors.primary }]}>${total.toFixed(0)}</CustomText>
+            </View>
+            <PrimaryButton 
+              title="تأكيد السلة" 
+              style={styles.confirmBtn} 
+              onPress={() => navigation.navigate('Checkout', { cart, subtotal, shipping, total })} 
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -255,6 +264,33 @@ const styles = StyleSheet.create({
   },
   confirmBtn: {
     marginTop: 18,
+    borderRadius: 24,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  browseButton: {
+    width: '80%',
     borderRadius: 24,
   },
 }); 

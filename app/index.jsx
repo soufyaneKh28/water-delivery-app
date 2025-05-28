@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { FONTS } from './constants/fonts';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
 
 // Enable RTL layout direction
@@ -52,7 +53,10 @@ export default function App() {
 
   return (
     <AuthProvider>
+      <CartProvider>
+
       <AppNavigator />
+      </CartProvider>
       {/* <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text> */}
     </AuthProvider>
   );

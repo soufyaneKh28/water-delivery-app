@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,9 +9,10 @@ import { colors } from '../../styling/colors';
 
 
 
-export default function Profile({ navigation }) {
+export default function Profile() {
 
   const { user, logout } = useAuth();
+  const navigation = useNavigation();
   const [profile] = useState({
     full_name: 'اسم المدير',
     avatar_url: null,
@@ -71,6 +73,12 @@ export default function Profile({ navigation }) {
     //   icon: require('../../../assets/icons/trash.png'),
     //   onPress: () => setShowDeleteModal(true),
     // },
+    {
+      id: 'offers',
+      title: 'إدارة عروض السلايدر',
+      icon: require('../../../assets/icons/faq.png'),
+      onPress: () => navigation.navigate('Offers'),
+    },
   ];
   
   return (
@@ -301,5 +309,17 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
     fontSize: 16,
+  },
+  offersButton: {
+    backgroundColor: colors.primary,
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  offersButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
