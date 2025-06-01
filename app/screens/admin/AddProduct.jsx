@@ -89,10 +89,9 @@ export default function AddProduct({ navigation }) {
       return;
     }
 
-    setIsLoading(true); // Start loading
+    setIsLoading(true);
 
     try {
-      // Fetch the Bearer token from Supabase session
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
@@ -102,40 +101,57 @@ export default function AddProduct({ navigation }) {
 
       // Prepare FormData
       const formData = new FormData();
-      // Get file info for the image
-      const fileInfo = await FileSystem.getInfoAsync(image);
-      formData.append('image', {
-        uri: image,
-        name: fileInfo.uri.split('/').pop() || 'image.jpg',
-        type: 'image/jpeg', // You may want to detect the type
-      });
+      // Only add image if it's a new file or not a URL
+      if (!editingProduct || (image && !image.startsWith('http'))) {
+        const fileInfo = await FileSystem.getInfoAsync(image);
+        formData.append('image', {
+          uri: image,
+          name: fileInfo.uri.split('/').pop() || 'image.jpg',
+          type: 'image/jpeg',
+        });
+      }
       formData.append('title', productName);
       formData.append('size', productSize);
       formData.append('description', productDescription);
       formData.append('price', productPrice);
-      formData.append('price_type', 'money'); // Or your logic
+      formData.append('price_type', 'money');
       formData.append('category', productCategory);
       formData.append('old_price', '12'); // Or your logic
 
-      const response = await axios.post(
-        'https://water-supplier-2.onrender.com/api/k1/products/createProduct',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-      console.log("response",response);
-      
-      alert('تمت إضافة المنتج بنجاح');
+      let response;
+      if (editingProduct) {
+        // PATCH request for editing
+        response = await axios.patch(
+          `https://water-supplier-2.onrender.com/api/k1/products/updateProduct/${editingProduct._id || editingProduct.id}`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+      } else {
+        // POST request for creating
+        response = await axios.post(
+          'https://water-supplier-2.onrender.com/api/k1/products/createProduct',
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+      }
+
+      alert(editingProduct ? 'تم تعديل المنتج بنجاح' : 'تمت إضافة المنتج بنجاح');
       navigation.goBack();
     } catch (err) {
       alert('حدث خطأ: ' + (err.response?.data?.message || err.message));
       console.log("err", err);
     } finally {
-      setIsLoading(false); // Stop loading regardless of success or failure
+      setIsLoading(false);
     }
   };
 

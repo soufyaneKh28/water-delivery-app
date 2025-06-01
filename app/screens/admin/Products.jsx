@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
@@ -157,6 +158,46 @@ export default function Products() {
     ? products
     : products.filter(product => product.category === selectedFilter);
 
+  const handleDeleteProduct = () => {
+    if (!selectedProduct) return;
+    Alert.alert(
+      'تأكيد الحذف',
+      'هل أنت متأكد أنك تريد حذف هذا المنتج؟',
+      [
+        { text: 'إلغاء', style: 'cancel' },
+        {
+          text: 'حذف',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Get Bearer token from Supabase
+              const { data: { session } } = await supabase.auth.getSession();
+              const token = session?.access_token;
+              if (!token) {
+                alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+                return;
+              }
+              await axios.delete(
+                `https://water-supplier-2.onrender.com/api/k1/products/deleteProduct/${selectedProduct._id || selectedProduct.id}`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                  },
+                }
+              );
+              setProductActionModalVisible(false);
+              setProducts((prev) => prev.filter((p) => (p._id || p.id) !== (selectedProduct._id || selectedProduct.id)));
+              setSelectedProduct(null);
+              alert('تم حذف المنتج بنجاح');
+            } catch (err) {
+              alert('حدث خطأ أثناء حذف المنتج: ' + (err.response?.data?.message || err.message));
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -293,7 +334,7 @@ export default function Products() {
                 <Ionicons name="pencil-outline" size={28} color="#2196F3" />
                 <CustomText style={[styles.modalButtonText, { color: '#2196F3' }]}>تعديل المنتج</CustomText>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#FDEAEA' }]}>
+              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#FDEAEA' }]} onPress={handleDeleteProduct}>
                 <Ionicons name="trash-outline" size={28} color="#F44336" />
                 <CustomText style={[styles.modalButtonText, { color: '#F44336' }]}>حذف المنتج</CustomText>
               </TouchableOpacity>

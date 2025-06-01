@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from 'react';
-import { FlatList, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -9,25 +11,109 @@ import { colors } from '../../styling/colors';
 const placeholderImg = require('../../../assets/images/category-1.png'); // Use your placeholder image path
 
 export default function AddCategory({ navigation }) {
-  const [categories, setCategories] = useState([
-    { id: '1', name: 'عبوات كبيرة', image: placeholderImg },
-    { id: '2', name: 'مياه معبأة', image: placeholderImg },
-  ]);
+  const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
   const [newImage, setNewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchingCategories, setFetchingCategories] = useState(true);
 
-  const handleAddCategory = () => {
-    if (!newCategory.trim() || !newImage) return;
-    setCategories(prev => [
-      ...prev,
-      { id: Date.now().toString(), name: newCategory.trim(), image: { uri: newImage } },
-    ]);
-    setNewCategory('');
-    setNewImage(null);
+  // Fetch categories from API on mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    setFetchingCategories(true);
+    try {
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+      const response = await axios.get(
+        'https://water-supplier-2.onrender.com/api/k1/product_categories/getAllCategory',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      setCategories(response.data.data || []);
+    } catch (err) {
+      alert('فشل تحميل الأقسام: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setFetchingCategories(false);
+    }
   };
 
-  const handleDeleteCategory = (id) => {
-    setCategories(prev => prev.filter(cat => cat.id !== id));
+  const handleAddCategory = async () => {
+    if (!newCategory.trim() || !newImage) return;
+    setLoading(true);
+    try {
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setLoading(false);
+        return;
+      }
+      // Prepare FormData
+      const formData = new FormData();
+      formData.append('title', newCategory.trim());
+      formData.append('image', {
+        uri: newImage,
+        name: newImage.split('/').pop() || 'category.jpg',
+        type: 'image/jpeg',
+      });
+      await axios.post(
+        'https://water-supplier-2.onrender.com/api/k1/product_categories/createProductCategory',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      setNewCategory('');
+      setNewImage(null);
+      fetchCategories();
+      alert('تمت إضافة القسم بنجاح');
+    } catch (err) {
+      alert('حدث خطأ أثناء إضافة القسم: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCategory = async (id) => {
+    try {
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+
+      await axios.delete(
+        `https://water-supplier-2.onrender.com/api/k1/product_categories/deleteProductCategory/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Update local state after successful deletion
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+      alert('تم حذف القسم بنجاح');
+    } catch (err) {
+      alert('حدث خطأ أثناء حذف القسم: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const pickImage = async () => {
@@ -56,22 +142,35 @@ export default function AddCategory({ navigation }) {
       </View>
 
       <CustomText type="bold" style={styles.sectionTitle}>الأقسام الحالية</CustomText>
-      <FlatList
-        data={categories}
-        keyExtractor={item => item.id}
-        style={styles.list}
-        renderItem={({ item }) => (
-          <View style={styles.categoryRow}>
-            <TouchableOpacity onPress={() => handleDeleteCategory(item.id)}>
-              <Ionicons name="trash-outline" size={22} color={colors.error} />
-            </TouchableOpacity>
-            <View style={styles.categoryInfo}>
-              <Image source={item.image} style={styles.categoryImg} />
-              <CustomText style={styles.categoryName}>{item.name}</CustomText>
+      {fetchingCategories ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.secondary} />
+        </View>
+      ) : categories.length === 0 ? (
+        <CustomText style={{ textAlign: 'center', color: colors.textSecondary, marginBottom: 12 }}>
+          لا توجد أقسام
+        </CustomText>
+      ) : (
+        <FlatList
+          data={categories}
+          keyExtractor={item => item.id || item._id}
+          style={styles.list}
+          renderItem={({ item }) => (
+            <View style={styles.categoryRow}>
+              <TouchableOpacity 
+                onPress={() => handleDeleteCategory(item.id || item._id)}
+                style={styles.deleteButton}
+              >
+                <Ionicons name="trash-outline" size={24} color={colors.error} />
+              </TouchableOpacity>
+              <View style={styles.categoryInfo}>
+                <CustomText style={styles.categoryName}>{item.title || item.name}</CustomText>
+                <Image source={item.image_url ? { uri: item.image_url } : placeholderImg} style={styles.categoryImg} />
+              </View>
             </View>
-          </View>
-        )}
-      />
+          )}
+        />
+      )}
 
       <View style={styles.divider} />
       <CustomText type="bold" style={styles.sectionTitle}>إضافة قسم جديد</CustomText>
@@ -95,10 +194,10 @@ export default function AddCategory({ navigation }) {
         )}
       </TouchableOpacity>
       <PrimaryButton
-        title="إضافة القسم"
+        title={loading ? 'جاري الإضافة...' : 'إضافة القسم'}
         onPress={handleAddCategory}
         style={styles.addButton}
-        disabled={!newCategory.trim() || !newImage}
+        disabled={!newCategory.trim() || !newImage || loading}
       />
     </View>
   );
@@ -142,7 +241,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryInfo: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 10,
   },
@@ -150,7 +249,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    marginLeft: 8,
+    marginRight: 8,
     backgroundColor: colors.backgroundDark,
   },
   categoryName: {
@@ -204,5 +303,14 @@ const styles = StyleSheet.create({
   addButton: {
     marginTop: 8,
     marginBottom: 24,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
   },
 }); 
