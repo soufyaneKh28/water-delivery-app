@@ -6,7 +6,7 @@ import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
 
-const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress }) => {
+const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, description, id }) => {
   const navigation = useNavigation();
   const { addToCart } = useCart();
 
@@ -17,13 +17,15 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress }) => {
       size,
       price,
       oldPrice,
+      description,
+      id
     });
   };
 
   const handleAddToCart = (e) => {
     e.stopPropagation(); // Prevent navigation when clicking the add button
     const product = {
-      id: Math.random().toString(), // Generate a unique ID
+      id: id || `${title}-${size}-${price}`, // Use provided id or create a consistent one
       name: title,
       image,
       price: parseFloat(price.replace('$', '')),

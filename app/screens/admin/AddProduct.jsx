@@ -202,7 +202,7 @@ export default function AddProduct({ navigation }) {
           </TouchableOpacity>
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>اسم المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>اسم المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
             placeholder="أدخل اسم المنتج" 
@@ -212,7 +212,7 @@ export default function AddProduct({ navigation }) {
           />
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>فئة المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>فئة المنتج</CustomText>
           <View style={[globalStyles.input, styles.pickerContainer]}>
             <Picker
               selectedValue={productCategory}
@@ -233,7 +233,7 @@ export default function AddProduct({ navigation }) {
           </View>
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>حجم المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>حجم المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
             placeholder="أدخل الحجم بالأرقام فقط" 
@@ -244,7 +244,7 @@ export default function AddProduct({ navigation }) {
           />
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>وصف المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>وصف المنتج</CustomText>
           <TextInput 
             style={[globalStyles.input, { height: 100, textAlignVertical: 'top' }]} 
             placeholder="صف منتجك" 
@@ -255,7 +255,7 @@ export default function AddProduct({ navigation }) {
           />
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>سعر المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>سعر المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
             placeholder="أدخل السعر بالأرقام فقط" 
@@ -393,5 +393,10 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  inputLabel: {
+    // marginBottom: 4,
+    // marginTop: 8,
+    textAlign: 'left',
   },
 }); 

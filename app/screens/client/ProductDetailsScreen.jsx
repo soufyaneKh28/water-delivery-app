@@ -8,13 +8,13 @@ import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
 export default function ProductDetailsScreen({ route, navigation }) {
-  const { image, title, size, price, oldPrice } = route.params;
+  const { image, title, size, price, oldPrice, description, id } = route.params;
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
     const product = {
-      id: Math.random().toString(), // Generate a unique ID
+      id: id || `${title}-${size}-${price}`, // Use provided id or create a consistent one
       name: title,
       image,
       price: parseFloat(price.replace('$', '')),
@@ -52,7 +52,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <CustomText type="medium" style={styles.link}>الوصف</CustomText>
         </TouchableOpacity>
         <CustomText type="regular" style={styles.description}>
-          لوريم إيبسوم دولار سيت أميت، كونسيكتيتور أديبيسيسينغ إيليت. نونك كونسيكتيتور فيليت آت ماسا فيهيكولا، كويز فريجيدأ أونا غرافيدا.
+          {description || 'لا يوجد وصف متاح للمنتج'}
         </CustomText>
         {/* Quantity and Add to Cart */}
         <View style={styles.addRow}>

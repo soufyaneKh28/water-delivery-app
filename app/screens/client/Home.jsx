@@ -206,7 +206,7 @@ const images = [
                 onPress={() => handleCategoryPress(category)}
               >
                 <View style={styles.categoryImage}>
-                  <Image source={category.image} style={{width: 37, height: 37 , borderRadius: 50}} />
+                  <Image source={{uri : category.image_url}} style={{width: 37, height: 37 , borderRadius: 50}} />
                 </View>  
                 <CustomText type="medium" style={styles.categoryTitle}>{category.title}</CustomText>
               </TouchableOpacity>
@@ -221,9 +221,11 @@ const images = [
             {products.map((product) => (
               <ProductCard
                 key={product.id}
+                id={product.id}
                 image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
                 title={product.title}
                 size={product.size}
+                description={product.description}
                 price={`$${product.price}`}
                 oldPrice={product.old_price ? `$${product.old_price}` : undefined}
                 onMenuPress={() => {}}
