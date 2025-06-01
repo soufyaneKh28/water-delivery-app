@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
@@ -26,6 +26,7 @@ export default function EditProfileScreen({ navigation }) {
     phone: "",
     email: "",
   });
+  const [phoneError, setPhoneError] = useState("");
 
   useEffect(() => {
     fetchProfile();
@@ -44,9 +45,9 @@ export default function EditProfileScreen({ navigation }) {
       }
 
       setFormData({
-        full_name: data.full_name || "",
+        username: data.username || "",
         phone: data.phone || "",
-        email: data.email || "",
+        email: user.email || "",
       });
     } catch (error) {
       Alert.alert("خطأ", "تعذر تحميل بيانات الحساب");
@@ -57,18 +58,24 @@ export default function EditProfileScreen({ navigation }) {
   };
 
   const handleSave = async () => {
-    if (!formData.full_name.trim()) {
+    if (!formData.username.trim()) {
       Alert.alert("خطأ", "اسم المستخدم مطلوب");
       return;
+    }
+    if (!/^\d{8,}$/.test(formData.phone.trim())) {
+      setPhoneError("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
+      return;
+    } else {
+      setPhoneError("");
     }
     setSaving(true);
     try {
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: formData.full_name.trim(),
+          username: formData.username.trim(),
           phone: formData.phone.trim(),
-          email: formData.email.trim(),
+          // email: formData.email.trim(),
           updated_at: new Date(),
         })
         .eq("id", user.id);
@@ -93,83 +100,98 @@ export default function EditProfileScreen({ navigation }) {
   //     </View>
   //   );
   // }
+console.log("formData", formData);
 
   return (
     <KeyboardAvoidingView
       style={globalStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Header */}
-        <View style={styles.header}>
-        <BackBtn />
-        <CustomText type="bold" style={styles.headerTitle}>حسابي</CustomText>
-        <View style={{ width: 40 }} />
-      </View>
-        <CustomText type="bold" style={styles.title}>المعلومات الشخصية</CustomText>
-
-        <View style={styles.form}>
-          {/* Username */}
-          <View style={globalStyles.inputContainer}>
-            <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
-            <TextInput
-              style={globalStyles.input}
-              value={formData.full_name}
-              onChangeText={text => setFormData(prev => ({ ...prev, full_name: text }))}
-              placeholder="اسم المستخدم"
-              placeholderTextColor={colors.gray[400]}
-              textAlign="right"
-            />
+      {loading ? (
+        <View style={[styles.loadingContainer, { flex: 1 }]}> 
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {/* Header */}
+          <View style={styles.header}>
+            <BackBtn />
+            <CustomText type="bold" style={styles.headerTitle}>حسابي</CustomText>
+            <View style={{ width: 40 }} />
           </View>
-          {/* Phone with static country picker */}
-          <View style={globalStyles.inputContainer}>
-            <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* <TouchableOpacity style={[styles.flagPicker, { marginBottom: 0 }]} activeOpacity={0.7}>
-                <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/commons/5/59/Flag_of_Lebanon.svg'}} style={styles.flag} />
-                <Ionicons name="chevron-down" size={18} color={colors.gray[500]} style={{marginHorizontal: 2}} />
-                <CustomText style={styles.countryCode}>+90</CustomText>
-              </TouchableOpacity> */}
+          <CustomText type="bold" style={styles.title}>المعلومات الشخصية</CustomText>
+
+          <View style={styles.form}>
+            {/* Username */}
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
               <TextInput
-                style={[globalStyles.input, { flex: 1}]}
-                value={formData.phone}
-                onChangeText={text => setFormData(prev => ({ ...prev, phone: text }))}
-                placeholder="5356577288"
+                style={[globalStyles.input, styles.disabledInput]}
+                value={formData.username}
+                onChangeText={text => setFormData(prev => ({ ...prev, full_name: text }))}
+                placeholder="اسم المستخدم"
                 placeholderTextColor={colors.gray[400]}
-                keyboardType="phone-pad"
                 textAlign="right"
+                editable={false}
+              />
+            </View>
+            {/* Phone with static country picker */}
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* <TouchableOpacity style={[styles.flagPicker, { marginBottom: 0 }]} activeOpacity={0.7}>
+                  <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/commons/5/59/Flag_of_Lebanon.svg'}} style={styles.flag} />
+                  <Ionicons name="chevron-down" size={18} color={colors.gray[500]} style={{marginHorizontal: 2}} />
+                  <CustomText style={styles.countryCode}>+90</CustomText>
+                </TouchableOpacity> */}
+                <TextInput
+                  style={[globalStyles.input, { flex: 1}]}
+                  value={formData.phone}
+                  onChangeText={text => {
+                    setFormData(prev => ({ ...prev, phone: text }));
+                    if (phoneError && /^\d{8,}$/.test(text.trim())) setPhoneError("");
+                  }}
+                  placeholder="5356577288"
+                  placeholderTextColor={colors.gray[400]}
+                  keyboardType="phone-pad"
+                  textAlign="right"
+                />
+              </View>
+              {phoneError ? (
+                <CustomText style={{ color: colors.error, fontSize: 13, marginTop: 4, textAlign: 'right' }}>{phoneError}</CustomText>
+              ) : null}
+            </View>
+            {/* Email */}
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
+              <TextInput
+                style={[globalStyles.input, styles.disabledInput]}
+                value={formData.email}
+                onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
+                placeholder="البريد الإلكتروني"
+                placeholderTextColor={colors.gray[400]}
+                textAlign="right"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                editable={false}
               />
             </View>
           </View>
-          {/* Email */}
-          <View style={globalStyles.inputContainer}>
-            <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
-            <TextInput
-              style={globalStyles.input}
-              value={formData.email}
-              onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
-              placeholder="البريد الإلكتروني"
-              placeholderTextColor={colors.gray[400]}
-              textAlign="right"
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-        </View>
 
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.8}
-        >
-          {saving ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <CustomText type="bold" style={styles.saveButtonText}>تعديل المعلومات</CustomText>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSave}
+            disabled={saving}
+            activeOpacity={0.8}
+          >
+            {saving ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <CustomText type="bold" style={styles.saveButtonText}>تعديل المعلومات</CustomText>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -277,5 +299,9 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     textAlign: 'center',
+  },
+  disabledInput: {
+    backgroundColor: colors.gray[100],
+    color: colors.gray[500],
   },
 }); 

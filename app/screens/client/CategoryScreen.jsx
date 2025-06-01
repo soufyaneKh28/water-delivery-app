@@ -1,6 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -10,39 +12,78 @@ const CategoryScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { category } = route.params;
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample products data - replace with your actual data
-  const products = [
-    {
-      id: 1,
-      image: require('../../../assets/images/bottle.png'),
-      title: "عبوة مياه كبيرة",
-      size: "20 لتر",
-      price: "$2"
-    },
-    {
-      id: 2,
-      image: require('../../../assets/images/bottle.png'),
-      title: "عبوة مياه صغيرة",
-      size: "10 لتر",
-      price: "$1"
-    },
-    {
-      id: 3,
-      image: require('../../../assets/images/bottle.png'),
-      title: "عبوة مياه متوسطة",
-      size: "15 لتر",
-      price: "$1.5"
-    },
-  ];
+  useEffect(() => {
+    fetchCategoryProducts();
+  }, [category]);
+
+  const fetchCategoryProducts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', category.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching products:', error);
+        return;
+      }
+      setProducts(data);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <CustomText style={styles.loadingText}>جاري تحميل المنتجات...</CustomText>
+        </View>
+      );
+    }
+
+    if (products.length === 0) {
+      return (
+        <View style={styles.centerContainer}>
+          <Ionicons name="cube-outline" size={64} color={colors.textDisabled} />
+          <CustomText type="bold" style={styles.emptyTitle}>لا توجد منتجات</CustomText>
+          <CustomText style={styles.emptyText}>
+            لم يتم العثور على منتجات في هذه الفئة بعد
+          </CustomText>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.productsGrid}>
+        {products.map((product) => (
+          <ProductCard
+            key={product.id}
+            image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
+            title={product.title}
+            size={product.size}
+            price={`$${product.price}`}
+            oldPrice={product.old_price ? `$${product.old_price}` : undefined}
+            onMenuPress={() => {}}
+          />
+        ))}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <CustomText type="bold" style={styles.title}>{category.title}</CustomText>
-      
-         <BackBtn />
-       
+        <BackBtn />
       </View>
 
       <ScrollView 
@@ -50,18 +91,7 @@ const CategoryScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <View style={styles.productsGrid}>
-          {products.map((product) => (
-            <ProductCard
-              key={product.id}
-              image={product.image}
-              title={product.title}
-              size={product.size}
-              price={product.price}
-              onMenuPress={() => {}}
-            />
-          ))}
-        </View>
+        {renderContent()}
       </ScrollView>
     </View>
   );
@@ -95,12 +125,36 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+    flexGrow: 1,
   },
   productsGrid: {
     flexDirection: 'row-reverse',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 10,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 12,
+    color: colors.textSecondary,
+    fontSize: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    color: colors.textPrimary,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
 });
 

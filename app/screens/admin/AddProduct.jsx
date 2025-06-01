@@ -1,19 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
+import axios from 'axios';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 export default function AddProduct({ navigation }) {
   const route = useRoute();
   const editingProduct = route.params?.product;
+  const { user } = useAuth();
 
   const [image, setImage] = useState(null);
   const [productName, setProductName] = useState('');
@@ -21,8 +25,8 @@ export default function AddProduct({ navigation }) {
   const [productSize, setProductSize] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
-  const [productExample, setProductExample] = useState('');
   const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Prefill fields if editing
   useEffect(() => {
@@ -33,7 +37,6 @@ export default function AddProduct({ navigation }) {
       setProductSize(editingProduct.size || '');
       setProductDescription(editingProduct.description || '');
       setProductPrice(editingProduct.price ? String(editingProduct.price) : '');
-      setProductExample(editingProduct.example || '');
     }
   }, [editingProduct]);
 
@@ -85,42 +88,79 @@ export default function AddProduct({ navigation }) {
       alert('الرجاء ملء جميع الحقول المطلوبة');
       return;
     }
-    // TODO: handle image upload if needed
-    const productData = {
-      title: productName,
-      category: productCategory,
-      size: productSize,
-      description: productDescription,
-      price: parseFloat(productPrice),
-      image_url: image,
-      example: productExample,
-    };
+
+    setIsLoading(true); // Start loading
+
     try {
-      if (editingProduct) {
-        // Update product
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-        if (error) throw error;
-        alert('تم تحديث المنتج بنجاح');
-      } else {
-        // Add new product
-        const { error } = await supabase
-          .from('products')
-          .insert([productData]);
-        if (error) throw error;
-        alert('تمت إضافة المنتج بنجاح');
+      // Fetch the Bearer token from Supabase session
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
       }
+
+      // Prepare FormData
+      const formData = new FormData();
+      // Get file info for the image
+      const fileInfo = await FileSystem.getInfoAsync(image);
+      formData.append('image', {
+        uri: image,
+        name: fileInfo.uri.split('/').pop() || 'image.jpg',
+        type: 'image/jpeg', // You may want to detect the type
+      });
+      formData.append('title', productName);
+      formData.append('size', productSize);
+      formData.append('description', productDescription);
+      formData.append('price', productPrice);
+      formData.append('price_type', 'money'); // Or your logic
+      formData.append('category', productCategory);
+      formData.append('old_price', '12'); // Or your logic
+
+      const response = await axios.post(
+        'https://water-supplier-2.onrender.com/api/k1/products/createProduct',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("response",response);
+      
+      alert('تمت إضافة المنتج بنجاح');
       navigation.goBack();
     } catch (err) {
-      alert('حدث خطأ: ' + err.message);
+      alert('حدث خطأ: ' + (err.response?.data?.message || err.message));
+      console.log("err", err);
+    } finally {
+      setIsLoading(false); // Stop loading regardless of success or failure
+    }
+  };
+
+  // Add these validation functions after the state declarations
+  const handleSizeChange = (text) => {
+    // Only allow numbers
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setProductSize(numericValue);
+  };
+
+  const handlePriceChange = (text) => {
+    // Allow numbers and one decimal point
+    const numericValue = text.replace(/[^0-9.]/g, '');
+    // Ensure only one decimal point
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      setProductPrice(parts[0] + '.' + parts.slice(1).join(''));
+    } else {
+      setProductPrice(numericValue);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1   , paddingBottom: 50}} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
         {/* <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={28} color="#222" />
         </TouchableOpacity> */}
@@ -180,10 +220,11 @@ export default function AddProduct({ navigation }) {
           <CustomText style={globalStyles.inputLabel}>حجم المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
-            placeholder="10 لتر" 
+            placeholder="أدخل الحجم بالأرقام فقط" 
             placeholderTextColor={colors.textDisabled}
             value={productSize}
-            onChangeText={setProductSize}
+            onChangeText={handleSizeChange}
+            keyboardType="numeric"
           />
         </View>
         <View style={globalStyles.inputContainer}>
@@ -201,28 +242,30 @@ export default function AddProduct({ navigation }) {
           <CustomText style={globalStyles.inputLabel}>سعر المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
-            placeholder="0.00" 
+            placeholder="أدخل السعر بالأرقام فقط" 
             placeholderTextColor={colors.textDisabled}
-            keyboardType="numeric"
+            keyboardType="decimal-pad"
             value={productPrice}
-            onChangeText={setProductPrice}
-          />
-        </View>
-        <View style={globalStyles.inputContainer}>
-          <CustomText style={globalStyles.inputLabel}>مثال للمنتج</CustomText>
-          <TextInput 
-            style={globalStyles.input} 
-            placeholder="مثلاً" 
-            placeholderTextColor={colors.textDisabled}
-            value={productExample}
-            onChangeText={setProductExample}
+            onChangeText={handlePriceChange}
           />
         </View>
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <CustomText style={styles.saveButtonText}>حفظ المنتج</CustomText>
+          <TouchableOpacity 
+            style={[styles.saveButton, isLoading && styles.disabledButton]} 
+            onPress={handleSave}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <CustomText style={styles.saveButtonText}>حفظ المنتج</CustomText>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <TouchableOpacity 
+            style={styles.cancelButton} 
+            onPress={() => navigation.goBack()}
+            disabled={isLoading}
+          >
             <CustomText style={styles.cancelButtonText}>إلغاء</CustomText>
           </TouchableOpacity>
         </View>
@@ -331,5 +374,8 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 150 : 50,
     width: '100%',
     color: colors.textPrimary,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 }); 

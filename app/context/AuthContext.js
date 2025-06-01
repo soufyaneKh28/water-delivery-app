@@ -82,6 +82,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  console.log("user",user);
+  
   // Login function
   const login = async (email, password) => {
     try {
