@@ -158,76 +158,84 @@ export default function Products() {
     : products.filter(product => product.category === selectedFilter);
 
   return (
-    <View  style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-          <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
-        <CustomText type='bold' style={styles.headerTitle}>المنتجات</CustomText>
-      </View>
+    <View style={styles.container}>
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#2196F3']}
+            tintColor="#2196F3"
+          />
+        }
+      >
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+          <CustomText type='bold' style={styles.headerTitle}>المنتجات</CustomText>
+        </View>
 
-      {/* Filters */}
-      <View style={{ marginTop: 10, marginBottom: 8 }}>
-        <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.filtersRow, { minWidth: '100%' }]}
-        >
-          {filters.map((filter) => (
-            <TouchableOpacity
-              key={filter.value}
-              style={[
-                styles.filterChip,
-                { width: "auto" },
-                selectedFilter === filter.value && styles.filterChipActive,
-              ]}
-              onPress={() => handleFilterChange(filter.value)}
-              activeOpacity={0.7}
-            >
-              <CustomText type='bold' style={[
-                styles.filterText,
-                { fontSize: 14 },
-                selectedFilter === filter.value && styles.filterTextActive,
-              ]}>
-                {filter.label}
-              </CustomText>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+        {/* Filters */}
+        <View style={{ marginTop: 10, marginBottom: 8 }}>
+          <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ flexDirection: 'row-reverse' }}
+            
+            contentContainerStyle={styles.filtersRow}
+          >
+            {filters.map((filter) => (
+              <TouchableOpacity
+                key={filter.value}
+                style={[
+                  styles.filterChip,
+                  selectedFilter === filter.value && styles.filterChipActive,
+                ]}
+                onPress={() => handleFilterChange(filter.value)}
+                activeOpacity={0.7}
+              >
+                <CustomText type='bold' style={[
+                  styles.filterText,
+                  { fontSize: 14 },
+                  selectedFilter === filter.value && styles.filterTextActive,
+                ]}>
+                  {filter.label}
+                </CustomText>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
-      {/* Products Grid with Fade Animation */}
-      <Animated.View style={{ flex: 1, opacity: fadeAnim }}>
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          contentContainerStyle={styles.productsGrid}
-          columnWrapperStyle={styles.productsRow}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={['#2196F3']} // Android
-              tintColor="#2196F3" // iOS
-            />
-          }
-          renderItem={({ item }) => (
-            <View style={[styles.productWrapper]}>
-              <ProductCard
-                image={item.image_url}
-                title={item.title}
-                size={item.size}
-                price={item.price}
-                onMenuPress={() => handleMenuPress(item)}
-              />
-            </View>
-          )}
-        />
-      </Animated.View>
+        {/* Products Grid with Fade Animation */}
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            scrollEnabled={false}
+            contentContainerStyle={styles.productsGrid}
+            columnWrapperStyle={styles.productsRow}
+            renderItem={({ item }) => (
+              <View style={[styles.productWrapper]}>
+                <ProductCard
+                  image={item.image_url}
+                  title={item.title}
+                  size={item.size}
+                  price={item.price}
+                  onMenuPress={() => handleMenuPress(item)}
+                />
+              </View>
+            )}
+          />
+        </Animated.View>
+      </ScrollView>
 
+      {/* Modals remain outside ScrollView */}
       {/* Add Modal */}
       <Modal
         visible={modalVisible}
@@ -304,6 +312,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     direction: 'rtl',
   },
+  scrollView: {
+    flex: 1,
+  },
   headerRow: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
@@ -332,8 +343,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   filtersRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 8,
+    // flexDirection: 'row-reverse',
+    paddingLeft: 16,
+    paddingRight: 8,
     alignItems: 'center',
     marginTop: 12,
   },
@@ -358,7 +370,7 @@ const styles = StyleSheet.create({
   },
   productsGrid: {
     paddingHorizontal: 12,
-    paddingBottom: 12,
+    paddingBottom: 100,
     width: '100%',
   },
   productsRow: {

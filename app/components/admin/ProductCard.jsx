@@ -1,18 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import CustomText from '../common/CustomText';
 const ProductCard = ({ image, title, size, price, onMenuPress }) => {
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
-        <Ionicons name="ellipsis-horizontal" size={22} color="#888" />
+        <View style={styles.menuButtonBg}>
+          <Ionicons name="ellipsis-horizontal" size={22} color="#888" />
+        </View>
       </TouchableOpacity>
       <Image source={{uri: image}} style={styles.image} resizeMode="cover" />
       <Text style={styles.title}>{title}</Text>
       <View style={styles.row}>
-        <Text style={styles.price}>{price}</Text>
-        <Text style={styles.size}>{size}</Text>
+        <View >
+          <CustomText style={styles.price}>{price} دينار</CustomText>
+        </View>
+        <View >
+          <CustomText style={styles.size}>{size} لتر</CustomText>
+        </View>
       </View>
     </View>
   );
@@ -35,10 +41,12 @@ const styles = StyleSheet.create({
   menuButton: {
     position: 'absolute',
     top: 8,
-    // RTL: left for RTL, right for LTR
-    left:  8 ,
-    // :  8,
+    left: 8,
     zIndex: 2,
+  },
+  menuButtonBg: {
+    backgroundColor: '#F2F4F7',
+    borderRadius: 8,
     padding: 4,
   },
   image: {
@@ -61,13 +69,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 2,
   },
+  priceContainer: {
+    // backgroundColor: '#E3F2FD',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  sizeContainer: {
+    // backgroundColor: '#F5F5F5',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
   price: {
     color: '#2196F3',
     fontWeight: 'bold',
     fontSize: 15,
   },
   size: {
-    color: '#888',
+    color: '#666',
     fontSize: 13,
   },
 });
