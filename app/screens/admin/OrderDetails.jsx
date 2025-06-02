@@ -11,16 +11,18 @@ import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
 const statusColors = {
+  pending: '#FFD700', // Gold for pending
   processing: '#EEEEEE',
+  'on-the-way': '#87CEEB', // Sky blue for on-the-way
   delivered: '#9DFA9F',
-  accepted: '#2196F3',
   cancelled: '#F44336',
 };
 
 const statusLabels = {
+  pending: 'قيد الانتظار',
   processing: 'قيد المعالجة',
+  'on-the-way': 'في الطريق',
   delivered: 'تم التوصيل',
-  accepted: 'تم القبول',
   cancelled: 'تم الالغاء',
 };
 
@@ -166,8 +168,20 @@ export default function OrderDetails({ route, navigation }) {
             <TouchableOpacity
               style={styles.updateButton}
               onPress={() => {
-                setModalVisible(false);
-                handleStatusChange(selectedStatus);
+                Alert.alert(
+                  'تأكيد',
+                  'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
+                  [
+                    { text: 'إلغاء', style: 'cancel' },
+                    {
+                      text: 'تأكيد',
+                      onPress: () => {
+                        setModalVisible(false);
+                        handleStatusChange(selectedStatus);
+                      },
+                    },
+                  ]
+                );
               }}
               disabled={isUpdating}
             >

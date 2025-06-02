@@ -13,9 +13,10 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const orderStatuses = [
   { label: 'كل الطلبات', value: 'all' },
+  { label: 'قيد الانتظار', value: 'pending' },
   { label: 'قيد المعالجة', value: 'processing' },
+  { label: 'في الطريق', value: 'on-the-way' },
   { label: 'تم التوصيل', value: 'delivered' },
-  { label: 'تم القبول', value: 'accepted' },
   { label: 'تم الالغاء', value: 'cancelled' },
 ];
 
@@ -50,16 +51,18 @@ const mockOrders = [
 ];
 
 const statusColors = {
+  pending: '#FFD700', // Gold for pending
   processing: '#EEEEEE',
+  'on-the-way': '#87CEEB', // Sky blue for on-the-way
   delivered: '#9DFA9F',
-  accepted: '#2196F3',
   cancelled: '#F44336',
 };
 
 const statusLabels = {
+  pending: 'قيد الانتظار',
   processing: 'قيد المعالجة',
+  'on-the-way': 'في الطريق',
   delivered: 'تم التوصيل',
-  accepted: 'تم القبول',
   cancelled: 'تم الالغاء',
 };
 
@@ -79,9 +82,10 @@ const Orders = () => {
       .from('orders')
       .select(`
         *,
-        location_id:locations (*)
+        location_id:locations (*),
+        user_id:profiles (*)
       `, { count: 'exact' })
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
   
     console.log("orders", data);
     if (!error) {
@@ -214,7 +218,7 @@ const Orders = () => {
         
           <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
             <View>
-              <CustomText style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
+              <CustomText type='bold' style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
               <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
                 <CustomText style={styles.topCardNumber}>{totalOrders}</CustomText>
               </View>
@@ -329,7 +333,19 @@ const Orders = () => {
                   { backgroundColor: statusColors[key] },
                   key === selectedOrder.status && styles.selectedStatusOption,
                 ]}
-                onPress={() => handleStatusChange(selectedOrder.id, key)}
+                onPress={() => {
+                  Alert.alert(
+                    'تأكيد',
+                    'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
+                    [
+                      { text: 'إلغاء', style: 'cancel' },
+                      {
+                        text: 'تأكيد',
+                        onPress: () => handleStatusChange(selectedOrder.id, key),
+                      },
+                    ]
+                  );
+                }}
               >
                 <CustomText 
                   type='regular' 
@@ -370,7 +386,7 @@ const styles = StyleSheet.create({
   topCardTitle: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     textAlign: 'right',
   },
   topCardNumber: {
