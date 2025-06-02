@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import { supabase } from '../../../lib/supabase';
@@ -26,6 +26,10 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const defaultDataWith6Colors = [
     "#B0604D",
@@ -83,31 +87,42 @@ const images = [
   };
 
   const getCategories = async () => {
-    const { data, error } = await supabase
-      .from('product_categories')
-      .select('*')
-      .order('created_at', { ascending: false }); // Optional: order by created_at
+    setIsLoadingCategories(true);
+    try {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching categories:', error);
-      return;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return;
+      }
+      setCategories(data);
+    } finally {
+      setIsLoadingCategories(false);
     }
-    setCategories(data);
   };
 
   const getProducts = async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Error fetching products:', error);
-      return;
+    setIsLoadingProducts(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching products:', error);
+        return;
+      }
+      setProducts(data);
+    } finally {
+      setIsLoadingProducts(false);
     }
-    setProducts(data);
   };
 
   const getLocations = async () => {
+    setIsLoadingLocations(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -127,7 +142,6 @@ const images = [
       const addresses = data.data || [];
       setSavedAddresses(addresses);
       
-      // Set the first address as default if there are any addresses and no address is currently selected
       if (addresses.length > 0 && !selectedAddress) {
         setSelectedAddress(addresses[0]);
       }
@@ -135,8 +149,26 @@ const images = [
       console.log("error", error);
       console.error('Error fetching locations:', error);
       setSavedAddresses([]);
+    } finally {
+      setIsLoadingLocations(false);
     }
   };
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // Refresh all data in parallel
+      await Promise.all([
+        getCategories(),
+        getProducts(),
+        getLocations()
+      ]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     getCategories();
@@ -193,10 +225,30 @@ const images = [
   return (
     <SafeAreaView style={styles.container}>
      <StatusBar style="light" backgroundColor="#1B7CC8" />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 50 }}>
+      <ScrollView 
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false} 
+        contentContainerStyle={{ paddingBottom: 50 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} // Android
+            tintColor={colors.primary} // iOS
+            title="جاري التحديث..." // iOS
+            titleColor={colors.primary} // iOS
+          />
+        }
+      >
         <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -150, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
-          {renderLocationButton()}
+          {isLoadingLocations ? (
+            <View style={[styles.locationButton, styles.loadingContainer]}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : (
+            renderLocationButton()
+          )}
         </View>
 
         {/* Offers Carousel */}
@@ -238,45 +290,57 @@ const images = [
         {/* Categories Section */}
         <View style={styles.categoriesContainer}>
           <CustomText type="bold" style={styles.categoriesTitle}>الفئات</CustomText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesScrollContent}
-            style={styles.categoriesScroll}
-          >
-            {categories.map((category) => (
-              <TouchableOpacity 
-                key={category.id} 
-                style={styles.categoryCard}
-                onPress={() => handleCategoryPress(category)}
-              >
-                <View style={styles.categoryImage}>
-                  <Image source={{uri : category.image_url}} style={{width: 37, height: 37 , borderRadius: 50}} />
-                </View>  
-                <CustomText type="medium" style={styles.categoryTitle}>{category.title}</CustomText>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          {isLoadingCategories ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScrollContent}
+              style={styles.categoriesScroll}
+            >
+              {categories.map((category) => (
+                <TouchableOpacity 
+                  key={category.id} 
+                  style={styles.categoryCard}
+                  onPress={() => handleCategoryPress(category)}
+                >
+                  <View style={styles.categoryImage}>
+                    <Image source={{uri : category.image_url}} style={{width: 37, height: 37 , borderRadius: 50}} />
+                  </View>  
+                  <CustomText type="medium" style={styles.categoryTitle}>{category.title}</CustomText>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
         </View>
 
         {/* Products Section */}
         <View style={styles.productsSection}>
           <CustomText type="bold" style={styles.productsTitle}>المنتجات</CustomText>
-          <View style={styles.productsRow}>
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
-                title={product.title}
-                size={product.size}
-                description={product.description}
-                price={`$${product.price}`}
-                oldPrice={product.old_price ? `$${product.old_price}` : undefined}
-                onMenuPress={() => {}}
-              />
-            ))}
-          </View>
+          {isLoadingProducts ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : (
+            <View style={styles.productsRow}>
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
+                  title={product.title}
+                  size={product.size}
+                  description={product.description}
+                  price={`$${product.price}`}
+                  oldPrice={product.old_price ? `$${product.old_price}` : undefined}
+                  onMenuPress={() => {}}
+                />
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Order Status */}
@@ -550,6 +614,13 @@ const styles = StyleSheet.create({
   addLocationText: {
     color: colors.primary,
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 100,
+    padding: 20,
   },
 }); 
 
