@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -12,7 +13,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const orderStatuses = [
   { label: 'كل الطلبات', value: 'all' },
-  { label: 'قيد المعالجة', value: 'pending' },
+  { label: 'قيد المعالجة', value: 'processing' },
   { label: 'تم التوصيل', value: 'delivered' },
   { label: 'تم القبول', value: 'accepted' },
   { label: 'تم الالغاء', value: 'cancelled' },
@@ -49,14 +50,14 @@ const mockOrders = [
 ];
 
 const statusColors = {
-  pending: '#EEEEEE',
+  processing: '#EEEEEE',
   delivered: '#9DFA9F',
   accepted: '#2196F3',
   cancelled: '#F44336',
 };
 
 const statusLabels = {
-  pending: 'قيد المعالجة',
+  processing: 'قيد المعالجة',
   delivered: 'تم التوصيل',
   accepted: 'تم القبول',
   cancelled: 'تم الالغاء',
@@ -68,19 +69,25 @@ const Orders = () => {
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [orders, setOrders] = useState([]);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
-    .from('orders')
-    .select(`
-      *,
-      location_id:locations (*)
-    `)
-    .order('created_at', { ascending: false });
+    const { data, error, count } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        location_id:locations (*)
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false });
   
-
-    console.log("orders",data);
-    if (!error) setOrders(data || []);
+    console.log("orders", data);
+    if (!error) {
+      setOrders(data || []);
+      setTotalOrders(count || 0);
+    }
   };
 
   React.useEffect(() => {
@@ -119,6 +126,67 @@ const Orders = () => {
     navigation.navigate('OrderDetails', { order });
   };
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      setIsUpdating(true);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', orderId);
+
+      if (error) {
+        Alert.alert(
+          'خطأ',
+          'حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.',
+          [{ text: 'حسناً' }]
+        );
+        return;
+      }
+
+      // Update local state
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status: newStatus } : order
+      ));
+
+      // Show success message
+      Alert.alert(
+        'تم التحديث',
+        'تم تحديث حالة الطلب بنجاح',
+        [{ text: 'حسناً' }]
+      );
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      Alert.alert(
+        'خطأ',
+        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+        [{ text: 'حسناً' }]
+      );
+    } finally {
+      setIsUpdating(false);
+      setModalVisible(false);
+    }
+  };
+
+  const openStatusModal = (order) => {
+    setSelectedOrder(order);
+    setModalVisible(true);
+  };
+
+  // Helper function to format location as a single string
+  const formatLocation = (location) => {
+    if (!location) return '';
+    const parts = [
+      location.label,
+      location.description,
+      location.floor_no ? `Floor ${location.floor_no}` : null,
+      location.building_no ? `Building ${location.building_no}` : null,
+      location.city,
+      location.region,
+    ];
+    return parts.filter(Boolean).join(', ');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -148,7 +216,7 @@ const Orders = () => {
             <View>
               <CustomText style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
               <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
-                <CustomText style={styles.topCardNumber}>24</CustomText>
+                <CustomText style={styles.topCardNumber}>{totalOrders}</CustomText>
               </View>
               <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
 
@@ -203,14 +271,29 @@ const Orders = () => {
               {filteredOrders.map((item) => (
                 <View style={styles.orderCard} key={item.id}>
                   <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <CustomText style={styles.orderId}>#{item.id}</CustomText>
-                    <View style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}> 
-                      <CustomText type='regular' style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}>{statusLabels[item.status]}</CustomText>
-                    </View>
+                    <CustomText style={styles.orderId} numberOfLines={1} ellipsizeMode="tail">#{item.id}</CustomText>
+                    <TouchableOpacity 
+                      style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}
+                      onPress={() => openStatusModal(item)}
+                    >
+                      <CustomText 
+                        type='regular' 
+                        style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}
+                      >
+                        {statusLabels[item.status]}
+                      </CustomText>
+                    </TouchableOpacity>
                   </View>
+
                   <CustomText type='bold' style={styles.orderTitle}>{item.title}</CustomText>
-                  <CustomText type='medium' style={styles.orderDate}>{item.date} - {item.time}</CustomText>
-                  <CustomText type='medium' style={styles.orderAddress}>{item.address}</CustomText>
+                  <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
+                  <CustomText type='medium' style={styles.orderDate}>
+                    {dayjs(item.created_at).format('DD MMM YYYY, HH:mm')}
+                  </CustomText>
+                  <CustomText type='medium' style={styles.orderAddress} numberOfLines={1} ellipsizeMode="tail">
+                    {formatLocation(item.location_id)}
+                  </CustomText>
+                  </View>
                   <View style={styles.orderFooter}>
                     <TouchableOpacity 
                       style={styles.menuButton}
@@ -218,7 +301,7 @@ const Orders = () => {
                     >
                       <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
                     </TouchableOpacity>
-                    <CustomText type='bold' style={styles.orderPrice}>{item.price} دينار</CustomText>
+                    <CustomText type='bold' style={styles.orderPrice}>{item.total} دينار</CustomText>
                   </View>
                 </View>
               ))}
@@ -226,6 +309,48 @@ const Orders = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* Status Change Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHandle} />
+            <CustomText type="bold" style={styles.modalTitle}>تغيير حالة الطلب</CustomText>
+            {selectedOrder && Object.entries(statusLabels).map(([key, label]) => (
+              <Pressable
+                key={key}
+                style={[
+                  styles.statusOption,
+                  { backgroundColor: statusColors[key] },
+                  key === selectedOrder.status && styles.selectedStatusOption,
+                ]}
+                onPress={() => handleStatusChange(selectedOrder.id, key)}
+              >
+                <CustomText 
+                  type='regular' 
+                  style={[
+                    styles.statusOptionText,
+                    key === 'delivered' && { color: '#262626' }
+                  ]}
+                >
+                  {label}
+                </CustomText>
+              </Pressable>
+            ))}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <CustomText type='bold' style={styles.closeButtonText}>إغلاق</CustomText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -317,6 +442,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
+    justifyContent: 'flex-start',
     marginBottom: 12,
     shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
@@ -330,6 +456,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222',
     fontSize: 15,
+    textAlign: 'right',
+    width: 200,
+    // numberOfLines: 1,
     marginLeft: 8,
   },
   statusBadge: {
@@ -356,13 +485,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginBottom: 2,
+    
     textAlign: 'right',
   },
   orderAddress: {
     fontSize: 14,
     color: '#888',
     marginBottom: 8,
-    textAlign: 'right',
+    width: 200,
+
+    // textAlign: 'left',
   },
   orderFooter: {
     flexDirection: 'row',
@@ -387,6 +519,60 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#666',
     marginTop: 32,
+    fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 32,
+    alignItems: 'center',
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#ccc',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  statusOption: {
+    width: '100%',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  selectedStatusOption: {
+    borderWidth: 2,
+    borderColor: '#2196F3',
+  },
+  statusOptionText: {
+    fontSize: 13,
+    color: '#222',
+  },
+  closeButton: {
+    width: '100%',
+    backgroundColor: '#F2F4F7',
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#262626',
     fontSize: 16,
   },
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -49,7 +50,7 @@ export default function AddLocationScreen({ route, navigation }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       return;
     }
@@ -57,22 +58,44 @@ export default function AddLocationScreen({ route, navigation }) {
     // Create the location object with all the data
     const locationDetails = {
       label,
-      address,
+      region: city, // Assuming region is the same as city for now
       city,
-      buildingNumber,
-      floor,
-      additionalDirections,
-      coordinates: locationData ? {
-        latitude: locationData.latitude,
-        longitude: locationData.longitude,
-      } : null,
+      latitude: locationData?.latitude || '',
+      longitude: locationData?.longitude || '',
+      description: additionalDirections,
+      floor_no: floor,
+      building_no: buildingNumber,
+      // address,
     };
 
-    // Here you would typically save the location to your backend
-    console.log('Saving location:', locationDetails);
-    
-    // Navigate to home page
-    navigation.navigate('ClientTabs');
+    try {
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+      const response = await fetch(
+        'https://water-supplier-2.onrender.com/api/k1/locations/createLocation',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(locationDetails),
+        }
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل إضافة العنوان');
+      }
+      alert('تمت إضافة العنوان بنجاح');
+      navigation.navigate('ClientTabs');
+    } catch (error) {
+      alert('حدث خطأ أثناء إضافة العنوان: ' + error.message);
+    }
   };
 
   return (

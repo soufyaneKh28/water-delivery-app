@@ -1,6 +1,7 @@
 // import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -16,15 +17,11 @@ import { colors } from '../../styling/colors';
 
 // import * as React from "react";
 
-const addresses = [
-  { label: 'New Home', address: '759 Ashcraft Court San Diego\nSan Diego' , id: 1},
-  { label: 'Work', address: '759 Ashcraft Court San Diego\nSan Diego' , id: 2},
-];
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [savedAddresses, setSavedAddresses] = useState(addresses);
+  const [savedAddresses, setSavedAddresses] = useState([]);
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -109,10 +106,38 @@ const images = [
     setProducts(data);
   };
 
+  const getLocations = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+
+      const response = await axios.get('https://water-supplier-2.onrender.com/api/k1/locations/getAllOnMe', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = response.data;
+      console.log('data-locations', data);
+      setSavedAddresses(data || []);
+    } catch (error) {
+      console.log("error", error);
+      console.error('Error fetching locations:', error);
+      setSavedAddresses([]);
+    }
+  };
+
   useEffect(() => {
     getCategories();
     getProducts();
+    getLocations();
   }, []);
+
+  console.log("savedAddresses", savedAddresses);
 
   const renderLocationButton = () => {
     if (savedAddresses?.length === 0) {
@@ -135,7 +160,7 @@ const images = [
         <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24, objectFit: 'cover'}} />
         <View style={{flex: 1, textAlign: 'right', alignItems: 'flex-end'}}>
           <CustomText type="regular" style={styles.locationText}>تسليم إلى</CustomText>
-          <CustomText type="bold" style={styles.locationTextMain}>
+          <CustomText type="bold" style={styles.locationTextMain} numberOfLines={1} ellipsizeMode="tail">
             {selectedAddress ? selectedAddress.address : 'اختر عنوان التوصيل'}
           </CustomText>
         </View>
@@ -261,7 +286,7 @@ const images = [
             {/* <View style={{ width: 40, height: 4, backgroundColor: '#ccc', borderRadius: 2, marginBottom: 8 }} /> */}
             <CustomText type="bold" style={{ fontSize: 18 }}>عنوان التوصيل</CustomText>
           </View>
-          {savedAddresses.map((address) => (
+          { savedAddresses && savedAddresses.map((address) => (
             <TouchableOpacity
             key={address.id}
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10 }}

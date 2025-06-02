@@ -5,17 +5,20 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableO
 // import BackButton from '../../components/common/BackButton';
 import BackBtn from '../../components/common/BackButton';
 // import CustomText from '../../components/common/CustomText';
+import { Alert } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
+
 const statusColors = {
-  pending: '#EEEEEE',
+  processing: '#EEEEEE',
   delivered: '#9DFA9F',
   accepted: '#2196F3',
   cancelled: '#F44336',
 };
 
 const statusLabels = {
-  pending: 'قيد المعالجة',
+  processing: 'قيد المعالجة',
   delivered: 'تم التوصيل',
   accepted: 'تم القبول',
   cancelled: 'تم الالغاء',
@@ -27,14 +30,48 @@ export default function OrderDetails({ route, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(order.status);
 
-  const handleStatusChange = (newStatus) => {
-    setIsUpdating(true);
-    // Here you would typically make an API call to update the order status
-    setTimeout(() => {
+  const handleStatusChange = async (newStatus) => {
+    try {
+      setIsUpdating(true);
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('id', order.id);
+
+      if (error) {
+        Alert.alert(
+          'خطأ',
+          'حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.',
+          [{ text: 'حسناً' }]
+        );
+        return;
+      }
+
+      // Show success message
+      Alert.alert(
+        'تم التحديث',
+        'تم تحديث حالة الطلب بنجاح',
+        [
+          { 
+            text: 'حسناً',
+            onPress: () => {
+              // Navigate back to refresh the orders list
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      Alert.alert(
+        'خطأ',
+        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+        [{ text: 'حسناً' }]
+      );
+    } finally {
       setIsUpdating(false);
-      // After successful update, you might want to navigate back or refresh the orders list
-      navigation.goBack();
-    }, 1000);
+    }
   };
 
   return (
@@ -77,9 +114,20 @@ export default function OrderDetails({ route, navigation }) {
         <View style={styles.divider} />
         <View style={styles.statusRow}>
           <CustomText style={styles.detailLabel}>حالة الطلب</CustomText>
-          <TouchableOpacity style={styles.statusButton} onPress={() => setModalVisible(true)}>
+          <TouchableOpacity 
+            style={[styles.statusBadge, { backgroundColor: statusColors[order.status] || '#E0E0E0' }]} 
+            onPress={() => setModalVisible(true)}
+          >
             <Ionicons name="chevron-down" size={20} color="#262626" style={{ marginLeft: 8 }} />
-            <CustomText style={styles.statusButtonText}>{statusLabels[order.status] || 'غير معروف'}</CustomText>
+            <CustomText 
+              type='regular' 
+              style={[
+                styles.statusBadgeText, 
+                order.status === 'delivered' && { color: '#262626' }
+              ]}
+            >
+              {statusLabels[order.status] || 'غير معروف'}
+            </CustomText>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -93,28 +141,24 @@ export default function OrderDetails({ route, navigation }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHandle} />
-            <CustomText type="bold" style={styles.modalTitle}>حالة الطلب</CustomText>
+            <CustomText type="bold" style={styles.modalTitle}>تغيير حالة الطلب</CustomText>
             {Object.entries(statusLabels).map(([key, label]) => (
               <Pressable
                 key={key}
                 style={[
                   styles.statusOption,
+                  { backgroundColor: statusColors[key] },
                   key === selectedStatus && styles.selectedStatusOption,
-                  key === 'delivered' && styles.deliveredStatus,
-                  key === 'pending' && styles.pendingStatus,
-                  key === 'accepted' && styles.acceptedStatus,
-                  key === 'cancelled' && styles.cancelledStatus,
                 ]}
                 onPress={() => setSelectedStatus(key)}
               >
-                <CustomText type='bold' style={[
-                  styles.statusOptionText,
-                  key === selectedStatus && styles.selectedStatusOptionText,
-                  key === 'delivered' && { color: '#2E7D32' },
-                  key === 'pending' && { color: '#FF9800' },
-                  key === 'accepted' && { color: '#2196F3' },
-                  key === 'cancelled' && { color: '#F44336' },
-                ]}>
+                <CustomText 
+                  type='regular' 
+                  style={[
+                    styles.statusOptionText,
+                    key === 'delivered' && { color: '#262626' }
+                  ]}
+                >
                   {label}
                 </CustomText>
               </Pressable>
@@ -130,7 +174,7 @@ export default function OrderDetails({ route, navigation }) {
               {isUpdating ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <CustomText type='bold' style={styles.updateButtonText}>تعديل حالة الطلب</CustomText>
+                <CustomText type='bold' style={styles.updateButtonText}>تحديث الحالة</CustomText>
               )}
             </TouchableOpacity>
           </View>
@@ -201,20 +245,18 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     marginTop: 12,
   },
-  statusButton: {
+  statusBadge: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: '#9DFA9F',
     borderRadius: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
   },
-  statusButtonText: {
-    color: '#262626',
-    fontWeight: 'bold',
-    fontSize: 16,
+  statusBadgeText: {
+    fontSize: 13,
+    color: '#222',
+    paddingHorizontal: 10,
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -246,32 +288,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#eee',
     marginBottom: 10,
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   selectedStatusOption: {
     borderWidth: 2,
     borderColor: '#2196F3',
-    backgroundColor: '#E5F1FF',
   },
   statusOptionText: {
-    fontSize: 16,
-    // fontWeight: 'bold',
-  },
-  deliveredStatus: {
-    borderColor: '#4CAF50',
-  },
-  pendingStatus: {
-    borderColor: '#FF9800',
-  },
-  acceptedStatus: {
-    borderColor: '#2196F3',
-  },
-  cancelledStatus: {
-    borderColor: '#F44336',
+    fontSize: 13,
+    color: '#222',
   },
   updateButton: {
     width: '100%',
@@ -284,6 +310,5 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: '#fff',
     fontSize: 16,
-    // fontWeight: 'bold',
   },
 }); 
