@@ -65,7 +65,7 @@ export default function AddLocationScreen({ route, navigation }) {
       description: additionalDirections,
       floor_no: floor,
       building_no: buildingNumber,
-      // address,
+      address,
     };
 
     try {

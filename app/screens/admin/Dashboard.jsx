@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [ordersCount, setOrdersCount] = useState(0);
   const [clientsCount, setClientsCount] = useState(0);
   const [productsCount, setProductsCount] = useState(0);
+  const [successRate, setSuccessRate] = useState('0%');
 
   const fetchOrdersCount = async () => {
     const { count, error } = await supabase
@@ -34,10 +35,24 @@ export default function AdminDashboard() {
     if (!error) setProductsCount(count || 0);
   };
 
+  const fetchSuccessRate = async () => {
+    const { data: orders, error } = await supabase
+      .from('orders')
+      .select('status');
+    
+    if (!error && orders) {
+      const totalOrders = orders.length;
+      const deliveredOrders = orders.filter(order => order.status === 'delivered').length;
+      const rate = totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0;
+      setSuccessRate(`${rate}%`);
+    }
+  };
+
   React.useEffect(() => {
     fetchOrdersCount();
     fetchClientsCount();
     fetchProductsCount();
+    fetchSuccessRate();
   }, []);
 
   const onRefresh = React.useCallback(() => {
@@ -46,6 +61,7 @@ export default function AdminDashboard() {
       fetchOrdersCount(),
       fetchClientsCount(),
       fetchProductsCount(),
+      fetchSuccessRate(),
     ]).finally(() => setRefreshing(false));
   }, []);
 
@@ -53,7 +69,6 @@ export default function AdminDashboard() {
   const userName = 'سفيان خلف الله';
   const profit = '14.000';
   const profitChange = '+15%';
-  const successRate = '90%';
 
   return (
     <View style={styles.container}>

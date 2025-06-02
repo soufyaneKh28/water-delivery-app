@@ -6,10 +6,10 @@ import * as Font from 'expo-font';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { FONTS } from './constants/fonts';
+import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
-
 // Enable RTL layout direction
 // I18nManager.forceRTL(true);
 // // Allow RTL on Android (optional)
@@ -54,8 +54,9 @@ export default function App() {
   return (
     <AuthProvider>
       <CartProvider>
-
+      <AddressProvider>
       <AppNavigator />
+      </AddressProvider>
       </CartProvider>
       {/* <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text> */}
     </AuthProvider>

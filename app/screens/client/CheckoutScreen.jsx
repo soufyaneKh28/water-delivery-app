@@ -8,7 +8,7 @@ import { globalStyles } from '../../styling/globalStyles';
 
 export default function CheckoutScreen({ route, navigation }) {
   // You can pass cart, subtotal, shipping, total via route.params
-  const { cart = [], subtotal = 0, shipping = 0, total = 0 } = route?.params || {};
+  const { cart = [], subtotal = 0, shipping = 0, total = 0, selectedAddress } = route?.params || {};
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -17,6 +17,20 @@ export default function CheckoutScreen({ route, navigation }) {
   const [cardErrors, setCardErrors] = useState({});
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState('');
+
+  const formatAddressString = (address) => {
+    if (!address) return '';
+    const parts = [
+      address.label,
+      address.city,
+      address.address,
+      `مبنى ${address.building_no}`,
+      `طابق ${address.floor_no}`,
+      address.description
+    ].filter(Boolean);
+    
+    return parts.join('، ');
+  };
 
   const handleConfirm = () => {
     if (paymentMethod === 'delivery' && note.trim() === '') {
@@ -51,9 +65,16 @@ export default function CheckoutScreen({ route, navigation }) {
         {/* Delivery Address */}
         <CustomText type="bold" style={styles.label}>عنوان التسليم</CustomText>
         <View style={styles.addressBox}>
-          <CustomText style={{ textAlign: 'right' }} type="bold">759 Ashcraft Court San Diego</CustomText>
-          <CustomText style={{ fontSize: 12, color: '#888', textAlign: 'right', maxWidth: '80%' }}>759 Ashcraft Court San Diego\nIstanbul 34010,Floor:11</CustomText>
-          {/* <Image source={require('../../../assets/images/map.png')} style={styles.mapImage} /> */}
+          {selectedAddress ? (
+            <>
+              <CustomText type="bold" style={{ fontSize: 16, textAlign: 'right', marginBottom: 4 }}>{selectedAddress.label}</CustomText>
+              <CustomText style={{ fontSize: 14, color: '#666', textAlign: 'right' }} numberOfLines={2} ellipsizeMode="tail">
+                {formatAddressString(selectedAddress)}
+              </CustomText>
+            </>
+          ) : (
+            <CustomText style={{ textAlign: 'right', color: '#666' }}>يرجى اختيار عنوان التوصيل</CustomText>
+          )}
         </View>
         {/* Payment Method */}
         <CustomText type="bold" style={styles.label}>طريقة الدفع</CustomText>
@@ -191,7 +212,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   addressBox: {
-    backgroundColor: colors.white,
+    backgroundColor: 'rgba(33, 150, 243, 0.05)', // 5% opacity of primary color
     borderWidth: 1,
     borderColor: colors.border,
     padding: 15,

@@ -4,7 +4,6 @@ import { AddressProvider } from './app/context/AddressContext';
 import { AuthProvider } from './app/context/AuthContext';
 import { CartProvider } from './app/context/CartContext';
 import AppNavigator from './app/navigation/AppNavigator';
-// ... other imports ...
 
 export default function App() {
   return (

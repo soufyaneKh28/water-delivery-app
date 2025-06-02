@@ -4,11 +4,13 @@ import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-nativ
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import SuccessModal from '../../components/common/SuccessModal';
+import { useAddress } from '../../context/AddressContext';
 import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
 export default function CartScreen() {
   const navigation = useNavigation();
+  const { selectedAddress } = useAddress();
   const { 
     cart, 
     removeFromCart, 
@@ -108,7 +110,13 @@ export default function CartScreen() {
             <PrimaryButton 
               title="تأكيد السلة" 
               style={styles.confirmBtn} 
-              onPress={() => navigation.navigate('Checkout', { cart, subtotal, shipping, total })} 
+              onPress={() => navigation.navigate('Checkout', { 
+                cart, 
+                subtotal, 
+                shipping, 
+                total,
+                selectedAddress
+              })} 
             />
           </View>
         </>

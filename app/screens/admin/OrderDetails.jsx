@@ -5,6 +5,7 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableO
 // import BackButton from '../../components/common/BackButton';
 import BackBtn from '../../components/common/BackButton';
 // import CustomText from '../../components/common/CustomText';
+import dayjs from 'dayjs';
 import { Alert } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -25,6 +26,16 @@ const statusLabels = {
   delivered: 'تم التوصيل',
   cancelled: 'تم الالغاء',
 };
+
+function generateOrderNumber(uuid) {
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = ((hash << 5) - hash) + uuid.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Make it positive and limit to 8 digits
+  return Math.abs(hash).toString().padStart(8, '0').slice(0, 8);
+}
 
 export default function OrderDetails({ route, navigation }) {
   const { order } = route.params;
@@ -76,6 +87,20 @@ export default function OrderDetails({ route, navigation }) {
     }
   };
 
+  const formatLocation = (location) => {
+    if (!location) return '';
+    const parts = [
+      location.label,
+      location.description,
+      location.floor_no ? `Floor ${location.floor_no}` : null,
+      location.building_no ? `Building ${location.building_no}` : null,
+      location.city,
+      location.region,
+    ];
+    return parts.filter(Boolean).join(', ');
+  };
+
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -86,12 +111,15 @@ export default function OrderDetails({ route, navigation }) {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>رقم الطلب</CustomText>
-          <CustomText style={styles.detailValue}>#{order.id || 'غير معروف'}</CustomText>
+          <CustomText style={styles.detailValue}>#{generateOrderNumber(order.id)}</CustomText>
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>تاريخ الطلب</CustomText>
-          <CustomText style={styles.detailValue}>{order.date || 'غير معروف'} - {order.time || 'غير معروف' }</CustomText>
+          <View style={styles.dateContainer}>
+            <CustomText style={styles.detailValue}>{  dayjs(order.created_at).format('DD MMM YYYY, HH:mm')|| 'غير معروف'}</CustomText>
+            {/* <CustomText style={[styles.detailValue, styles.timeText]}>{order.time || 'غير معروف'}</CustomText> */}
+          </View>
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>
@@ -101,17 +129,22 @@ export default function OrderDetails({ route, navigation }) {
         <View style={styles.divider} />
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>اسم العميل</CustomText>
-          <CustomText style={styles.detailValue}>{order.customerName || 'غير معروف'}</CustomText>
+          <CustomText style={styles.detailValue}>{order.user_id?.username || 'غير معروف'}</CustomText>
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>الموقع</CustomText>
-          <CustomText style={styles.detailValue}>{order.address || 'غير معروف'}</CustomText>
+          <CustomText style={styles.detailValue}>{ formatLocation(order.location_id) || 'غير معروف'}</CustomText>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
+          <CustomText style={styles.detailLabel}>طريقة الدفع</CustomText>
+          <CustomText style={styles.detailValue}>{order.payment_method === 'cash' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'} </CustomText>
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>
            <CustomText style={styles.detailLabel}>المبلغ الإجمالي</CustomText>
-          <CustomText style={styles.detailValue}>{order.price || 'غير معروف'} دولار</CustomText> 
+          <CustomText style={styles.detailValue}>{order.total || 'غير معروف'} دينار</CustomText> 
         </View>
         <View style={styles.divider} />
         <View style={styles.statusRow}>
@@ -324,5 +357,14 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  dateContainer: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  timeText: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
   },
 }); 
