@@ -28,9 +28,11 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
+  const [isLoadingOffers, setIsLoadingOffers] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeOrders, setActiveOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
@@ -54,7 +56,7 @@ const images = [
 ];
 
   // Sample offers data - you can replace this with your actual offers data
-  const offers = [
+  const offersData = [
     { id: 1, image: require('../../../assets/images/offer1.png') },
     { id: 2, image: require('../../../assets/images/offer1.png') },
     { id: 3, image: require('../../../assets/images/offer1.png') },
@@ -174,6 +176,33 @@ const images = [
     }
   };
 
+  const getOffers = async () => {
+    setIsLoadingOffers(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+
+      const response = await axios.get('https://water-supplier-2.onrender.com/api/k1/offers/getAllOffers', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = response.data;
+      console.log('data-offers', data);
+      setOffers(data.data || []);
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+      setOffers([]);
+    } finally {
+      setIsLoadingOffers(false);
+    }
+  };
+
   const fetchActiveOrders = async () => {
     if (!user?.id) return;
     
@@ -217,7 +246,8 @@ const images = [
         getCategories(),
         getProducts(),
         getLocations(),
-        fetchActiveOrders()
+        fetchActiveOrders(),
+        getOffers()
       ]);
     } catch (error) {
       console.error('Error refreshing data:', error);
@@ -231,6 +261,7 @@ const images = [
     getProducts();
     getLocations();
     fetchActiveOrders();
+    getOffers();
   }, [user?.id]);
 
   console.log("savedAddresses", savedAddresses);
@@ -310,38 +341,43 @@ const images = [
 
         {/* Offers Carousel */}
         <View style={styles.offersContainer}>
-          {/* <CustomText type="semiBold" style={styles.offersTitle}>العروض الحالية</CustomText> */}
-      
+          {isLoadingOffers ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : offers.length > 0 ? (
             <View
-			id="carousel-component"
-			dataSet={{ kind: "basic-layouts", name: "parallax" }}
-		>
-			<Carousel
-				autoPlayInterval={2000}
-				data={images}
-				height={220}
-				loop={true}
-				pagingEnabled={true}
-				snapEnabled={true}
-				width={width}
-				style={{
-					// backgroundColor: 'red',
-				}}
-				mode="parallax"
-				modeConfig={{
-					parallaxScrollingScale: 0.9,
-					parallaxScrollingOffset: 50,
-				}}
-				onProgressChange={progress}
-        renderItem={({ item }) => (
-          // <TouchableOpacity style={{width: '100%', height: '100%'}}>
-
-          <Image source={{ uri: item }} style={[styles.image, { width: '100%', height: '100%' , objectFit: "cover" }]} />
-          // </TouchableOpacity>
-        )}
-			/>
-		</View>
-          {/* </View> */}
+              id="carousel-component"
+              dataSet={{ kind: "basic-layouts", name: "parallax" }}
+            >
+              <Carousel
+                autoPlayInterval={2000}
+                data={offers}
+                height={220}
+                loop={true}
+                pagingEnabled={true}
+                snapEnabled={true}
+                width={width}
+                style={{}}
+                mode="parallax"
+                modeConfig={{
+                  parallaxScrollingScale: 0.9,
+                  parallaxScrollingOffset: 50,
+                }}
+                onProgressChange={progress}
+                renderItem={({ item }) => (
+                  <Image 
+                    source={{ uri: item.image_url }} 
+                    style={[styles.image, { width: '100%', height: '100%', objectFit: "cover" }]} 
+                  />
+                )}
+              />
+            </View>
+          ) : (
+            <View style={styles.emptyOffersContainer}>
+              <CustomText type="regular" style={styles.emptyOffersText}>لا توجد عروض متاحة حالياً</CustomText>
+            </View>
+          )}
         </View>
 
         {/* Active Orders Section */}
@@ -781,6 +817,19 @@ const styles = StyleSheet.create({
   emptyProductsText: {
     fontSize: 17,
     color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  emptyOffersContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.primaryLight,
+    borderRadius: 10,
+    marginHorizontal: 20,
+  },
+  emptyOffersText: {
+    fontSize: 16,
+    color: colors.secondary,
     textAlign: 'center',
   },
 }); 
