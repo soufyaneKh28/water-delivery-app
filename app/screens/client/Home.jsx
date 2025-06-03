@@ -2,11 +2,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import dayjs from 'dayjs';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import EmptyCartImage from '../../../assets/images/empty-cart.png';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
 import CustomText from '../../components/common/CustomText';
@@ -30,6 +32,8 @@ export default function HomeScreen() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeOrders, setActiveOrders] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
   const defaultDataWith6Colors = [
     "#B0604D",
@@ -55,6 +59,22 @@ const images = [
     { id: 2, image: require('../../../assets/images/offer1.png') },
     { id: 3, image: require('../../../assets/images/offer1.png') },
   ];
+
+  const statusColors = {
+    pending: '#FFD700', // Gold for pending
+    processing: '#EEEEEE',
+    'on-the-way': '#87CEEB', // Sky blue for on-the-way
+    delivered: '#9DFA9F',
+    cancelled: '#F44336',
+  };
+
+  const statusLabels = {
+    pending: 'قيد الانتظار',
+    processing: 'قيد المعالجة',
+    'on-the-way': 'في الطريق',
+    delivered: 'تم التوصيل',
+    cancelled: 'تم الالغاء',
+  };
 
   const handleLogout = async () => {
     try {
@@ -154,6 +174,41 @@ const images = [
     }
   };
 
+  const fetchActiveOrders = async () => {
+    if (!user?.id) return;
+    
+    setIsLoadingOrders(true);
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            product:products (
+              title,
+              image_url,
+              price
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'processing', 'on-the-way'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching active orders:', error);
+        return;
+      }
+
+      setActiveOrders(data || []);
+    } catch (error) {
+      console.error('Error in fetchActiveOrders:', error);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
@@ -161,20 +216,22 @@ const images = [
       await Promise.all([
         getCategories(),
         getProducts(),
-        getLocations()
+        getLocations(),
+        fetchActiveOrders()
       ]);
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     getCategories();
     getProducts();
     getLocations();
-  }, []);
+    fetchActiveOrders();
+  }, [user?.id]);
 
   console.log("savedAddresses", savedAddresses);
 
@@ -192,7 +249,7 @@ const images = [
   };
 
   const renderLocationButton = () => {
-    if (savedAddresses?.length === 0) {
+    if (savedAddresses?.length == 0 || !selectedAddress) {
       return (
         <TouchableOpacity 
           style={[styles.locationButton, styles.addLocationButton]} 
@@ -287,6 +344,35 @@ const images = [
           {/* </View> */}
         </View>
 
+        {/* Active Orders Section */}
+        {activeOrders.length > 0 && (
+          <View style={styles.activeOrderCardContainer}>
+            <View style={styles.activeOrderCardSingle}>
+              <TouchableOpacity
+                style={styles.arrowIconContainer}
+                onPress={() => navigation.navigate('OrderDetails', { order: activeOrders[0] })}
+              >
+                <Ionicons name="chevron-back" size={24} color={colors.secondary} />
+              </TouchableOpacity>
+              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+                <CustomText type="bold" style={styles.activeOrderTitle} numberOfLines={1}>
+                  {activeOrders[0].order_items && activeOrders[0].order_items.length > 0
+                    ? `${activeOrders[0].order_items[0].product?.title || 'منتج غير معروف'} - ${activeOrders[0].order_items[0].quantity} عبوات`
+                    : 'طلب بدون منتجات'}
+                </CustomText>
+                <CustomText style={styles.activeOrderDate}>
+                  تم الطلب بتاريخ: {dayjs(activeOrders[0].created_at).format('D MMMM YYYY - HH:mm')}
+                </CustomText>
+                <View style={[styles.statusBadgeHome, { backgroundColor: statusColors[activeOrders[0].status] || '#E0E0E0' }]}> 
+                  <CustomText style={styles.statusTextHome}>
+                    {statusLabels[activeOrders[0].status] || 'غير معروف'}
+                  </CustomText>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
         {/* Categories Section */}
         <View style={styles.categoriesContainer}>
           <CustomText type="bold" style={styles.categoriesTitle}>الفئات</CustomText>
@@ -323,6 +409,11 @@ const images = [
           {isLoadingProducts ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : products.length === 0 ? (
+            <View style={styles.emptyProductsContainer}>
+              <Image source={EmptyCartImage} style={styles.emptyProductsImage} resizeMode="contain" />
+              <CustomText type="bold" style={styles.emptyProductsText}>لا توجد منتجات متاحة حالياً</CustomText>
             </View>
           ) : (
             <View style={styles.productsRow}>
@@ -488,7 +579,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
+    color: colors.black,
     marginBottom: 15,
     textAlign: 'right',
   },
@@ -621,6 +713,75 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: 100,
     padding: 20,
+  },
+  activeOrderCardContainer: {
+  
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  activeOrderCardSingle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 18,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.08,
+    // shadowRadius: 6,
+    // elevation: 2,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  arrowIconContainer: {
+    marginLeft: 10,
+    backgroundColor: '#F5F6FA',
+    borderRadius: 20,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeOrderTitle: {
+    fontSize: 17,
+    color: colors.textPrimary,
+    marginBottom: 2,
+    textAlign: 'right',
+  },
+  activeOrderDate: {
+    fontSize: 13,
+    color: '#8A8A8A',
+    marginBottom: 7,
+    textAlign: 'right',
+  },
+  statusBadgeHome: {
+    alignSelf: 'flex-end',
+    paddingVertical: 6,
+    paddingHorizontal: 22,
+    borderRadius: 8,
+    marginTop: 2,
+  },
+  statusTextHome: {
+    fontSize: 15,
+    color: '#3578E6',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  emptyProductsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyProductsImage: {
+    width: 120,
+    height: 120,
+    marginBottom: 18,
+  },
+  emptyProductsText: {
+    fontSize: 17,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
 }); 
 

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
@@ -54,6 +54,7 @@ export default function Products() {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   const filters = [
@@ -170,11 +171,13 @@ export default function Products() {
           style: 'destructive',
           onPress: async () => {
             try {
+              setIsDeleting(true);
               // Get Bearer token from Supabase
               const { data: { session } } = await supabase.auth.getSession();
               const token = session?.access_token;
               if (!token) {
                 alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+                setIsDeleting(false);
                 return;
               }
               await axios.delete(
@@ -191,6 +194,8 @@ export default function Products() {
               alert('تم حذف المنتج بنجاح');
             } catch (err) {
               alert('حدث خطأ أثناء حذف المنتج: ' + (err.response?.data?.message || err.message));
+            } finally {
+              setIsDeleting(false);
             }
           }
         }
@@ -225,7 +230,7 @@ export default function Products() {
           <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText>
           <ScrollView
             horizontal
-            showsHorizontalScrollIndicator={false}
+            // showsHorizontalScrollIndicator={false}
             style={{ flexDirection: 'row-reverse' }}
             
             contentContainerStyle={styles.filtersRow}
@@ -327,19 +332,37 @@ export default function Products() {
             <CustomText type="bold" style={styles.modalTitle}>إدارة المنتج</CustomText>
             <CustomText style={styles.modalSubtitle}>اختر الإجراء الذي تريد تنفيذه على هذا المنتج.</CustomText>
             <View style={styles.modalButtonsRow}>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#F2F4F7' }]} onPress={() => {
-                setProductActionModalVisible(false);
-                navigation.navigate('AddProduct', { product: selectedProduct });
-              }}>
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: '#F2F4F7' }]} 
+                onPress={() => {
+                  setProductActionModalVisible(false);
+                  navigation.navigate('AddProduct', { product: selectedProduct });
+                }}
+                disabled={isDeleting}
+              >
                 <Ionicons name="pencil-outline" size={28} color="#2196F3" />
                 <CustomText style={[styles.modalButtonText, { color: '#2196F3' }]}>تعديل المنتج</CustomText>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.modalButton, { backgroundColor: '#FDEAEA' }]} onPress={handleDeleteProduct}>
-                <Ionicons name="trash-outline" size={28} color="#F44336" />
-                <CustomText style={[styles.modalButtonText, { color: '#F44336' }]}>حذف المنتج</CustomText>
+              <TouchableOpacity 
+                style={[styles.modalButton, { backgroundColor: '#FDEAEA' }]} 
+                onPress={handleDeleteProduct}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator color="#F44336" size="small" />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={28} color="#F44336" />
+                    <CustomText style={[styles.modalButtonText, { color: '#F44336' }]}>حذف المنتج</CustomText>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
-            <Pressable onPress={() => setProductActionModalVisible(false)} style={styles.closeBar} />
+            <Pressable 
+              onPress={() => setProductActionModalVisible(false)} 
+              style={styles.closeBar}
+              disabled={isDeleting}
+            />
           </View>
         </Animated.View>
       </Modal>
@@ -385,6 +408,7 @@ const styles = StyleSheet.create({
   },
   filtersRow: {
     // flexDirection: 'row-reverse',
+    width: '100%',
     paddingLeft: 16,
     paddingRight: 8,
     alignItems: 'center',

@@ -3,13 +3,28 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
 
-const statusMap = {
-  pending: { label: 'قيد المعالجة', color: '#BFD6F6' },
-  accepted: { label: 'تم القبول', color: '#90C2FF' },
-  delivered: { label: 'تم التوصيل', color: '#6DD98D' },
+const statusColors = {
+  pending: '#FFD700', // Gold for pending
+  processing: '#EEEEEE',
+  'on-the-way': '#87CEEB', // Sky blue for on-the-way
+  delivered: '#9DFA9F',
+  cancelled: '#F44336',
+};
+
+const statusLabels = {
+  pending: 'قيد الانتظار',
+  processing: 'قيد المعالجة',
+  'on-the-way': 'في الطريق',
+  delivered: 'تم التوصيل',
+  cancelled: 'تم الالغاء',
 };
 
 export default function OrderCard({ order, onPress }) {
+  const status = {
+    label: statusLabels[order.status] || 'غير معروف',
+    color: statusColors[order.status] || '#E0E0E0'
+  };
+
   return (
     <TouchableOpacity 
       style={styles.orderCard}
@@ -22,15 +37,23 @@ export default function OrderCard({ order, onPress }) {
           <CustomText style={styles.orderDate}>تم الطلب بتاريخ: {order.date} - {order.time}</CustomText>
         </View>
     
-      <View style={styles.statusContainer}>
-        <View style={[styles.statusBtn, { backgroundColor: statusMap[order.status].color }]}>
-          <CustomText style={styles.statusText}>{statusMap[order.status].label}</CustomText>
+        <View style={styles.statusContainer}>
+          <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
+            <CustomText 
+              type="regular" 
+              style={[
+                styles.statusBadgeText,
+                order.status === 'delivered' && { color: '#262626' }
+              ]}
+            >
+              {status.label}
+            </CustomText>
+          </View>
         </View>
-      </View>
       </View>
       <View style={styles.arrowContainer}>
-          <CustomText style={styles.arrow}>{'<'}</CustomText>
-        </View>
+        <CustomText style={styles.arrow}>{'<'}</CustomText>
+      </View>
     </TouchableOpacity>
   );
 }
@@ -78,17 +101,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginTop: 8,
   },
-  statusBtn: {
+  statusBadge: {
     borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 18,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
     alignSelf: 'flex-end',
   },
-  statusText: {
+  statusBadgeText: {
+    fontSize: 13,
     color: '#222',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    paddingHorizontal: 10,
   },
   arrow: {
     fontSize: 22,

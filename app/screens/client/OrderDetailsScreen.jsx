@@ -1,39 +1,108 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
-// This would typically come from an API or database
-const mockOrderDetails = {
-  id: 1,
-  title: 'مياه معدنية نقية - 5 عبوات',
-  date: '2025 أبريل 27',
-  time: '14:35',
-  status: 'pending',
-  customerName: 'أحمد محمد',
-  phoneNumber: '0501234567',
-  address: 'شارع الملك فهد، حي النزهة، الرياض',
-  items: [
-    { name: 'مياه معدنية نقية - عبوة 330 مل', quantity: 5, price: 10 },
-    { name: 'مياه معدنية نقية - عبوة 600 مل', quantity: 3, price: 15 },
-  ],
-  totalAmount: 95,
-  paymentMethod: 'بطاقة ائتمان',
-  deliveryFee: 10,
-  subtotal: 85,
+const statusColors = {
+  pending: '#FFD700', // Gold for pending
+  processing: '#EEEEEE',
+  'on-the-way': '#87CEEB', // Sky blue for on-the-way
+  delivered: '#9DFA9F',
+  cancelled: '#F44336',
 };
 
-const statusMap = {
-  pending: { label: 'قيد المعالجة', color: '#BFD6F6' },
-  accepted: { label: 'تم القبول', color: '#90C2FF' },
-  delivered: { label: 'تم التوصيل', color: '#6DD98D' },
+const statusLabels = {
+  pending: 'قيد الانتظار',
+  processing: 'قيد المعالجة',
+  'on-the-way': 'في الطريق',
+  delivered: 'تم التوصيل',
+  cancelled: 'تم الالغاء',
 };
+
+function generateOrderNumber(uuid) {
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = ((hash << 5) - hash) + uuid.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Make it positive and limit to 8 digits
+  return Math.abs(hash).toString().padStart(8, '0').slice(0, 8);
+}
 
 export default function OrderDetailsScreen({ route, navigation }) {
-  const { orderId } = route.params;
-  // In a real app, you would fetch the order details using the orderId
-  const order = mockOrderDetails;
+  const { order } = route.params;
+  const [orderDetails, setOrderDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrderDetails();
+  }, [order.id]);
+
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            *,
+            product:products (
+              title,
+              image_url,
+              price
+            )
+          ),
+          location_id:locations (*),
+          user_id:profiles (*)
+        `)
+        .eq('id', order.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching order details:', error);
+        return;
+      }
+
+      setOrderDetails(data);
+    } catch (error) {
+      console.error('Error in fetchOrderDetails:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatLocation = (location) => {
+    if (!location) return '';
+    const parts = [
+      location.label,
+      location.description,
+      location.floor_no ? `Floor ${location.floor_no}` : null,
+      location.building_no ? `Building ${location.building_no}` : null,
+      location.city,
+      location.region,
+    ];
+    return parts.filter(Boolean).join(', ');
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!orderDetails) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <CustomText style={styles.errorText}>لم يتم العثور على تفاصيل الطلب</CustomText>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -51,8 +120,16 @@ export default function OrderDetailsScreen({ route, navigation }) {
 
         {/* Order Status */}
         <View style={styles.statusContainer}>
-          <View style={[styles.statusBadge, { backgroundColor: statusMap[order.status].color }]}>
-            <CustomText style={styles.statusText}>{statusMap[order.status].label}</CustomText>
+          <View style={[styles.statusBadge, { backgroundColor: statusColors[orderDetails.status] || '#E0E0E0' }]}>
+            <CustomText 
+              type="regular" 
+              style={[
+                styles.statusText,
+                orderDetails.status === 'delivered' && { color: '#262626' }
+              ]}
+            >
+              {statusLabels[orderDetails.status] || 'غير معروف'}
+            </CustomText>
           </View>
         </View>
 
@@ -62,11 +139,13 @@ export default function OrderDetailsScreen({ route, navigation }) {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>رقم الطلب:</CustomText>
-              <CustomText style={styles.infoValue}>#{order.id}</CustomText>
+              <CustomText style={styles.infoValue}>#{generateOrderNumber(orderDetails.id)}</CustomText>
             </View>
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>تاريخ الطلب:</CustomText>
-              <CustomText style={styles.infoValue}>{order.date} - {order.time}</CustomText>
+              <CustomText style={styles.infoValue}>
+                {dayjs(orderDetails.created_at).format('DD MMM YYYY, HH:mm')}
+              </CustomText>
             </View>
           </View>
         </View>
@@ -77,15 +156,11 @@ export default function OrderDetailsScreen({ route, navigation }) {
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>الاسم:</CustomText>
-              <CustomText style={styles.infoValue}>{order.customerName}</CustomText>
-            </View>
-            <View style={styles.infoRow}>
-              <CustomText style={styles.infoLabel}>رقم الجوال:</CustomText>
-              <CustomText style={styles.infoValue}>{order.phoneNumber}</CustomText>
+              <CustomText style={styles.infoValue}>{orderDetails.user_id?.username || 'غير معروف'}</CustomText>
             </View>
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>العنوان:</CustomText>
-              <CustomText style={styles.infoValue}>{order.address}</CustomText>
+              <CustomText style={styles.infoValue}>{formatLocation(orderDetails.location_id) || 'غير معروف'}</CustomText>
             </View>
           </View>
         </View>
@@ -94,13 +169,13 @@ export default function OrderDetailsScreen({ route, navigation }) {
         <View style={styles.section}>
           <CustomText type="bold" style={styles.sectionTitle}>المنتجات</CustomText>
           <View style={styles.itemsCard}>
-            {order.items.map((item, index) => (
+            {orderDetails.order_items?.map((item, index) => (
               <View key={index} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
-                  <CustomText style={styles.itemName}>{item.name}</CustomText>
+                  <CustomText style={styles.itemName}>{item.product?.title || 'منتج غير معروف'}</CustomText>
                   <CustomText style={styles.itemQuantity}>الكمية: {item.quantity}</CustomText>
                 </View>
-                <CustomText style={styles.itemPrice}>{item.price} ريال</CustomText>
+                <CustomText style={styles.itemPrice}>{item.price} دينار</CustomText>
               </View>
             ))}
           </View>
@@ -112,19 +187,21 @@ export default function OrderDetailsScreen({ route, navigation }) {
           <View style={styles.summaryCard}>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>المجموع الفرعي:</CustomText>
-              <CustomText style={styles.summaryValue}>{order.subtotal} ريال</CustomText>
+              <CustomText style={styles.summaryValue}>{orderDetails.subtotal || 0} دينار</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم التوصيل:</CustomText>
-              <CustomText style={styles.summaryValue}>{order.deliveryFee} ريال</CustomText>
+              <CustomText style={styles.summaryValue}>{orderDetails.delivery_fee || 0} دينار</CustomText>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <CustomText type="bold" style={styles.totalLabel}>المجموع الكلي:</CustomText>
-              <CustomText type="bold" style={styles.totalValue}>{order.totalAmount} ريال</CustomText>
+              <CustomText type="bold" style={styles.totalValue}>{orderDetails.total || 0} دينار</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>طريقة الدفع:</CustomText>
-              <CustomText style={styles.summaryValue}>{order.paymentMethod}</CustomText>
+              <CustomText style={styles.summaryValue}>
+                {orderDetails.payment_method === 'cash' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'}
+              </CustomText>
             </View>
           </View>
         </View>
@@ -138,9 +215,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   scrollView: {
     flex: 1,
-    // paddingHorizontal: 20,
   },
   scrollContent: {
     paddingBottom: 30,
@@ -158,6 +238,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
   },
+  errorText: {
+    fontSize: 16,
+    color: colors.error,
+    textAlign: 'center',
+  },
   statusContainer: {
     alignItems: 'center',
     marginBottom: 24,
@@ -170,7 +255,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#222',
   },
   section: {

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -10,6 +11,8 @@ import { colors } from '../../styling/colors';
 export default function Offers() {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [deletingOfferId, setDeletingOfferId] = useState(null);
 
   useEffect(() => {
     fetchOffers();
@@ -17,45 +20,88 @@ export default function Offers() {
 
   const fetchOffers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('offers')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      Alert.alert('خطأ', 'تعذر جلب العروض');
-    } else {
-      setOffers(data);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+
+      const response = await axios.get(
+        'https://water-supplier-2.onrender.com/api/k1/offers/getAllOffers',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      // console.log("response-offers", response.data);
+      setOffers(response.data.data);
+    } catch (error) {
+      Alert.alert('خطأ', 'تعذر جلب العروض: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('عذراً', 'نحتاج إلى إذن للوصول إلى معرض الصور!');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [2, 1],
-      quality: 0.8,
-      maxWidth: 2000,
-      maxHeight: 1000,
-    });
-    if (!result.canceled) {
-      // TODO: Upload image to Supabase Storage and get public URL
-      // For now, just add the local uri as a placeholder
-      const imageUrl = result.assets[0].uri;
-      // Save to DB
-      const { error } = await supabase
-        .from('offers')
-        .insert([{ image_url: imageUrl }]);
-      if (error) {
-        Alert.alert('خطأ', 'تعذر إضافة العرض');
-      } else {
-        fetchOffers();
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('عذراً', 'نحتاج إلى إذن للوصول إلى معرض الصور!');
+        return;
       }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [2, 1],
+        quality: 0.8,
+        maxWidth: 2000,
+        maxHeight: 1000,
+      });
+
+      if (!result.canceled) {
+        setIsUploading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        
+        if (!token) {
+          Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+          return;
+        }
+
+        // Create form data for the image
+        const formData = new FormData();
+        // const fileInfo = await FileSystem.getInfoAsync(result.assets[0].uri);
+        formData.append('image', {
+          uri: result.assets[0].uri,
+          type: 'image/jpeg',
+          name:'image.jpg',
+        });
+
+        const response = await axios.post(
+          'https://water-supplier-2.onrender.com/api/k1/offers/createOffer',
+          formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data',
+            },
+          }
+        );
+
+        if (response.data) {
+          Alert.alert('نجاح', 'تم إضافة العرض بنجاح');
+          fetchOffers();
+
+        }
+      }
+    } catch (error) {
+      Alert.alert('خطأ', 'تعذر إضافة العرض: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -63,15 +109,35 @@ export default function Offers() {
     Alert.alert('تأكيد', 'هل أنت متأكد من حذف هذا العرض؟', [
       { text: 'إلغاء', style: 'cancel' },
       {
-        text: 'حذف', style: 'destructive', onPress: async () => {
-          const { error } = await supabase
-            .from('offers')
-            .delete()
-            .eq('id', id);
-          if (error) {
-            Alert.alert('خطأ', 'تعذر حذف العرض');
-          } else {
+        text: 'حذف', 
+        style: 'destructive', 
+        onPress: async () => {
+          try {
+            setDeletingOfferId(id);
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            if (!token) {
+              Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+              setDeletingOfferId(null);
+              return;
+            }
+
+            await axios.delete(
+              `https://water-supplier-2.onrender.com/api/k1/offers/deleteOffer/${id}`,
+              {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              }
+            );
+            
+            Alert.alert('نجاح', 'تم حذف العرض بنجاح');
             fetchOffers();
+          } catch (error) {
+            Alert.alert('خطأ', 'تعذر حذف العرض: ' + (error.response?.data?.message || error.message));
+          } finally {
+            setDeletingOfferId(null);
           }
         }
       }
@@ -85,25 +151,47 @@ export default function Offers() {
         <CustomText type="bold" style={styles.headerTitle}>إدارة عروض السلايدر</CustomText>
         <View style={{ width: 28 }} />
       </View>
-      <TouchableOpacity style={styles.addButton} onPress={pickImage}>
-        <Ionicons name="add" size={24} color="#fff" />
-        <CustomText style={styles.addButtonText}>إضافة عرض جديد</CustomText>
+      <TouchableOpacity 
+        style={[styles.addButton, isUploading && styles.disabledButton]} 
+        onPress={pickImage}
+        disabled={isUploading}
+      >
+        {isUploading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <>
+            <Ionicons name="add" size={24} color="#fff" />
+            <CustomText style={styles.addButtonText}>إضافة عرض جديد</CustomText>
+          </>
+        )}
       </TouchableOpacity>
       <FlatList
         data={offers}
-        keyExtractor={item => item.id}
+        keyExtractor={item => item._id || item.id}
         refreshing={loading}
         onRefresh={fetchOffers}
         contentContainerStyle={{ paddingBottom: 40 }}
         renderItem={({ item }) => (
           <View style={styles.offerRow}>
             <Image source={{ uri: item.image_url }} style={styles.offerImage} />
-            <TouchableOpacity onPress={() => deleteOffer(item.id)} style={styles.deleteBtn}>
-              <Ionicons name="trash-outline" size={22} color={colors.error} />
+            <TouchableOpacity 
+              onPress={() => deleteOffer(item.id)} 
+              style={styles.deleteBtn}
+              disabled={deletingOfferId === item._id}
+            >
+              {deletingOfferId === item._id ? (
+                <ActivityIndicator color={colors.error} size="small" />
+              ) : (
+                <Ionicons name="trash-outline" size={22} color={colors.error} />
+              )}
             </TouchableOpacity>
           </View>
         )}
-        ListEmptyComponent={<CustomText style={{ textAlign: 'center', marginTop: 40 }}>لا توجد عروض حالياً</CustomText>}
+        ListEmptyComponent={
+          <CustomText style={{ textAlign: 'center', marginTop: 40 }}>
+            {loading ? 'جاري التحميل...' : 'لا توجد عروض حالياً'}
+          </CustomText>
+        }
       />
     </View>
   );
@@ -160,5 +248,8 @@ const styles = StyleSheet.create({
   deleteBtn: {
     marginLeft: 12,
     padding: 6,
+  },
+  disabledButton: {
+    opacity: 0.7,
   },
 }); 
