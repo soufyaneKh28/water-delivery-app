@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -129,16 +129,11 @@ export default function AddCategory({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      {/* <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Ionicons name="chevron-back" size={28} color="#222" />
-        
-      </TouchableOpacity> */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' , marginTop: 22 }}>
-
-      <BackBtn/>
-      <CustomText type="bold" style={styles.title}>إضافة قسم</CustomText>
-      <View style={{ width: 30 }} />
+    <ScrollView style={{ flex: 1 , backgroundColor: 'white' }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 }}>
+        <BackBtn/>
+        <CustomText type="bold" style={styles.title}>إضافة قسم</CustomText>
+        <View style={{ width: 30 }} />
       </View>
 
       <CustomText type="bold" style={styles.sectionTitle}>الأقسام الحالية</CustomText>
@@ -151,12 +146,9 @@ export default function AddCategory({ navigation }) {
           لا توجد أقسام
         </CustomText>
       ) : (
-        <FlatList
-          data={categories}
-          keyExtractor={item => item.id || item._id}
-          style={styles.list}
-          renderItem={({ item }) => (
-            <View style={styles.categoryRow}>
+        <View style={styles.list}>
+          {categories.map((item) => (
+            <View key={item.id || item._id} style={styles.categoryRow}>
               <TouchableOpacity 
                 onPress={() => handleDeleteCategory(item.id || item._id)}
                 style={styles.deleteButton}
@@ -168,8 +160,8 @@ export default function AddCategory({ navigation }) {
                 <Image source={item.image_url ? { uri: item.image_url } : placeholderImg} style={styles.categoryImg} />
               </View>
             </View>
-          )}
-        />
+          ))}
+        </View>
       )}
 
       <View style={styles.divider} />
@@ -199,14 +191,14 @@ export default function AddCategory({ navigation }) {
         style={styles.addButton}
         disabled={!newCategory.trim() || !newImage || loading}
       />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: colors.white,
+    // flex: 1,
+    // backgroundColor: colors.white,
     paddingHorizontal: 20,
     direction: 'rtl',
   },
@@ -308,9 +300,9 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   loadingContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     minHeight: 200,
+    marginBottom: 12,
   },
 }); 

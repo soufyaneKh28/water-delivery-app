@@ -25,8 +25,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "supportsRTL": true,
-      "forcesRTL": true
+
     },
     "plugins": [
       "expo-router",

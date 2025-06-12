@@ -230,8 +230,8 @@ export default function Products() {
           <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText>
           <ScrollView
             horizontal
-            // showsHorizontalScrollIndicator={false}
-            style={{ flexDirection: 'row-reverse' }}
+            showsHorizontalScrollIndicator={false}
+            // style={{ flexDirection: 'row', direction: 'rtl' }}
             
             contentContainerStyle={styles.filtersRow}
           >
@@ -291,6 +291,12 @@ export default function Products() {
       >
         <Animated.View style={[styles.modalOverlay, { opacity: overlayOpacity }]}>
           <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeIconButton} 
+              onPress={() => setModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
             <CustomText type="bold" style={styles.modalTitle}>إضافة جديدة</CustomText>
             <CustomText type='regular' style={styles.modalSubtitle}>يرجى اختيار ما تريد إضافته.</CustomText>
             <View style={styles.modalButtonsRow}>
@@ -315,7 +321,6 @@ export default function Products() {
                 <CustomText style={styles.modalButtonText}>إضافة منتج</CustomText>
               </TouchableOpacity>
             </View>
-            <Pressable onPress={() => setModalVisible(false)} style={styles.closeBar} />
           </View>
         </Animated.View>
       </Modal>
@@ -403,12 +408,12 @@ const styles = StyleSheet.create({
   filterTitle: {
     color: '#121212',
     fontSize: 20,
-    // textAlign: "left",
+    textAlign: "left",
     paddingHorizontal: 16,
   },
   filtersRow: {
     // flexDirection: 'row-reverse',
-    width: '100%',
+    // width: '100%',
     paddingLeft: 16,
     paddingRight: 8,
     alignItems: 'center',
@@ -460,6 +465,14 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     padding: 24,
     alignItems: 'center',
+    position: 'relative',
+  },
+  closeIconButton: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    padding: 4,
+    zIndex: 1,
   },
   modalTitle: {
     fontSize: 20,

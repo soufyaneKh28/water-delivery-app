@@ -5,6 +5,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -57,8 +58,13 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: 'red' }}>
+
+        <StatusBar style="dark" translucent={true} backgroundColor={colors.primary} />
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'red' }}>
+     
+
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
-      <StatusBar style="light" backgroundColor={colors.primary}/>
       <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         {/* Blue header with curve */}
         <View style={styles.header} />
@@ -90,7 +96,7 @@ export default function LoginScreen({ navigation }) {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
-              />
+                />
             </View>
 
             {/* Password Field */}
@@ -101,7 +107,7 @@ export default function LoginScreen({ navigation }) {
                   style={globalStyles.passwordVisibilityButton} 
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
-                >
+                  >
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
                 </TouchableOpacity>
                 <TextInput
@@ -111,7 +117,7 @@ export default function LoginScreen({ navigation }) {
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   editable={!isLoading}
-                />
+                  />
               </View>
             </View>
 
@@ -120,7 +126,7 @@ export default function LoginScreen({ navigation }) {
               style={styles.forgotPasswordContainer} 
               onPress={handleForgotPassword}
               disabled={isLoading}
-            >
+              >
               <CustomText  type="regular" style={styles.forgotPasswordText}>نسيت كلمة المرور؟</CustomText>
             </TouchableOpacity>
 
@@ -133,7 +139,7 @@ export default function LoginScreen({ navigation }) {
               ]} 
               onPress={handleLogin}
               disabled={isLoading}
-            >
+              >
               <CustomText type="bold" style={globalStyles.buttonText}>
                 {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
               </CustomText>
@@ -144,7 +150,7 @@ export default function LoginScreen({ navigation }) {
               <TouchableOpacity 
                 onPress={handleCreateAccount}
                 disabled={isLoading}
-              >
+                >
                 <CustomText type="bold" style={styles.signupLink}>قم بإنشاء حساب جديد الآن</CustomText>
               </TouchableOpacity>
               <CustomText type="bold" style={styles.signupText}>ليس لديك حساب؟</CustomText>
@@ -153,6 +159,8 @@ export default function LoginScreen({ navigation }) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
+                  </View>
   )
 }
 

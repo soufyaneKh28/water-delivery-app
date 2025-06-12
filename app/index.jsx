@@ -10,16 +10,6 @@ import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
-// Enable RTL layout direction
-// I18nManager.forceRTL(true);
-// // Allow RTL on Android (optional)
-// I18nManager.allowRTL(true);
-// if (I18nManager.isRTL !== true) {
-//   I18nManager.forceRTL(true);
-//   RNRestart.Restart(); // Use the react-native-restart library for app restarts
-// }
-
-// console.log('RTL enabled:', I18nManager.isRTL);
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -58,7 +48,6 @@ export default function App() {
       <AppNavigator />
       </AddressProvider>
       </CartProvider>
-      {/* <Text>RTL enabled: {I18nManager.isRTL ? 'Yes' : 'No'}</Text> */}
     </AuthProvider>
   );
 }

@@ -1,14 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
 import CustomText from "../../components/common/CustomText";
@@ -66,6 +67,14 @@ export default function ForgotPasswordScreen({ navigation }) {
         </View>
 
         <View style={styles.content}>
+        <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            disabled={isLoading}
+          >
+            <Ionicons name="arrow-forward" size={24} color={colors.primary} />
+          </TouchableOpacity>
+
           {/* Title */}
           <View style={styles.titleContainer}>
             <CustomText type="bold" style={globalStyles.title}>نسيت كلمة المرور؟</CustomText>
@@ -130,6 +139,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 20,
+  },
   curveContainer: {
     height: 40,
     marginTop: 120,
@@ -174,5 +194,12 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     color: colors.primary,
     fontWeight: "bold",
+  },
+  backButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 22,
+    marginBottom: 12,
   },
 }); 

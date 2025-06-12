@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import { I18nManager, Image, View } from 'react-native';
+import { Image, View } from 'react-native';
 import CustomText from '../components/common/CustomText';
 
 // Import admin screens
@@ -80,22 +80,17 @@ export function AdminTabs() {
         tabBarInactiveTintColor: 'gray',
         // tabBarLabelStyle: { fontFamily: 'Cairo', fontSize: 13, display: 'none' },
         tabBarStyle: { 
-          flexDirection: I18nManager.isRTL ? 'row-reverse' : 'row',
+          flexDirection: 'row',
           elevation: 0,
           shadowOpacity: 0,
-          // borderTopWidth: 1,
-          // borderTopColor: '#E0E0E0',
-          // justifyContent: 'center',
-          // alignItems: 'center',
           height: 100,
-          // paddingBottom: 70,     
-           position: 'absolute',
+          position: 'absolute',
           paddingTop: 30,
-           shadowColor: '#000',
-    shadowOffset: { width: 10, height: 100 },
-    shadowOpacity: 0.90,
-    shadowRadius: 30,
-    elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 10, height: 100 },
+          shadowOpacity: 0.90,
+          shadowRadius: 30,
+          elevation: 4,
         },
       })}
       initialRouteName="الرئيسية"
