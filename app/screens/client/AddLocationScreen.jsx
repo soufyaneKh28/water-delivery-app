@@ -10,6 +10,9 @@ import { globalStyles } from '../../styling/globalStyles';
 
 export default function AddLocationScreen({ route, navigation }) {
   const locationData = route.params?.location;
+  const editAddress = route.params?.editAddress;
+  
+  console.log('Edit Address in AddLocationScreen:', editAddress);
   
   const [label, setLabel] = useState('');
   const [address, setAddress] = useState('');
@@ -18,6 +21,17 @@ export default function AddLocationScreen({ route, navigation }) {
   const [floor, setFloor] = useState('');
   const [additionalDirections, setAdditionalDirections] = useState('');
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (editAddress) {
+      setLabel(editAddress.label || '');
+      setAddress(editAddress.address || '');
+      setCity(editAddress.city || '');
+      setBuildingNumber(editAddress.building_no?.toString() || '');
+      setFloor(editAddress.floor_no?.toString() || '');
+      setAdditionalDirections(editAddress.description || '');
+    }
+  }, [editAddress]);
 
   useEffect(() => {
     if (locationData?.address) {
@@ -60,8 +74,8 @@ export default function AddLocationScreen({ route, navigation }) {
       label,
       region: city, // Assuming region is the same as city for now
       city,
-      latitude: locationData?.latitude || '',
-      longitude: locationData?.longitude || '',
+      latitude: locationData?.latitude || editAddress?.latitude || '',
+      longitude: locationData?.longitude || editAddress?.longitude || '',
       description: additionalDirections,
       floor_no: floor,
       building_no: buildingNumber,
@@ -76,25 +90,31 @@ export default function AddLocationScreen({ route, navigation }) {
         alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
         return;
       }
-      const response = await fetch(
-        'https://water-supplier-2.onrender.com/api/k1/locations/createLocation',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          body: JSON.stringify(locationDetails),
-        }
-      );
+
+      const endpoint = editAddress 
+        ? `https://water-supplier-2.onrender.com/api/k1/locations/updateLocation/${editAddress.id}`
+        : 'https://water-supplier-2.onrender.com/api/k1/locations/createLocation';
+
+      const method = editAddress ? 'PATCH' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(locationDetails),
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'فشل إضافة العنوان');
+        throw new Error(errorData.message || (editAddress ? 'فشل تحديث العنوان' : 'فشل إضافة العنوان'));
       }
-      alert('تمت إضافة العنوان بنجاح');
+
+      alert(editAddress ? 'تم تحديث العنوان بنجاح' : 'تمت إضافة العنوان بنجاح');
       navigation.navigate('ClientTabs');
     } catch (error) {
-      alert('حدث خطأ أثناء إضافة العنوان: ' + error.message);
+      alert('حدث خطأ: ' + error.message);
     }
   };
 
@@ -103,7 +123,9 @@ export default function AddLocationScreen({ route, navigation }) {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <BackBtn />
-          <CustomText type="bold" style={styles.headerTitle}>إضافة عنوان جديد</CustomText>
+          <CustomText type="bold" style={styles.headerTitle}>
+            {editAddress ? 'تعديل العنوان' : 'إضافة عنوان جديد'}
+          </CustomText>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.form}>

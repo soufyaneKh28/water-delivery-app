@@ -74,7 +74,7 @@ export default function OrderDetailsScreen({ route, navigation }) {
       setLoading(false);
     }
   };
-
+console.log('orderDetails', orderDetails);
   const formatLocation = (location) => {
     if (!location) return '';
     const parts = [
@@ -200,7 +200,7 @@ export default function OrderDetailsScreen({ route, navigation }) {
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>طريقة الدفع:</CustomText>
               <CustomText style={styles.summaryValue}>
-                {orderDetails.payment_method === 'cash' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'}
+                {orderDetails.order_type === 'on-delivery' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'}
               </CustomText>
             </View>
           </View>

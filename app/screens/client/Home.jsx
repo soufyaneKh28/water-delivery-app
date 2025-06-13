@@ -65,7 +65,7 @@ const images = [
   ];
 
   const statusColors = {
-    pending: '#FFD700', // Gold for pending
+    new: '#FFD700', // Gold for pending
     processing: '#EEEEEE',
     'on-the-way': '#87CEEB', // Sky blue for on-the-way
     delivered: '#9DFA9F',
@@ -73,7 +73,7 @@ const images = [
   };
 
   const statusLabels = {
-    pending: 'قيد الانتظار',
+    new: 'قيد الانتظار',
     processing: 'قيد المعالجة',
     'on-the-way': 'في الطريق',
     delivered: 'تم التوصيل',
@@ -104,6 +104,12 @@ const images = [
   const handleAddLocation = () => {
     setAddressModalVisible(false);
     navigation.navigate('MapAddLocation');
+  };
+
+  const handleEditLocation = (address) => {
+    console.log('Edit Address Data:', address);
+    setAddressModalVisible(false);
+    navigation.navigate('AddLocation', { editAddress: address });
   };
 
   const handleCategoryPress = (category) => {
@@ -163,7 +169,7 @@ const images = [
         },
       });
       const data = await response.json();
-      // console.log('data-locations', data);
+      console.log('API Response Data:', data.data);
       const addresses = data.data || [];
       setSavedAddresses(addresses);
       if (addresses.length > 0 && !selectedAddress) {
@@ -225,7 +231,7 @@ const images = [
           )
         `)
         .eq('user_id', user.id)
-        .in('status', ['pending', 'processing', 'on-the-way'])
+        .in('status', ['new', 'processing', 'on-the-way'])
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -394,9 +400,11 @@ const images = [
                 <Ionicons name="chevron-back" size={24} color={colors.secondary} />
               </TouchableOpacity>
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
-                <CustomText type="bold" style={styles.activeOrderTitle} numberOfLines={1}>
+                <CustomText type="bold" style={styles.activeOrderTitle} numberOfLines={1} ellipsizeMode="tail">
                   {activeOrders[0].order_items && activeOrders[0].order_items.length > 0
-                    ? `${activeOrders[0].order_items[0].product?.title || 'منتج غير معروف'} - ${activeOrders[0].order_items[0].quantity} عبوات`
+                    ? activeOrders[0].order_items
+                        .map(item => item.product?.title || 'منتج غير معروف')
+                        .join('، ')
                     : 'طلب بدون منتجات'}
                 </CustomText>
                 <CustomText style={styles.activeOrderDate}>
@@ -505,8 +513,11 @@ const images = [
             style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10, marginHorizontal: 20 }}
             onPress={() => handleSelectAddress(address)}
             >
-              <TouchableOpacity style={{width: 30, height: 30, alignItems: 'center', alignSelf: "center", justifyContent: 'center'}}>
-              <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 5, marginTop: 2  }} />
+              <TouchableOpacity 
+                style={{width: 30, height: 30, alignItems: 'center', alignSelf: "center", justifyContent: 'center'}}
+                onPress={() => handleEditLocation(address)}
+              >
+                <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 5, marginTop: 2  }} />
               </TouchableOpacity>
               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                 <CustomText type="bold" style={{ fontSize: 16, textAlign: 'right', marginBottom: 4 }}>{address.label}</CustomText>
