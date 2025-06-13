@@ -46,6 +46,8 @@ export default function HomeScreen() {
     "#F1F1F1",
   ];
 
+  
+
   const progress = useSharedValue(0);
 const { width } = Dimensions.get('window');
 
@@ -160,7 +162,7 @@ const images = [
         },
       });
       const data = response.data;
-      console.log('data-locations', data);
+      // console.log('data-locations', data);
       const addresses = data.data || [];
       setSavedAddresses(addresses);
       
@@ -193,7 +195,7 @@ const images = [
         },
       });
       const data = response.data;
-      console.log('data-offers', data);
+      // console.log('data-offers', data);
       setOffers(data.data || []);
     } catch (error) {
       console.error('Error fetching offers:', error);
@@ -264,7 +266,7 @@ const images = [
     getOffers();
   }, [user?.id]);
 
-  console.log("savedAddresses", savedAddresses);
+  // console.log("savedAddresses", savedAddresses);
 
   const formatAddressString = (address) => {
     const parts = [
@@ -309,10 +311,10 @@ const images = [
     );
   };
 
-  console.log("products", products);
+  // console.log("products", products);
   return (
     <SafeAreaView style={styles.container}>
-     <StatusBar style="light" backgroundColor="#1B7CC8" />
+     <StatusBar style="dark" backgroundColor="#1B7CC8" />
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false} 
@@ -479,7 +481,7 @@ const images = [
 
       </ScrollView>
 
-      <View >
+      <SafeAreaView >
 
       <Modal
         visible={addressModalVisible}
@@ -487,12 +489,12 @@ const images = [
         animationType="slide"
         onRequestClose={() => setAddressModalVisible(false)}
         >
-        <View style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
+        <SafeAreaView style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
        
-          <TouchableOpacity  style={{position: 'absolute', top: 20, left: 20 , width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setAddressModalVisible(false)}>
+          <View style={{ width: '100%', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, flexDirection: 'row', marginBottom: 16 }}>
+          <TouchableOpacity  style={{   width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setAddressModalVisible(false)}>
             <Ionicons name="close" size={22} color={colors.black} />
           </TouchableOpacity>
-          <View style={{ alignItems: 'center', marginBottom: 16 }}>
             <CustomText type="bold" style={{ fontSize: 18 }}>عنوان التوصيل</CustomText>
           </View>
           { savedAddresses && savedAddresses.map((address) => (
@@ -518,9 +520,9 @@ const images = [
             <CustomText type="bold" style={{ color: '#222', fontSize: 15, marginLeft: 8 }}>أضف عنواناً جديداً</CustomText>
             <CustomText style={{ fontSize: 24, color: '#222' }}>+</CustomText>
           </TouchableOpacity>
-        </View>
+        </SafeAreaView>
       </Modal>
-          </View>
+          </SafeAreaView>
     </SafeAreaView>
   );
 }
@@ -681,8 +683,11 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
   categoriesScroll: {
-    // marginHorizontal: -20,
-    flexDirection: 'row-reverse',
+    // marginHorizontal: -20, 
+    // flexDirection: 'row-reverse',
+
+    direction: 'rtl',
+    // width: '100%',
   },
   categoriesScrollContent: {
     // paddingHorizontal: 20,

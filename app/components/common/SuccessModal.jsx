@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { colors } from '../../styling/colors';
 import CustomText from './CustomText';
 
@@ -9,8 +9,9 @@ const SuccessModal = ({ visible, product }) => {
       transparent
       visible={visible}
       animationType="fade"
+      statusBarTranslucent
     >
-      <View style={styles.overlay}>
+      <View style={styles.modalWrapper}>
         <View style={styles.modalContent}>
           <View style={styles.iconContainer}>
             <View style={styles.checkmark}>
@@ -29,11 +30,16 @@ const SuccessModal = ({ visible, product }) => {
 };
 
 const styles = StyleSheet.create({
-  overlay: {
+  modalWrapper: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        paddingTop: 20, // Add some padding for iOS status bar
+      },
+    }),
   },
   modalContent: {
     backgroundColor: 'white',
@@ -42,6 +48,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '80%',
     maxWidth: 320,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
   },
   iconContainer: {
     width: 60,

@@ -76,10 +76,10 @@ export const globalStyles = StyleSheet.create({
     // direction: 'rtl',
   },
   contentContainer: {
-    flexGrow: 1,
+    // flexGrow: 1,
     // padding: 24,
     backgroundColor:colors.background,
-    flex:1
+    // flex:1
   },
 
   // Common text styles

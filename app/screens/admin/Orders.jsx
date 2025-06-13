@@ -324,46 +324,47 @@ const Orders = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHandle} />
-            <CustomText type="bold" style={styles.modalTitle}>تغيير حالة الطلب</CustomText>
-            {selectedOrder && Object.entries(statusLabels).map(([key, label]) => (
-              <Pressable
-                key={key}
-                style={[
-                  styles.statusOption,
-                  { backgroundColor: statusColors[key] },
-                  key === selectedOrder.status && styles.selectedStatusOption,
-                ]}
-                onPress={() => {
-                  Alert.alert(
-                    'تأكيد',
-                    'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
-                    [
-                      { text: 'إلغاء', style: 'cancel' },
-                      {
-                        text: 'تأكيد',
-                        onPress: () => handleStatusChange(selectedOrder.id, key),
-                      },
-                    ]
-                  );
-                }}
-              >
-                <CustomText 
-                  type='regular' 
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <CustomText type="bold" style={styles.modalTitle}>تغيير حالة الطلب</CustomText>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeIconButton}>
+                <Ionicons name="close" size={24} color="#222" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.statusGrid}>
+              {selectedOrder && Object.entries(statusLabels).map(([key, label]) => (
+                <Pressable
+                  key={key}
                   style={[
-                    styles.statusOptionText,
-                    key === 'delivered' && { color: '#262626' }
+                    styles.statusOption,
+                    { backgroundColor: statusColors[key] },
+                    key === selectedOrder.status && styles.selectedStatusOption,
                   ]}
+                  onPress={() => {
+                    Alert.alert(
+                      'تأكيد',
+                      'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
+                      [
+                        { text: 'إلغاء', style: 'cancel' },
+                        {
+                          text: 'تأكيد',
+                          onPress: () => handleStatusChange(selectedOrder.id, key),
+                        },
+                      ]
+                    );
+                  }}
                 >
-                  {label}
-                </CustomText>
-              </Pressable>
-            ))}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <CustomText type='bold' style={styles.closeButtonText}>إغلاق</CustomText>
-            </TouchableOpacity>
+                  <CustomText 
+                    type='regular' 
+                    style={[
+                      styles.statusOptionText,
+                      key === 'delivered' && { color: '#262626' }
+                    ]}
+                  >
+                    {label}
+                  </CustomText>
+                </Pressable>
+              ))}
+            </View>
           </View>
         </View>
       </Modal>
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
-    paddingBottom: 32,
+    paddingBottom: 102,
     alignItems: 'center',
   },
   modalHandle: {
@@ -563,10 +564,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  statusOption: {
+  statusGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     width: '100%',
+    marginVertical: 10,
+  },
+  statusOption: {
+    width: '48%', // Two per row
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 4,
     borderRadius: 8,
     marginBottom: 10,
     alignItems: 'center',
@@ -579,17 +587,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#222',
   },
-  closeButton: {
-    width: '100%',
-    backgroundColor: '#F2F4F7',
-    paddingVertical: 14,
-    borderRadius: 8,
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    color: '#262626',
-    fontSize: 16,
+  closeIconButton: {
+    padding: 4,
+    marginLeft: 8,
   },
 });
 export default Orders; 

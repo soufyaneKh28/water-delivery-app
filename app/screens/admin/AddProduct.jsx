@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import SuccessModal from '../../components/common/SuccessModal';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
@@ -27,6 +28,8 @@ export default function AddProduct({ navigation }) {
   const [productPrice, setProductPrice] = useState('');
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
 
   // Prefill fields if editing
   useEffect(() => {
@@ -120,7 +123,6 @@ export default function AddProduct({ navigation }) {
 
       let response;
       if (editingProduct) {
-        // PATCH request for editing
         response = await axios.patch(
           `https://water-supplier-2.onrender.com/api/k1/products/updateProduct/${editingProduct._id || editingProduct.id}`,
           formData,
@@ -131,8 +133,11 @@ export default function AddProduct({ navigation }) {
             },
           }
         );
+        setSuccessMessage({
+          title: 'تم التعديل بنجاح',
+          message: 'تم تعديل المنتج بنجاح'
+        });
       } else {
-        // POST request for creating
         response = await axios.post(
           'https://water-supplier-2.onrender.com/api/k1/products/createProduct',
           formData,
@@ -143,10 +148,19 @@ export default function AddProduct({ navigation }) {
             },
           }
         );
+        setSuccessMessage({
+          title: 'تمت الإضافة بنجاح',
+          message: 'تم إضافة المنتج بنجاح'
+        });
       }
 
-      alert(editingProduct ? 'تم تعديل المنتج بنجاح' : 'تمت إضافة المنتج بنجاح');
-      navigation.goBack();
+      setShowSuccessModal(true);
+      // Auto dismiss after 2 seconds
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        navigation.goBack();
+      }, 2000);
+
     } catch (err) {
       alert('حدث خطأ: ' + (err.response?.data?.message || err.message));
       console.log("err", err);
@@ -286,6 +300,16 @@ export default function AddProduct({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title={successMessage.title}
+        message={successMessage.message}
+        onDismiss={() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }}
+      />
     </SafeAreaView>
   );
 }

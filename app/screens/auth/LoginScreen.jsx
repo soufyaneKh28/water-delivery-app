@@ -35,12 +35,19 @@ export default function LoginScreen({ navigation }) {
     try {
       await login(email, password)
     } catch (error) {
+      console.log("error",error);
       if (error.message.includes('Email not confirmed')) {
         Alert.alert(
           "البريد الإلكتروني غير مفعل",
           "يرجى تفعيل بريدك الإلكتروني قبل تسجيل الدخول. تحقق من بريدك الإلكتروني واضغط على رابط التفعيل.",
           [{ text: "حسناً" }]
         )
+      } else if (
+        error.message?.toLowerCase().includes('invalid login credentials') ||
+        error.message?.toLowerCase().includes('invalid credentials') ||
+        error.status === 400
+      ) {
+        Alert.alert("خطأ", "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {
         Alert.alert("خطأ", error.message || "حدث خطأ أثناء تسجيل الدخول")
       }

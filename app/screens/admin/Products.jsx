@@ -231,7 +231,7 @@ export default function Products() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            // style={{ flexDirection: 'row', direction: 'rtl' }}
+            style={{ flexDirection: 'row',  }}
             
             contentContainerStyle={styles.filtersRow}
           >

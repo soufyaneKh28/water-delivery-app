@@ -5,14 +5,17 @@ import { Image, RefreshControl, ScrollView, StyleSheet, View } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [ordersCount, setOrdersCount] = useState(0);
   const [clientsCount, setClientsCount] = useState(0);
   const [productsCount, setProductsCount] = useState(0);
   const [successRate, setSuccessRate] = useState('0%');
+  const [totalProfit, setTotalProfit] = useState('0');
 
   const fetchOrdersCount = async () => {
     const { count, error } = await supabase
@@ -48,11 +51,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchTotalProfit = async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select('total, status')
+      .eq('status', 'delivered');
+    
+    if (!error && data) {
+      const sum = data.reduce((acc, order) => acc + (order.total || 0), 0);
+      setTotalProfit(sum.toLocaleString());
+    }
+  };
+
   React.useEffect(() => {
     fetchOrdersCount();
     fetchClientsCount();
     fetchProductsCount();
     fetchSuccessRate();
+    fetchTotalProfit();
   }, []);
 
   const onRefresh = React.useCallback(() => {
@@ -62,12 +78,11 @@ export default function AdminDashboard() {
       fetchClientsCount(),
       fetchProductsCount(),
       fetchSuccessRate(),
+      fetchTotalProfit(),
     ]).finally(() => setRefreshing(false));
   }, []);
 
   // Example data
-  const userName = 'سفيان خلف الله';
-  const profit = '14.000';
   const profitChange = '+15%';
 
   return (
@@ -88,7 +103,7 @@ export default function AdminDashboard() {
         <View style={styles.welcomeRow}>
           <View style={{  }}>
             <CustomText type="bold" style={styles.welcomeTitle}>مرحباً بعودتك!</CustomText>
-            <CustomText type="regular" style={styles.welcomeSubtitle}>{userName}</CustomText>
+            <CustomText type="regular" style={styles.welcomeSubtitle}>{user?.user_metadata?.username || ''}</CustomText>
           </View>
           <View style={styles.avatarCircle}>
             <Ionicons name="water-outline" size={28} color={colors.primary} />
@@ -96,29 +111,26 @@ export default function AdminDashboard() {
         </View>
 
         {/* Profit Card */}
-   
         <View style={{width:'100%'}} >
-        <LinearGradient
-        // Background Linear Gradient
-        colors={['#2196F3', '#1870B5']}
-        start={{ x: 1, y: 0.9 }}
-        end={{ x: 1, y: 0.1 }}
-        
-        style={[ styles.profitCard]}
-      >
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <CustomText type="regular" style={styles.profitLabel}>مبلغ الربح</CustomText>
-              <CustomText type="bold" style={styles.profitAmount}>{profit} دينار</CustomText>
-              <View style={styles.profitChangeRow}>
-                <CustomText type="regular" style={styles.profitChangeText}>من الشهر الماضي</CustomText>
-                <View style={styles.profitChangeBadge}>
-                  <CustomText type="bold" style={styles.profitChangeBadgeText}>{profitChange}</CustomText>
-                </View>
+          <LinearGradient
+            colors={['#2196F3', '#1870B5']}
+            start={{ x: 1, y: 0.9 }}
+            end={{ x: 1, y: 0.1 }}
+            style={[ styles.profitCard]}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <CustomText type="regular" style={styles.profitLabel}>مبلغ الربح</CustomText>
+                <CustomText type="bold" style={styles.profitAmount}>{totalProfit} دينار</CustomText>
+                {/* <View style={styles.profitChangeRow}>
+                  <CustomText type="regular" style={styles.profitChangeText}>من الشهر الماضي</CustomText>
+                  <View style={styles.profitChangeBadge}>
+                    <CustomText type="bold" style={styles.profitChangeBadgeText}>{profitChange}</CustomText>
+                  </View>
+                </View> */}
               </View>
             </View>
-          </View>
-            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:"100%",height:50 , objectFit:"cover" , marginTop:15}}/>
+            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:"100%",height:60 , objectFit:"cover" , marginTop:15}}/>
           </LinearGradient>
         </View>
            

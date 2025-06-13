@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
 // Create the context
@@ -19,6 +20,71 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [refreshTokenInterval, setRefreshTokenInterval] = useState(null);
+
+  // Function to refresh the token
+  const refreshToken = useCallback(async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      if (session) {
+        // Check if token is about to expire (within 5 minutes)
+        const expiresAt = session.expires_at * 1000; // Convert to milliseconds
+        const now = Date.now();
+        const timeUntilExpiry = expiresAt - now;
+
+        if (timeUntilExpiry < 5 * 60 * 1000) { // 5 minutes in milliseconds
+          console.log('Refreshing token...');
+          const { data, error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) throw refreshError;
+          
+          if (data.session) {
+            setUser(data.session.user);
+            setIsAuthenticated(true);
+            await fetchUserRole(data.session.user.id);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing token:', error);
+      // If refresh fails, log out the user
+      await logout();
+    }
+  }, []);
+
+  // Set up token refresh interval
+  useEffect(() => {
+    // Clear any existing interval
+    if (refreshTokenInterval) {
+      clearInterval(refreshTokenInterval);
+    }
+
+    // Set up new interval to check token every minute
+    const interval = setInterval(refreshToken, 60 * 1000); // Check every minute
+    setRefreshTokenInterval(interval);
+
+    // Clean up interval on unmount
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [refreshToken]);
+
+  // Handle app state changes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        // App came to foreground, refresh token
+        refreshToken();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [refreshToken]);
 
   // Check active sessions and listen for auth changes
   useEffect(() => {
@@ -105,7 +171,6 @@ export const AuthProvider = ({ children }) => {
 
       return data;
     } catch (error) {
-      console.error('Error during login:', error);
       throw error;
     }
   };
@@ -201,6 +266,7 @@ export const AuthProvider = ({ children }) => {
     signup,
     logout,
     updateUser,
+    refreshToken,
   };
 
   return (

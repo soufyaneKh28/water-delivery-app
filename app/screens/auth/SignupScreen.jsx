@@ -25,9 +25,11 @@ export default function SignUpScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { signup } = useAuth()
+  const [username, setUsername] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword) {
+    if (!email || !password || !confirmPassword || !username || !phoneNumber) {
       Alert.alert("خطأ", "الرجاء ملء جميع الحقول المطلوبة")
       return
     }
@@ -39,10 +41,24 @@ export default function SignUpScreen({ navigation }) {
 
     setIsLoading(true)
     try {
-      await signup(email, password, {
-        role: 'client', // Set default role as client
-        username: email,  
+      const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          username,
+          phone: phoneNumber,
+        }),
       })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "حدث خطأ أثناء إنشاء الحساب")
+      }
 
       Alert.alert(
         "تم التسجيل بنجاح",
@@ -64,7 +80,7 @@ export default function SignUpScreen({ navigation }) {
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
    <StatusBar style="dark" backgroundColor={colors.primary}/>
-      <ScrollView contentContainerStyle={globalStyles.contentContainer}>
+      <ScrollView  contentContainerStyle={globalStyles.contentContainer}>
         <View style={styles.header} />
         <View style={styles.curveContainer}>
           <View style={styles.curve} />
@@ -139,6 +155,29 @@ export default function SignUpScreen({ navigation }) {
                   editable={!isLoading}
                 />
               </View>
+            </View>
+
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
+              <TextInput
+                style={globalStyles.input}
+                placeholder="اسم المستخدم"
+                value={username}
+                onChangeText={setUsername}
+                editable={!isLoading}
+              />
+            </View>
+
+            <View style={globalStyles.inputContainer}>
+              <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
+              <TextInput
+                style={globalStyles.input}
+                placeholder="+905436978485"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                editable={!isLoading}
+              />
             </View>
 
             <TouchableOpacity
