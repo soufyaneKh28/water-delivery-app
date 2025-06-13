@@ -1,7 +1,6 @@
 // import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import axios from 'axios';
 import dayjs from 'dayjs';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
@@ -156,17 +155,17 @@ const images = [
         return;
       }
 
-      const response = await axios.get('https://water-supplier-2.onrender.com/api/k1/locations/getAllLocations', {
+      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/locations/getAllLocations', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       });
-      const data = response.data;
+      const data = await response.json();
       // console.log('data-locations', data);
       const addresses = data.data || [];
       setSavedAddresses(addresses);
-      
       if (addresses.length > 0 && !selectedAddress) {
         setSelectedAddress(addresses[0]);
       }
@@ -189,13 +188,14 @@ const images = [
         return;
       }
 
-      const response = await axios.get('https://water-supplier-2.onrender.com/api/k1/offers/getAllOffers', {
+      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/offers/getAllOffers', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
       });
-      const data = response.data;
+      const data = await response.json();
       // console.log('data-offers', data);
       setOffers(data.data || []);
     } catch (error) {

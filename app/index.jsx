@@ -17,8 +17,17 @@ const toastConfig = {
   success: (props) => (
     <BaseToast
       {...props}
-      style={{ marginTop: 40, borderLeftColor: '#4CAF50' }} // Green left border
-      contentContainerStyle={{ paddingHorizontal: 15 }}
+      style={{ 
+        marginTop: 40, 
+        borderLeftColor: '#4CAF50',
+        zIndex: 9999,
+        elevation: 9999, // for Android
+      }}
+      contentContainerStyle={{ 
+        paddingHorizontal: 15,
+        zIndex: 9999,
+        elevation: 9999, // for Android
+      }}
       text1Style={{
         fontSize: 16,
         fontWeight: 'bold',
@@ -28,7 +37,29 @@ const toastConfig = {
       }}
     />
   ),
-  // You can add error/info customizations here if needed
+  error: (props) => (
+    <BaseToast
+      {...props}
+      style={{ 
+        marginTop: 40, 
+        borderLeftColor: '#FF3B30',
+        zIndex: 9999,
+        elevation: 9999, // for Android
+      }}
+      contentContainerStyle={{ 
+        paddingHorizontal: 15,
+        zIndex: 9999,
+        elevation: 9999, // for Android
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}
+      text2Style={{
+        fontSize: 14,
+      }}
+    />
+  ),
 };
 
 export default function App() {

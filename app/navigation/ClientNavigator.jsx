@@ -17,6 +17,7 @@ import HomeScreen from '../screens/client/Home';
 import MapScreen from '../screens/client/MapScreen';
 import MyOrdersScreen from '../screens/client/MyOrdersScreen';
 import OrderDetailsScreen from '../screens/client/OrderDetailsScreen';
+import OrderSuccessScreen from '../screens/client/OrderSuccessScreen';
 import ProductDetailsScreen from '../screens/client/ProductDetailsScreen';
 import ProfileScreen from '../screens/client/ProfileScreen';
 import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
@@ -210,6 +211,11 @@ export default function ClientNavigator() {
       <Stack.Screen
         name="OrderDetails"
         component={OrderDetailsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="OrderSuccessScreen"
+        component={OrderSuccessScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

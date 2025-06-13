@@ -1,8 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { useAddress } from '../../context/AddressContext';
+import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
@@ -19,6 +23,45 @@ export default function CouponsScreen() {
   const [cardErrors, setCardErrors] = useState({});
   const [refillModalVisible, setRefillModalVisible] = useState(false);
   const [bottleCount, setBottleCount] = useState(1);
+  const [couponBalance, setCouponBalance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refillError, setRefillError] = useState('');
+  const { selectedAddress } = useAddress();
+  const { user } = useAuth();
+
+  const fetchCouponBalance = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('coupons')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) throw error;
+      setCouponBalance(data?.balance || 0);
+    } catch (error) {
+      console.error('Error fetching coupon balance:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'حدث خطأ أثناء تحديث الرصيد',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchCouponBalance();
+    setRefreshing(false);
+  }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchCouponBalance();
+    }
+  }, [user?.id]);
 
   const openModal = (book) => {
     setSelectedBook(book);
@@ -65,15 +108,123 @@ export default function CouponsScreen() {
   const incrementBottle = () => setBottleCount(count => count + 1);
   const decrementBottle = () => setBottleCount(count => (count > 1 ? count - 1 : 1));
 
+  // Helper to format address
+  const formatAddressString = (address) => {
+    if (!address) return '';
+    const parts = [
+      address.label,
+      address.city,
+      address.address,
+      `مبنى ${address.building_no}`,
+      `طابق ${address.floor_no}`,
+      address.description
+    ].filter(Boolean);
+    return parts.join('، ');
+  };
+
+  const handleRefillRequest = async () => {
+    if (!selectedAddress) {
+      setRefillError('يرجى اختيار عنوان التوصيل');
+      return;
+    }
+
+    if (couponBalance < bottleCount) {
+      setRefillError('رصيد الكوبونات غير كافي. يرجى شراء المزيد من الكوبونات');
+      return;
+    }
+
+    try {
+      // Start a transaction to update the coupon balance
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      // First, get the current balance to ensure it hasn't changed
+      const { data: currentBalance, error: balanceError } = await supabase
+        .from('coupons')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (balanceError) throw balanceError;
+
+      if (currentBalance.balance < bottleCount) {
+        setRefillError('تم تغيير الرصيد. يرجى تحديث الصفحة والمحاولة مرة أخرى');
+        return;
+      }
+
+      // Create the refill order
+      const { data: order, error: orderError } = await supabase
+        .from('refill_orders')
+        .insert([
+          {
+            user_id: user.id,
+            address_id: selectedAddress.id,
+            bottle_count: bottleCount,
+            status: 'pending',
+            coupon_cost: bottleCount,
+          }
+        ])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Update the coupon balance
+      const { error: updateError } = await supabase
+        .from('coupons')
+        .update({ balance: currentBalance.balance - bottleCount })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setCouponBalance(currentBalance.balance - bottleCount);
+      setRefillModalVisible(false);
+      setBottleCount(1);
+      setRefillError('');
+
+      Toast.show({
+        type: 'success',
+        text1: 'تم الطلب بنجاح',
+        text2: 'تم تسجيل طلب إعادة التعبئة بنجاح',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } catch (error) {
+      console.error('Error processing refill request:', error);
+      setRefillError('حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى');
+    }
+  };
+
+  // Reset error when modal opens/closes
+  useEffect(() => {
+    if (!refillModalVisible) {
+      setRefillError('');
+    }
+  }, [refillModalVisible]);
+
   return (
     <>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom:100 }} showsVerticalScrollIndicator={true} >
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={{ paddingBottom:100 }} 
+        showsVerticalScrollIndicator={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]} // Android
+            tintColor={colors.primary} // iOS
+            title="جاري التحديث..." // iOS
+            titleColor={colors.primary} // iOS
+          />
+        }
+      >
         {/* Balance Section */}
-
-          <CustomText type="medium" style={styles.balanceLabel}>رصيدي</CustomText>
+        <CustomText type="medium" style={styles.balanceLabel}>رصيدي</CustomText>
         <View style={styles.balanceCard}>
           <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
-          <CustomText type="bold" style={styles.balanceValue}>50</CustomText>
+          <CustomText type="bold" style={styles.balanceValue}>{couponBalance}</CustomText>
         </View>
 
         {/* Buy Coupon Book Section */}
@@ -116,7 +267,7 @@ export default function CouponsScreen() {
         animationType="slide"
         onRequestClose={closeModal}
         >
-        <View style={modalStyles.overlay}>
+        <SafeAreaView >
           <ScrollView style={modalStyles.modalContainer} contentContainerStyle={{ paddingBottom: 70 ,  }}>
           <TouchableOpacity  style={{position: 'absolute', top: 10, left: 10 , width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={closeModal}>
             <Ionicons name="close" size={22} color={colors.black} />
@@ -127,9 +278,14 @@ export default function CouponsScreen() {
             {/* Delivery Address */}
             <CustomText type="bold" style={modalStyles.label}>عنوان التسليم</CustomText>
             <View style={modalStyles.addressBox}>
-              <CustomText style={{textAlign:'right'}} type="bold">759 Ashcraft Court San Diego</CustomText>
-              <CustomText style={{ fontSize: 12, color: '#888' , textAlign:'right' ,maxWidth:'80%'}}>759 Ashcraft Court San Diego\nIstanbul 34010,Floor:11</CustomText>
-              {/* <Image source={require('../../../assets/images/map.png')} style={modalStyles.mapImage} /> */}
+              {selectedAddress ? (
+                <>
+                  <CustomText style={{textAlign:'right'}} type="bold">{selectedAddress.label}</CustomText>
+                  <CustomText style={{ fontSize: 12, color: '#888' , textAlign:'right' ,maxWidth:'80%'}} numberOfLines={2} ellipsizeMode="tail">{formatAddressString(selectedAddress)}</CustomText>
+                </>
+              ) : (
+                <CustomText style={{textAlign:'right', color:'#888'}}>يرجى اختيار عنوان التوصيل</CustomText>
+              )}
             </View>
             {/* Payment Method */}
             <CustomText type="bold" style={modalStyles.label}>طريقة الدفع</CustomText>
@@ -232,7 +388,7 @@ export default function CouponsScreen() {
               }
             />
           </ScrollView>
-        </View>
+        </SafeAreaView>
       </Modal>
         </View>
 
@@ -253,7 +409,7 @@ export default function CouponsScreen() {
             <CustomText type="bold" style={modalStyles.title}>الرصيد الحالي</CustomText>
             <View style={[styles.balanceCard, {marginBottom: 16}]}>        
               <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
-              <CustomText type="bold" style={styles.balanceValue}>50</CustomText>
+              <CustomText type="bold" style={styles.balanceValue}>{couponBalance}</CustomText>
             </View>
             <CustomText type="bold" style={modalStyles.label}>عدد القارورات</CustomText>
             <View style={{flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 16 , }}>
@@ -271,7 +427,6 @@ export default function CouponsScreen() {
                 </TouchableOpacity>
               </View>
               </View>
-              
             </View>
             <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
             <View style={modalStyles.summaryRow2}>
@@ -282,14 +437,16 @@ export default function CouponsScreen() {
               <CustomText type="bold" style={{color: colors.primary}}>{bottleCount} كوبونات</CustomText>
               <CustomText>عدد الكوبونات المراد سحبها</CustomText>
             </View>
+            {refillError ? (
+              <View style={styles.errorContainer}>
+                <CustomText style={styles.errorText}>{refillError}</CustomText>
+              </View>
+            ) : null}
             <PrimaryButton
               title="طلب اعادة تعبئة"
               style={modalStyles.confirmButton}
-              onPress={() => {
-                // handle refill logic here
-                setRefillModalVisible(false);
-              }}
-              />
+              onPress={handleRefillRequest}
+            />
           </View>
         </View>
       </Modal>
@@ -422,6 +579,19 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 45,
     borderRadius: 50,
+  },
+  errorContainer: {
+    backgroundColor: '#FFE5E5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#FF3B30',
+  },
+  errorText: {
+    color: '#FF3B30',
+    textAlign: 'center',
+    fontSize: 14,
   },
 }); 
 

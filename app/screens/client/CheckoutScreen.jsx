@@ -1,5 +1,8 @@
+import axios from 'axios';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
+import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -32,6 +35,54 @@ export default function CheckoutScreen({ route, navigation }) {
     return parts.join('، ');
   };
 
+  // Create order function
+  const createOrder = async () => {
+    try {
+      const order_type = paymentMethod === 'card' ? 'online-payment' : 'on-delivery';
+      const location_id = selectedAddress?.id;
+      const cartPayload = cart.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        // unit_price: item.price,
+      }));
+      const payload = {
+        order_type,
+        location_id,
+        cart: cartPayload,
+      };
+      console.log('payload', payload);
+
+      // Get access token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      await axios.post(
+        'https://water-supplier-2.onrender.com/api/k1/orders/createOrder',
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      navigation.replace('OrderSuccessScreen', {
+        order: payload,
+        cart,
+        total,
+        selectedAddress,
+      });
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: error.response?.data?.message || error.message || 'حدث خطأ أثناء إرسال الطلب',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
   const handleConfirm = () => {
     if (paymentMethod === 'delivery' && note.trim() === '') {
       setNoteError('يرجى إدخال ملاحظة');
@@ -46,8 +97,8 @@ export default function CheckoutScreen({ route, navigation }) {
       setCardErrors(errors);
       if (Object.keys(errors).length > 0) return;
     }
-    // handle order confirmation logic here
-    navigation.goBack();
+    // Call createOrder for both payment methods
+    createOrder();
   };
 
   return (

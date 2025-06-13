@@ -8,7 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 
 const statusMap = {
-  pending: { label: 'قيد المعالجة', color: '#BFD6F6' },
+  new: { label: 'قيد المعالجة', color: '#BFD6F6' },
   accepted: { label: 'تم القبول', color: '#90C2FF' },
   delivered: { label: 'تم التوصيل', color: '#6DD98D' },
   cancelled: { label: 'ملغي', color: '#FF6B6B' },

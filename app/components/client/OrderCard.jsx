@@ -4,7 +4,7 @@ import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
 
 const statusColors = {
-  pending: '#FFD700', // Gold for pending
+  new: '#FFD700', // Gold for pending
   processing: '#EEEEEE',
   'on-the-way': '#87CEEB', // Sky blue for on-the-way
   delivered: '#9DFA9F',
@@ -12,7 +12,7 @@ const statusColors = {
 };
 
 const statusLabels = {
-  pending: 'قيد الانتظار',
+  new: 'قيد الانتظار',
   processing: 'قيد المعالجة',
   'on-the-way': 'في الطريق',
   delivered: 'تم التوصيل',
