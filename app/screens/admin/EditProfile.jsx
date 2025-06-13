@@ -22,7 +22,7 @@ export default function EditProfile({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: "",
+    username: "",
     phone: "",
     email: "",
   });
@@ -38,15 +38,15 @@ export default function EditProfile({ navigation }) {
         .select("*")
         .eq("id", user.id)
         .single();
-
+      console.log("data-profile", data);
       if (error) {
         throw error;
       }
 
       setFormData({
-        full_name: data.full_name || "",
+        username: data.username || "",
         phone: data.phone || "",
-        email: data.email || "",
+        email: user.email || "",
       });
     } catch (error) {
       Alert.alert("خطأ", "تعذر تحميل بيانات الحساب");
@@ -57,7 +57,7 @@ export default function EditProfile({ navigation }) {
   };
 
   const handleSave = async () => {
-    if (!formData.full_name.trim()) {
+    if (!formData.username.trim()) {
       Alert.alert("خطأ", "اسم المستخدم مطلوب");
       return;
     }
@@ -66,9 +66,9 @@ export default function EditProfile({ navigation }) {
       const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: formData.full_name.trim(),
+  
           phone: formData.phone.trim(),
-          email: formData.email.trim(),
+          
           updated_at: new Date(),
         })
         .eq("id", user.id);
@@ -105,12 +105,13 @@ export default function EditProfile({ navigation }) {
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
             <TextInput
-              style={globalStyles.input}
-              value={formData.full_name}
-              onChangeText={text => setFormData(prev => ({ ...prev, full_name: text }))}
+              style={[globalStyles.input, styles.disabledInput]}
+              value={formData.username}
+              onChangeText={text => setFormData(prev => ({ ...prev, username: text }))}
               placeholder="اسم المستخدم"
               placeholderTextColor={colors.gray[400]}
               textAlign="right"
+              editable={false}
             />
           </View>
           {/* Phone */}
@@ -130,7 +131,7 @@ export default function EditProfile({ navigation }) {
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
             <TextInput
-              style={globalStyles.input}
+              style={[globalStyles.input, styles.disabledInput]}
               value={formData.email}
               onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
               placeholder="البريد الإلكتروني"
@@ -138,6 +139,7 @@ export default function EditProfile({ navigation }) {
               textAlign="right"
               keyboardType="email-address"
               autoCapitalize="none"
+              editable={false}
             />
           </View>
         </View>
@@ -206,5 +208,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     textAlign: 'center',
+  },
+  disabledInput: {
+    backgroundColor: '#F2F2F2',
+    color: '#A0A0A0',
+    borderColor: '#E0E0E0',
   },
 }); 
