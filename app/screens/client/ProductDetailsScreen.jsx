@@ -1,6 +1,7 @@
 import { AntDesign, Feather } from '@expo/vector-icons';
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Toast from 'react-native-toast-message';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -22,6 +23,13 @@ export default function ProductDetailsScreen({ route, navigation }) {
       quantity, // Include the selected quantity
     };
     addToCart(product);
+    Toast.show({
+      type: 'success',
+      text1: 'تمت الإضافة',
+      text2: 'تمت إضافة المنتج إلى السلة بنجاح!',
+      position: 'top',
+      visibilityTime: 2500,
+    });
   };
 
   return (

@@ -222,16 +222,16 @@ const Orders = () => {
               <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
                 <CustomText style={styles.topCardNumber}>{totalOrders}</CustomText>
               </View>
-              <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
+              {/* <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
 
                 <View style={styles.topCardChange}><CustomText style={styles.topCardChangeText}>+15%</CustomText></View>
               <CustomText style={styles.topCardSubtitle}>من الأمس</CustomText>
-              </View>
+              </View> */}
             </View>
             {/* Placeholder for chart */}
             {/* <View style={styles.chartPlaceholder} /> */}
           </View>
-            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:'100%',height:52 ,marginTop:12}}/>
+            <Image source={require('../../../assets/images/linear_chart.png')} style={{width:'100%',height:60 ,marginTop:12}}/>
         </LinearGradient>
         </View>
 

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import Toast from 'react-native-toast-message';
 import EmptyCartImage from '../../../assets/images/empty-cart.png';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
@@ -487,6 +488,7 @@ const images = [
         visible={addressModalVisible}
         transparent
         animationType="slide"
+        // style={{paddingHorizontal: 20}}
         onRequestClose={() => setAddressModalVisible(false)}
         >
         <SafeAreaView style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
@@ -500,23 +502,28 @@ const images = [
           { savedAddresses && savedAddresses.map((address) => (
             <TouchableOpacity
             key={address.id}
-            style={{ flexDirection: 'row', alignItems: 'flex-start', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10 }}
+            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10, marginHorizontal: 20 }}
             onPress={() => handleSelectAddress(address)}
             >
-              <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 12, marginTop: 2 }} />
+              <TouchableOpacity style={{width: 30, height: 30, alignItems: 'center', alignSelf: "center", justifyContent: 'center'}}>
+              <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 5, marginTop: 2  }} />
+              </TouchableOpacity>
               <View style={{ flex: 1, alignItems: 'flex-end'}}>
                 <CustomText type="bold" style={{ fontSize: 16, textAlign: 'right', marginBottom: 4 }}>{address.label}</CustomText>
                 <CustomText type="regular" style={{ fontSize: 13, color: '#666', textAlign: 'right' }} numberOfLines={2} ellipsizeMode="tail">
                   {formatAddressString(address)}
                 </CustomText>
               </View>
-              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#BFD6F6', alignItems: 'center', justifyContent: 'center', marginLeft: 8, marginTop: 2 }}>
+              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#BFD6F6', alignItems: 'center', justifyContent: 'center', marginLeft: 12, marginTop: 2 }}>
                 {selectedAddress?.id === address.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#BFD6F6' }} />}
               </View>
             </TouchableOpacity>
           ))}
+          <View style={{width: '100%', paddingHorizontal: 20, alignItems:"center"}}>
+
           <View style={{width: '100%' , height: 1 , backgroundColor: '#E0E0E0' , marginTop: 20}}></View>
-          <TouchableOpacity onPress={handleAddLocation} style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 20 }}>
+          </View>
+          <TouchableOpacity onPress={handleAddLocation} style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 20 , paddingHorizontal: 20}}>
             <CustomText type="bold" style={{ color: '#222', fontSize: 15, marginLeft: 8 }}>أضف عنواناً جديداً</CustomText>
             <CustomText style={{ fontSize: 24, color: '#222' }}>+</CustomText>
           </TouchableOpacity>
@@ -838,4 +845,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 }); 
+
+const showAddProductToast = () => {
+  Toast.show({
+    type: 'success',
+    text1: 'تمت الإضافة',
+    text2: 'تمت إضافة المنتج إلى السلة بنجاح!',
+    position: 'bottom',
+    visibilityTime: 2500,
+  });
+};
 

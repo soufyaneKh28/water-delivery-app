@@ -2,6 +2,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
@@ -33,6 +34,13 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
       quantity: 1, // Explicitly set quantity to 1 for quick add
     };
     addToCart(product);
+    Toast.show({
+      type: 'success',
+      text1: 'تمت الإضافة',
+      text2: 'تمت إضافة المنتج إلى السلة بنجاح!',
+      position: 'top',
+      visibilityTime: 2500,
+    });
   };
 
   return (

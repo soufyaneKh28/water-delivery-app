@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -104,7 +105,7 @@ export default function FAQScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <BackBtn />
@@ -137,7 +138,7 @@ export default function FAQScreen({ navigation }) {
         {/* <Animated.View style={[styles.box, animatedStyle]} />
         <Button title="Animate" onPress={onPress} /> */}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 48,
+    paddingTop: 20,
     justifyContent: 'space-between',
     paddingBottom: 12,
     paddingHorizontal: 20,
@@ -169,11 +170,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: colors.black,
+    textAlign: "left",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
+    textAlign: "left",
     marginBottom: 24,
     lineHeight: 22,
   },
@@ -200,6 +203,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.black,
+    textAlign: "left",
   },
   accordionBody: {
     backgroundColor: '#EAF2FF',
@@ -212,6 +216,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     lineHeight: 22,
+    textAlign: "left",
   },
   box: {
     width: 100,

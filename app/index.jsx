@@ -5,11 +5,31 @@ import * as Font from 'expo-font';
 
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
+import Toast, { BaseToast } from 'react-native-toast-message';
 import { FONTS } from './constants/fonts';
 import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
+
+// Custom toast config with marginTop for top toasts
+const toastConfig = {
+  success: (props) => (
+    <BaseToast
+      {...props}
+      style={{ marginTop: 40, borderLeftColor: '#4CAF50' }} // Green left border
+      contentContainerStyle={{ paddingHorizontal: 15 }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+      }}
+      text2Style={{
+        fontSize: 14,
+      }}
+    />
+  ),
+  // You can add error/info customizations here if needed
+};
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -46,6 +66,7 @@ export default function App() {
       <CartProvider>
       <AddressProvider>
       <AppNavigator />
+      <Toast config={toastConfig} />
       </AddressProvider>
       </CartProvider>
     </AuthProvider>

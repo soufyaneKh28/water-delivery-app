@@ -1,6 +1,6 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -35,6 +35,7 @@ export default function TermsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingVertical: 20,
     backgroundColor: colors.white,
     direction: 'rtl',
   },
@@ -56,15 +57,18 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 16,
+    direction: 'rtl',
   },
   title: {
     fontSize: 22,
     color: colors.black,
+    textAlign: "left",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
+    textAlign: "left",
     marginBottom: 24,
     lineHeight: 28,
   },

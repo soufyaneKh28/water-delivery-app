@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image, Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Linking, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -64,7 +64,8 @@ export default function ContactScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    paddingTop: 20,
+    backgroundColor: 'white',
     direction: 'rtl',
   },
   header: {
@@ -85,18 +86,21 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 20,
     paddingTop: 16,
+    direction: 'rtl',
   },
   title: {
     fontSize: 22,
     color: colors.black,
     marginBottom: 8,
+    textAlign: "left",
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
     marginBottom: 24,
     lineHeight: 22,
-  },
+    textAlign: "left",
+    },
   cardsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -148,6 +152,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 12,
+    textAlign: "left",
     // textAlign: 'center',
   },
   socialBtn: {

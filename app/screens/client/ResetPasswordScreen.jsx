@@ -280,7 +280,8 @@ export default function ResetPasswordScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     backgroundColor: colors.white,
     // justifyContent: '',
   },
