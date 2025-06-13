@@ -2,13 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -250,18 +250,6 @@ export default function ProfileScreen() {
             <CustomText type="medium" style={styles.logoutLabel}>تسجيل الخروج</CustomText>
             <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
           </TouchableOpacity>
-          {/* Delete Account */}
-          <TouchableOpacity
-            style={[styles.menuItem, styles.deleteItem]}
-            activeOpacity={0.7}
-            onPress={() => setShowDeleteModal(true)}
-          >
-            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
-              <Image source={require('../../../assets/icons/trash.png')} style={{ width: 18, height: 18 }} />
-            </View>
-            <CustomText style={styles.deleteLabel}>حذف الحساب</CustomText>
-            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </>
@@ -340,17 +328,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   logoutLabel: {
-    flex: 1,
-    fontSize: 16,
-    color: '#F44336',
-    textAlign: 'right',
-  },
-  deleteItem: {
-    backgroundColor: '#fff',
-    borderBottomWidth: 0,
-    marginTop: 0,
-  },
-  deleteLabel: {
     flex: 1,
     fontSize: 16,
     color: '#F44336',

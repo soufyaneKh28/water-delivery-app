@@ -206,7 +206,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 20,
+    paddingHorizontal: 20,
+    // paddingVertical: 10,
     backgroundColor: colors.white,
   },
   header: {
