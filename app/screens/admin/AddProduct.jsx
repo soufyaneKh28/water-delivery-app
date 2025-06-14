@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Picker } from '@react-native-picker/picker';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
@@ -26,6 +26,7 @@ export default function AddProduct({ navigation }) {
   const [productSize, setProductSize] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
+  const [productType, setProductType] = useState('money');
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -40,6 +41,7 @@ export default function AddProduct({ navigation }) {
       setProductSize(editingProduct.size || '');
       setProductDescription(editingProduct.description || '');
       setProductPrice(editingProduct.price ? String(editingProduct.price) : '');
+      setProductType(editingProduct.price_type || 'money');
     }
   }, [editingProduct]);
 
@@ -117,7 +119,7 @@ export default function AddProduct({ navigation }) {
       formData.append('size', productSize);
       formData.append('description', productDescription);
       formData.append('price', productPrice);
-      formData.append('price_type', 'money');
+      formData.append('price_type', productType);
       formData.append('category', productCategory);
       formData.append('old_price', '12'); // Or your logic
 
@@ -227,24 +229,67 @@ export default function AddProduct({ navigation }) {
         </View>
         <View style={globalStyles.inputContainer}>
           <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>فئة المنتج</CustomText>
-          <View style={[globalStyles.input, styles.pickerContainer]}>
-            <Picker
-              selectedValue={productCategory}
-              onValueChange={(itemValue) => setProductCategory(itemValue)}
-              style={styles.picker}
-              dropdownIconColor={colors.primary}
-            >
-              <Picker.Item label="اختر فئة المنتج" value="" color={colors.textDisabled} />
-              {categories.map((category) => (
-                <Picker.Item
-                  key={category.id}
-                  label={category.title}
-                  value={category.id}
-                  color={colors.textPrimary}
+          <TouchableOpacity 
+            style={styles.dropdownContainer}
+            onPress={() => {
+              // This will trigger the picker to open
+              if (this.pickerRef) {
+                this.pickerRef.togglePicker(true);
+              }
+            }}
+          >
+            <RNPickerSelect
+              ref={(ref) => {
+                this.pickerRef = ref;
+              }}
+              onValueChange={(value) => setProductCategory(value)}
+              value={productCategory}
+              items={[
+                { label: 'اختر فئة المنتج', value: '' },
+                ...categories.map((category) => ({
+                  label: category.title,
+                  value: category.id,
+                }))
+              ]}
+              style={{
+                inputIOS: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                },
+                inputAndroid: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                },
+                placeholder: {
+                  color: colors.textDisabled,
+                },
+                iconContainer: {
+                  top: 12,
+                  left: 0,
+                },
+              }}
+              placeholder={{ label: 'اختر فئة المنتج', value: '' }}
+              useNativeAndroidPickerStyle={false}
+             
+              touchableWrapperProps={{
+                style: {
+                  flex: 1,
+                },
+              }}
+            />
+<Ionicons 
+                  name="chevron-down" 
+                  size={20} 
+                  color={colors.textPrimary} 
+                  style={styles.dropdownIcon}
                 />
-              ))}
-            </Picker>
-          </View>
+          </TouchableOpacity>
         </View>
         <View style={globalStyles.inputContainer}>
           <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>حجم المنتج</CustomText>
@@ -267,6 +312,59 @@ export default function AddProduct({ navigation }) {
             onChangeText={setProductDescription}
             multiline
           />
+        </View>
+        <View style={globalStyles.inputContainer}>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>نوع المنتج</CustomText>
+          <TouchableOpacity 
+            style={styles.dropdownContainer}
+            onPress={() => {
+              if (this.typePickerRef) {
+                this.typePickerRef.togglePicker(true);
+              }
+            }}
+          >
+            <RNPickerSelect
+              ref={ref => { this.typePickerRef = ref; }}
+              onValueChange={setProductType}
+              value={productType}
+              items={[
+                { label: 'منتج نقدي', value: 'money' },
+                { label: 'منتج كوبون', value: 'coupon' },
+              ]}
+              style={{
+                inputIOS: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                },
+                inputAndroid: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                },
+                placeholder: {
+                  color: colors.textDisabled,
+                },
+                iconContainer: {
+                  top: 12,
+                  left: 0,
+                },
+              }}
+              placeholder={{ label: 'اختر نوع المنتج', value: '' }}
+              useNativeAndroidPickerStyle={false}
+              touchableWrapperProps={{ style: { flex: 1 } }}
+            />
+            <Ionicons 
+              name="chevron-down" 
+              size={20} 
+              color={colors.textPrimary} 
+              style={styles.dropdownIcon}
+            />
+          </TouchableOpacity>
         </View>
         <View style={globalStyles.inputContainer}>
           <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>سعر المنتج</CustomText>
@@ -398,23 +496,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  pickerContainer: {
-    padding: 0,
-    marginBottom: 10,
-    ...Platform.select({
-      ios: {
-        paddingHorizontal: 10,
-      },
-      android: {
-        paddingHorizontal: 5,
-      },
-    }),
-  },
-  picker: {
-    height: Platform.OS === 'ios' ? 150 : 50,
-    width: '100%',
-    color: colors.textPrimary,
-  },
   disabledButton: {
     opacity: 0.7,
   },
@@ -422,5 +503,19 @@ const styles = StyleSheet.create({
     // marginBottom: 4,
     // marginTop: 8,
     textAlign: 'left',
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48, // Ensure minimum touchable height
+  },
+  dropdownIcon: {
+    // marginRight: 10,
   },
 }); 

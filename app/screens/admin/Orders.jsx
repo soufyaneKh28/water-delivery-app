@@ -14,7 +14,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const orderStatuses = [
   { label: 'كل الطلبات', value: 'all' },
-  { label: 'قيد الانتظار', value: 'new' },
   { label: 'قيد المعالجة', value: 'processing' },
   { label: 'في الطريق', value: 'on-the-way' },
   { label: 'تم التوصيل', value: 'delivered' },
@@ -67,9 +66,15 @@ const statusLabels = {
   cancelled: 'تم الالغاء',
 };
 
+const orderTypes = [
+  { label: 'كوبونات', value: 'coupon' },
+  { label: 'طلبات أخرى', value: 'other' }, // This will include both on-delivery and money orders
+];
+
 const Orders = () => {
   const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [orders, setOrders] = useState([]);
@@ -108,9 +113,18 @@ const Orders = () => {
     fetchOrders().finally(() => setRefreshing(false));
   }, []);
 
-  const filteredOrders = selectedStatus === 'all'
-    ? orders
-    : orders.filter(order => order.status === selectedStatus);
+  const filteredOrders = orders
+    .filter(order => {
+      // First filter out pending orders
+      if (order.status === 'pending') return false;
+      // Then apply the status filter if not 'all'
+      return selectedStatus === 'all' || order.status === selectedStatus;
+    })
+    .filter(order => {
+      if (selectedOrderType === 'coupon') return order.order_type === 'coupon';
+      // For 'other' type, include both on-delivery and money orders
+      return order.order_type === 'on-delivery' || order.order_type === 'money';
+    });
 
   const handleFilterChange = (status) => {
     // Fade out
@@ -121,6 +135,24 @@ const Orders = () => {
     }).start(() => {
       // Change filter
       setSelectedStatus(status);
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const handleOrderTypeChange = (type) => {
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      // Change filter
+      setSelectedOrderType(type);
       // Fade in
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -324,44 +356,59 @@ const Orders = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]} // Android
-            tintColor={colors.primary} // iOS
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       >
         {/* Top Card */}
-        <View >
-        <LinearGradient
-        // Background Linear Gradient
-        colors={['#2196F3', '#1870B5']}
-        start={{ x: 1, y: 0.9 }}
-        end={{ x: 1, y: 0.1 }}
-        
-        style={[ styles.topCard]}
-      >
-        
-          <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
-            <View>
-              <CustomText type='bold' style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
-              <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
-                <CustomText style={styles.topCardNumber}>{totalOrders}</CustomText>
+        <View>
+          <LinearGradient
+            colors={['#2196F3', '#1870B5']}
+            start={{ x: 1, y: 0.9 }}
+            end={{ x: 1, y: 0.1 }}
+            style={[styles.topCard]}
+          >
+            <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View>
+                <CustomText type='bold' style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
+                <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
+                  <CustomText type='bold' style={styles.topCardNumber}>{totalOrders}</CustomText>
+                </View>
               </View>
-              {/* <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
-
-                <View style={styles.topCardChange}><CustomText style={styles.topCardChangeText}>+15%</CustomText></View>
-              <CustomText style={styles.topCardSubtitle}>من الأمس</CustomText>
-              </View> */}
             </View>
-            {/* Placeholder for chart */}
-            {/* <View style={styles.chartPlaceholder} /> */}
-          </View>
             <Image source={require('../../../assets/images/linear_chart.png')} style={{width:'100%',height:60 ,marginTop:12}}/>
-        </LinearGradient>
+          </LinearGradient>
         </View>
 
-        {/* Filters */}
+        {/* Order Type Tabs */}
+        <View style={styles.tabContainer}>
+          {orderTypes.map((type) => (
+            <TouchableOpacity
+              key={type.value}
+              style={[
+                styles.tab,
+                selectedOrderType === type.value && styles.tabActive,
+              ]}
+              onPress={() => handleOrderTypeChange(type.value)}
+              activeOpacity={0.7}
+            >
+              <CustomText 
+                type='bold' 
+                style={[
+                  styles.tabText,
+                  selectedOrderType === type.value && styles.tabTextActive,
+                ]}
+              >
+                {type.label}
+              </CustomText>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Status Filters */}
         <View style={{ marginTop: 10, marginBottom: 8 }}>
-          <CustomText type='bold' style={styles.filterTitle}>أخر الطلبات</CustomText>
+          <CustomText type='bold' style={styles.filterTitle}>حالة الطلب</CustomText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -437,7 +484,9 @@ const Orders = () => {
                     >
                       <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
                     </TouchableOpacity>
-                    <CustomText type='bold' style={styles.orderPrice}>{item.total} دينار</CustomText>
+                    <CustomText type='bold' style={styles.orderPrice}>
+                      {item.total} {item.order_type === 'coupon' ? 'كوبون' : 'دينار'}
+                    </CustomText>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -622,7 +671,6 @@ const styles = StyleSheet.create({
   topCardTitle: {
     color: '#fff',
     fontSize: 16,
-    // fontWeight: 'bold',
     textAlign: 'right',
   },
   topCardNumber: {
@@ -654,7 +702,6 @@ const styles = StyleSheet.create({
   filterTitle:{
     color: '#121212',
     fontSize: 20,
-    // fontWeight: 'bold',
     textAlign: 'right',
     paddingHorizontal: 16,
   },
@@ -684,11 +731,9 @@ const styles = StyleSheet.create({
   filterText: {
     color: '#888',
     fontSize: 14,
-    // fontWeight: 'bold',
   },
   filterTextActive: {
     color: '#fff',
-    // fontWeight: 'bold',
   },
   orderCard: {
     backgroundColor: '#fff',
@@ -697,10 +742,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     marginBottom: 12,
     shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.06,
-    // shadowRadius: 4,
-    // elevation: 1,
     borderWidth: 1,
     borderColor: '#EEEEEE',
   },
@@ -710,22 +751,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'right',
     width: 200,
-    // numberOfLines: 1,
     marginLeft: 8,
   },
   statusBadge: {
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 2,
-    // marginLeft: 8,
     backgroundColor: '#E0E0E0',
   },
   statusBadgeText: {
     fontSize: 13,
     color: '#222',
-    // fontWeight: 'bold',
-    paddingHorizontal: 10,
-
   },
   orderTitle: {
     fontSize: 18,
@@ -737,7 +773,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginBottom: 2,
-    
     textAlign: 'right',
   },
   orderAddress: {
@@ -745,8 +780,6 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 8,
     width: 200,
-
-    // textAlign: 'left',
   },
   orderFooter: {
     flexDirection: 'row',
@@ -764,7 +797,6 @@ const styles = StyleSheet.create({
   },
   orderPrice: {
     color: '#2196F3',
-    // fontWeight: 'bold',
     fontSize: 20,
   },
   emptyText: {
@@ -807,7 +839,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   statusOption: {
-    width: '48%', // Two per row
+    width: '48%',
     paddingVertical: 12,
     paddingHorizontal: 4,
     borderRadius: 8,
@@ -886,6 +918,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: colors.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  tabTextActive: {
+    color: colors.primary,
   },
 });
 export default Orders; 

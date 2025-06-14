@@ -13,6 +13,7 @@ export default function Offers() {
   const [loading, setLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [deletingOfferId, setDeletingOfferId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchOffers();
@@ -113,6 +114,7 @@ export default function Offers() {
         style: 'destructive', 
         onPress: async () => {
           try {
+            setIsDeleting(true);
             setDeletingOfferId(id);
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
@@ -120,6 +122,7 @@ export default function Offers() {
             if (!token) {
               Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
               setDeletingOfferId(null);
+              setIsDeleting(false);
               return;
             }
 
@@ -138,6 +141,7 @@ export default function Offers() {
             Alert.alert('خطأ', 'تعذر حذف العرض: ' + (error.response?.data?.message || error.message));
           } finally {
             setDeletingOfferId(null);
+            setIsDeleting(false);
           }
         }
       }
@@ -193,6 +197,11 @@ export default function Offers() {
           </CustomText>
         }
       />
+      {isDeleting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
     </View>
   );
 }
@@ -251,5 +260,16 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
 }); 

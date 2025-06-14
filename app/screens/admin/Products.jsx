@@ -43,6 +43,7 @@ const mockProducts = [
 
 export default function Products() {
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [selectedType, setSelectedType] = useState('money');
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -155,9 +156,11 @@ export default function Products() {
   };
 
   // Filter logic
-  const filteredProducts = selectedFilter === 'all'
-    ? products
-    : products.filter(product => product.category === selectedFilter);
+  const filteredProducts = products.filter(product => {
+    const categoryMatch = (selectedFilter === 'all' || product.category === selectedFilter);
+    const typeMatch = (selectedType === 'all' || product.price_type === selectedType);
+    return categoryMatch && typeMatch;
+  });
 
   const handleDeleteProduct = () => {
     if (!selectedProduct) return;
@@ -224,14 +227,29 @@ export default function Products() {
           </TouchableOpacity>
           <CustomText type='bold' style={styles.headerTitle}>المنتجات</CustomText>
         </View>
+        {/* Type Filter Buttons (Top Tabs) */}
+        <View style={styles.typeFilterContainer}>
+           <TouchableOpacity
+             style={[styles.typeFilterChip, (selectedType === 'money') && styles.typeFilterChipActive]}
+             onPress={() => setSelectedType('money')}
+           >
+             <CustomText type='bold' style={[styles.typeFilterText, (selectedType === 'money') && styles.typeFilterTextActive]}>منتجات نقدية</CustomText>
+           </TouchableOpacity>
+           <TouchableOpacity
+             style={[styles.typeFilterChip, (selectedType === 'coupon') && styles.typeFilterChipActive]}
+             onPress={() => setSelectedType('coupon')}
+           >
+             <CustomText type='bold' style={[styles.typeFilterText, (selectedType === 'coupon') && styles.typeFilterTextActive]}>منتجات كوبونات</CustomText>
+           </TouchableOpacity>
+        </View>
 
         {/* Filters */}
-        <View style={{ marginTop: 10, marginBottom: 8 }}>
-          <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText>
+        <View style={{ marginTop: 0, marginBottom: 8 }}>
+          {/* <CustomText type='bold' style={styles.filterTitle}>أخر المنتجات</CustomText> */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flexDirection: 'row',  }}
+            style={{ flexDirection: 'row', marginBottom: 10 }}
             
             contentContainerStyle={styles.filtersRow}
           >
@@ -334,6 +352,12 @@ export default function Products() {
       >
         <Animated.View style={[styles.modalOverlay, { opacity: productActionOverlayOpacity }]}> 
           <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeIconButton} 
+              onPress={() => setProductActionModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color="#666" />
+            </TouchableOpacity>
             <CustomText type="bold" style={styles.modalTitle}>إدارة المنتج</CustomText>
             <CustomText style={styles.modalSubtitle}>اختر الإجراء الذي تريد تنفيذه على هذا المنتج.</CustomText>
             <View style={styles.modalButtonsRow}>
@@ -394,7 +418,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 22,
-    // fontWeight: 'bold',
     color: '#222',
   },
   addButton: {
@@ -405,6 +428,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  typeFilterContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  typeFilterChip: { paddingHorizontal: 20, paddingVertical: 10, marginHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  typeFilterChipActive: { borderBottomColor: '#2196F3' },
+  typeFilterText: { color: '#888', fontSize: 14 },
+  typeFilterTextActive: { color: '#2196F3' },
   filterTitle: {
     color: '#121212',
     fontSize: 20,
@@ -412,8 +440,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   filtersRow: {
-    // flexDirection: 'row-reverse',
-    // width: '100%',
     paddingLeft: 16,
     paddingRight: 8,
     alignItems: 'center',
@@ -457,7 +483,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
     justifyContent: 'flex-end',
-    // animationType:"slide"
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -476,7 +501,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    // fontWeight: 'bold',
     marginBottom: 8,
   },
   modalSubtitle: {
@@ -500,7 +524,6 @@ const styles = StyleSheet.create({
   modalButtonText: {
     marginTop: 8,
     color: '#222',
-    // fontWeight: 'bold',
   },
   closeBar: {
     width: 40,

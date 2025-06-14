@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
@@ -62,6 +62,18 @@ export default function Profile() {
     //   onPress: () => navigation.navigate('Contact'),
     // },
     {
+      id: 'offers',
+      title: 'إدارة عروض السلايدر',
+      icon: require('../../../assets/icons/faq.png'),
+      onPress: () => navigation.navigate('Offers'),
+    },
+    {
+      id: 'userCoupons',
+      title: 'إدارة كوبونات المستخدمين',
+      icon: require('../../../assets/icons/faq.png'),
+      onPress: () => navigation.navigate('UserCoupons'),
+    },
+    {
       id: 'logout',
       title: 'تسجيل الخروج',
       icon: require('../../../assets/icons/logout.png'),
@@ -73,12 +85,6 @@ export default function Profile() {
     //   icon: require('../../../assets/icons/trash.png'),
     //   onPress: () => setShowDeleteModal(true),
     // },
-    {
-      id: 'offers',
-      title: 'إدارة عروض السلايدر',
-      icon: require('../../../assets/icons/faq.png'),
-      onPress: () => navigation.navigate('Offers'),
-    },
   ];
   
   return (

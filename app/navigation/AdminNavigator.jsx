@@ -15,6 +15,7 @@ import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
 import Profile from '../screens/admin/Profile';
 import Security from '../screens/admin/Security';
+import UserCoupons from '../screens/admin/UserCoupons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -161,6 +162,11 @@ export default function AdminNavigator() {
       <Stack.Screen 
         name="Offers" 
         component={Offers} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="UserCoupons" 
+        component={UserCoupons} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

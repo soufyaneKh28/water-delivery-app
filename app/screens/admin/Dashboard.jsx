@@ -192,12 +192,12 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 18,
     color: colors.primary,
-    // textAlign: 'right',
+    textAlign: 'left',
   },
   welcomeSubtitle: {
     fontSize: 14,
     color: '#666',
-    // textAlign: 'right',
+    textAlign: 'left',
   },
   avatarCircle: {
     width: 40,
@@ -220,12 +220,12 @@ const styles = StyleSheet.create({
   profitAmount: {
     fontSize: 28,
     color: '#fff',
-    // textAlign: 'right',
+    textAlign: 'left',
   },
   profitLabel: {
     fontSize: 16,
     color: '#fff',
-    // textAlign: 'right',
+    textAlign: 'left',
     // marginBottom: 8,
   },
   profitChangeRow: {
