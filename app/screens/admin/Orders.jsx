@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -18,6 +19,14 @@ const orderStatuses = [
   { label: 'في الطريق', value: 'on-the-way' },
   { label: 'تم التوصيل', value: 'delivered' },
   { label: 'تم الالغاء', value: 'cancelled' },
+];
+
+const dateFilters = [
+  { label: 'كل الأوقات', value: 'all' },
+  { label: 'اليوم', value: 'today' },
+  { label: 'الأمس', value: 'yesterday' },
+  { label: 'آخر 7 أيام', value: 'last7days' },
+  { label: 'آخر 30 يوم', value: 'last30days' },
 ];
 
 const mockOrders = [
@@ -74,6 +83,7 @@ const orderTypes = [
 const Orders = () => {
   const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedDateFilter, setSelectedDateFilter] = useState('all');
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -113,6 +123,43 @@ const Orders = () => {
     fetchOrders().finally(() => setRefreshing(false));
   }, []);
 
+  const handleDateFilterChange = (filter) => {
+    // Fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      // Change filter
+      setSelectedDateFilter(filter);
+      // Fade in
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
+
+  const isOrderInDateRange = (orderDate) => {
+    const orderDateTime = dayjs(orderDate);
+    const now = dayjs();
+    
+    switch (selectedDateFilter) {
+      case 'today':
+        return orderDateTime.isSame(now, 'day');
+      case 'yesterday':
+        return orderDateTime.isSame(now.subtract(1, 'day'), 'day');
+      case 'last7days':
+        return orderDateTime.isAfter(now.subtract(7, 'days'));
+      case 'last30days':
+        return orderDateTime.isAfter(now.subtract(30, 'days'));
+      case 'all':
+      default:
+        return true;
+    }
+  };
+
   const filteredOrders = orders
     .filter(order => {
       // First filter out pending orders
@@ -124,7 +171,8 @@ const Orders = () => {
       if (selectedOrderType === 'coupon') return order.order_type === 'coupon';
       // For 'other' type, include both on-delivery and money orders
       return order.order_type === 'on-delivery' || order.order_type === 'money';
-    });
+    })
+    .filter(order => isOrderInDateRange(order.created_at));
 
   const handleFilterChange = (status) => {
     // Fade out
@@ -404,6 +452,67 @@ const Orders = () => {
               </CustomText>
             </TouchableOpacity>
           ))}
+        </View>
+
+        {/* Date Filter */}
+        <View style={styles.dateFilterContainer}>
+          <CustomText type='bold' style={styles.dateFilterTitle}>الفترة الزمنية</CustomText>
+          <TouchableOpacity 
+            style={styles.dropdownContainer}
+            onPress={() => {
+              if (this.datePickerRef) {
+                this.datePickerRef.togglePicker(true);
+              }
+            }}
+          >
+            <RNPickerSelect
+              ref={ref => { this.datePickerRef = ref; }}
+              onValueChange={(value) => setSelectedDateFilter(value)}
+              value={selectedDateFilter}
+              items={dateFilters.map(filter => ({
+                label: filter.label,
+                value: filter.value,
+              }))}
+              style={{
+                inputIOS: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                  textAlign: 'right',
+                },
+                inputAndroid: {
+                  color: colors.textPrimary,
+                  fontSize: 16,
+                  paddingVertical: 12,
+                  paddingHorizontal: 10,
+                  width: '100%',
+                  textAlign: 'right',
+                },
+                placeholder: {
+                  color: colors.textDisabled,
+                },
+                iconContainer: {
+                  top: 12,
+                  left: 0,
+                },
+              }}
+              placeholder={{ label: 'اختر الفترة الزمنية', value: '' }}
+              useNativeAndroidPickerStyle={false}
+              touchableWrapperProps={{
+                style: {
+                  flex: 1,
+                },
+              }}
+            />
+            <Ionicons 
+              name="chevron-down" 
+              size={20} 
+              color={colors.textPrimary} 
+              style={styles.dropdownIcon}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Status Filters */}
@@ -713,7 +822,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   filtersRow: {
-    flexDirection: 'row-reverse',
+    // flexDirection: 'row-reverse',
+    direction: 'rtl',
     paddingHorizontal: 8,
   },
   filterChip: {
@@ -924,8 +1034,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    // borderBottomWidth: 1,
+    // borderBottomColor: colors.border,
   },
   tab: {
     flex: 1,
@@ -944,6 +1054,29 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: colors.primary,
+  },
+  dateFilterContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  dateFilterTitle: {
+    color: '#1A1A1A',
+    fontSize: 18,
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48,
+  },
+  dropdownIcon: {
+    marginLeft: 10,
   },
 });
 export default Orders; 

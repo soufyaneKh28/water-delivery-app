@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -28,6 +28,11 @@ export default function CouponsScreen() {
   const [refillError, setRefillError] = useState('');
   const { selectedAddress } = useAddress();
   const { user } = useAuth();
+  const [couponProducts, setCouponProducts] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [productModalVisible, setProductModalVisible] = useState(false);
+  const [productCount, setProductCount] = useState(1);
 
   const fetchCouponBalance = async () => {
     try {
@@ -51,15 +56,44 @@ export default function CouponsScreen() {
     }
   };
 
+  const fetchCouponProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('price_type', 'coupon')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCouponProducts(data || []);
+    } catch (error) {
+      console.error('Error fetching coupon products:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'حدث خطأ أثناء جلب المنتجات',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchCouponBalance();
+    await Promise.all([
+      fetchCouponBalance(),
+      fetchCouponProducts()
+    ]);
     setRefreshing(false);
   }, []);
 
   useEffect(() => {
     if (user?.id) {
       fetchCouponBalance();
+      fetchCouponProducts();
     }
   }, [user?.id]);
 
@@ -107,6 +141,113 @@ export default function CouponsScreen() {
 
   const incrementBottle = () => setBottleCount(count => count + 1);
   const decrementBottle = () => setBottleCount(count => (count > 1 ? count - 1 : 1));
+
+  const incrementProduct = () => setProductCount(count => count + 1);
+  const decrementProduct = () => setProductCount(count => (count > 1 ? count - 1 : 1));
+
+  const handleProductRequest = async (product) => {
+    if (!selectedAddress) {
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'يرجى اختيار عنوان التوصيل',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    if (couponBalance < (product.price * productCount)) {
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'رصيد الكوبونات غير كافي. يرجى شراء المزيد من الكوبونات',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      // First, get the current balance to ensure it hasn't changed
+      const { data: currentBalance, error: balanceError } = await supabase
+        .from('coupons')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
+
+      if (balanceError) throw balanceError;
+
+      const totalCost = product.price * productCount;
+      if (currentBalance.balance < totalCost) {
+        Toast.show({
+          type: 'error',
+          text1: 'خطأ',
+          text2: 'تم تغيير الرصيد. يرجى تحديث الصفحة والمحاولة مرة أخرى',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+        return;
+      }
+
+      // Create the order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert([
+          {
+            user_id: user.id,
+            address_id: selectedAddress.id,
+            status: 'new',
+            total_amount: totalCost,
+            order_items: [
+              {
+                product_id: product.id,
+                quantity: productCount,
+                price: product.price
+              }
+            ]
+          }
+        ])
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Update the coupon balance
+      const { error: updateError } = await supabase
+        .from('coupons')
+        .update({ balance: currentBalance.balance - totalCost })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setCouponBalance(currentBalance.balance - totalCost);
+      setProductModalVisible(false);
+      setProductCount(1);
+      setSelectedProduct(null);
+
+      Toast.show({
+        type: 'success',
+        text1: 'تم الطلب بنجاح',
+        text2: 'تم تسجيل طلبك بنجاح',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } catch (error) {
+      console.error('Error processing product request:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
+  };
 
   // Helper to format address
   const formatAddressString = (address) => {
@@ -213,10 +354,10 @@ export default function CouponsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={[colors.primary]} // Android
-            tintColor={colors.primary} // iOS
-            title="جاري التحديث..." // iOS
-            titleColor={colors.primary} // iOS
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+            title="جاري التحديث..."
+            titleColor={colors.primary}
           />
         }
       >
@@ -248,15 +389,119 @@ export default function CouponsScreen() {
           <Image source={require('../../../assets/images/bottle.png')} style={styles.bottleImage} />
           <View style={styles.bottleInfo}>
             <View>
-            <CustomText type="bold" style={styles.bottleTitle}>عبوة مياه كبيرة</CustomText>
-              
-            <CustomText type="regular" style={styles.bottleSize}>20 لتر</CustomText>
+              <CustomText type="bold" style={styles.bottleTitle}>عبوة مياه كبيرة</CustomText>
+              <CustomText type="regular" style={styles.bottleSize}>20 لتر</CustomText>
             </View>
             <CustomText type="bold" style={styles.bottleCoupon}>1 كوبون</CustomText>
           </View>
           <PrimaryButton title="طلب اعادة تعبئة" style={styles.refillButton} onPress={() => setRefillModalVisible(true)} />
         </View>
+
+        {/* Coupon Products Section */}
+        <CustomText type="bold" style={styles.sectionTitle}>المنتجات المتاحة للكوبونات</CustomText>
+        {isLoadingProducts ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : couponProducts.length === 0 ? (
+          <View style={styles.emptyProductsContainer}>
+            <CustomText type="regular" style={styles.emptyProductsText}>لا توجد منتجات متاحة للكوبونات حالياً</CustomText>
+          </View>
+        ) : (
+          couponProducts.map((product) => (
+            <View key={product.id} style={styles.bottleCard}>
+              <Image 
+                source={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')} 
+                style={styles.bottleImage} 
+              />
+              <View style={styles.bottleInfo}>
+                <View>
+                  <CustomText type="bold" style={styles.bottleTitle}>{product.title}</CustomText>
+                  <CustomText type="regular" style={styles.bottleSize}>{product.size}</CustomText>
+                </View>
+                <CustomText type="bold" style={styles.bottleCoupon}>{product.price} كوبون</CustomText>
+              </View>
+              <PrimaryButton 
+                title="طلب المنتج" 
+                style={styles.refillButton} 
+                onPress={() => {
+                  setSelectedProduct(product);
+                  setProductModalVisible(true);
+                }} 
+              />
+            </View>
+          ))
+        )}
+
       </ScrollView>
+
+      {/* Product Order Modal */}
+      <Modal
+        visible={productModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setProductModalVisible(false);
+          setSelectedProduct(null);
+          setProductCount(1);
+        }}
+      >
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.modalContainer, {paddingBottom: 30}]}>    
+            <TouchableOpacity 
+              style={{position: 'absolute', top: 10, left: 10, width:30, height:30, zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} 
+              onPress={() => {
+                setProductModalVisible(false);
+                setSelectedProduct(null);
+                setProductCount(1);
+              }}
+            >
+              <Ionicons name="close" size={22} color={colors.black} />
+            </TouchableOpacity>
+            <CustomText type="bold" style={modalStyles.title}>الرصيد الحالي</CustomText>
+            <View style={[styles.balanceCard, {marginBottom: 16}]}>        
+              <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
+              <CustomText type="bold" style={styles.balanceValue}>{couponBalance}</CustomText>
+            </View>
+            <CustomText type="bold" style={modalStyles.label}>عدد المنتجات</CustomText>
+            <View style={{flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'flex-start', marginBottom: 16}}>
+              <Image 
+                source={selectedProduct?.image_url ? { uri: selectedProduct.image_url } : require('../../../assets/images/bottle.png')} 
+                style={{width: 93, height: 145, marginHorizontal: 12, resizeMode: 'cover'}} 
+              />
+              <View style={{alignItems: 'flex-end'}}>
+                <CustomText type="bold" style={{fontSize: 16}}>{selectedProduct?.title}</CustomText>
+                <CustomText type="regular" style={{fontSize: 14}}>{selectedProduct?.size}</CustomText>
+                <View style={{flexDirection: 'row', alignItems: 'center', marginTop: 15, backgroundColor: "#F7F7F7", borderRadius: 50}}>
+                  <TouchableOpacity onPress={incrementProduct} style={{backgroundColor: colors.secondary, borderRadius: 20, width: 35, height: 35, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4}}>
+                    <CustomText style={{color: '#fff', fontSize: 22}}>+</CustomText>
+                  </TouchableOpacity>
+                  <CustomText type="bold" style={{fontSize: 16, marginHorizontal: 8}}>{productCount}</CustomText>
+                  <TouchableOpacity onPress={decrementProduct} style={{backgroundColor: colors.secondary, borderRadius: 20, width: 35, height: 35, alignItems: 'center', justifyContent: 'center', marginHorizontal: 4}}>
+                    <CustomText style={{color: '#fff', fontSize: 22}}>-</CustomText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+            <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
+            <View style={modalStyles.summaryRow2}>
+              <CustomText>X{productCount}</CustomText>
+              <CustomText>عدد المنتجات</CustomText>
+            </View>
+            <View style={modalStyles.summaryRow2}>
+              <CustomText type="bold" style={{color: colors.primary}}>
+                {selectedProduct ? (selectedProduct.price * productCount) : 0} كوبونات
+              </CustomText>
+              <CustomText>عدد الكوبونات المراد سحبها</CustomText>
+            </View>
+            <PrimaryButton
+              title="تأكيد الطلب"
+              style={modalStyles.confirmButton}
+              onPress={() => selectedProduct && handleProductRequest(selectedProduct)}
+            />
+          </View>
+        </View>
+      </Modal>
 
       {/* Coupon Purchase Modal */}
       <View>
@@ -592,6 +837,41 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     textAlign: 'center',
     fontSize: 14,
+  },
+  productsRow: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    gridRowGap: 20,
+    rowGap: 15,
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 100,
+    padding: 20,
+  },
+  emptyProductsContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    marginBottom: 24,
+  },
+  emptyProductsText: {
+    fontSize: 16,
+    color: colors.secondary,
+    textAlign: 'center',
+  },
+  bottleDescription: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 2,
+    textAlign: 'right',
   },
 }); 
 

@@ -140,6 +140,7 @@ const images = [
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .neq('price_type', 'coupon')
         .order('created_at', { ascending: false });
       if (error) {
         console.error('Error fetching products:', error);
