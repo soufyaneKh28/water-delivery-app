@@ -473,8 +473,8 @@ const images = [
                   title={product.title}
                   size={product.size}
                   description={product.description}
-                  price={`$${product.price}`}
-                  oldPrice={product.old_price ? `$${product.old_price}` : undefined}
+                  price={`${product.price} د.أ`}
+                  oldPrice={product.old_price ? `${product.old_price} د.أ` : undefined}
                   onMenuPress={() => {}}
                 />
               ))}

@@ -55,7 +55,7 @@ export default function CartScreen() {
       </TouchableOpacity>
       <View style={styles.priceCol}>
         {/* <CustomText style={styles.oldPrice}>${item.oldPrice.toFixed(2)}</CustomText> */}
-        <CustomText type="bold" style={styles.price}>${item.price.toFixed(2)}</CustomText>
+        <CustomText type="bold" style={styles.price}>{item.price.toFixed(2)} د.أ</CustomText>
       </View>
       </View>
     </View>
@@ -97,15 +97,15 @@ export default function CartScreen() {
             <CustomText style={styles.summaryTitle}>ملخص الدفع</CustomText>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>المجموع الفرعي</CustomText>
-              <CustomText style={styles.summaryValue}>${subtotal.toFixed(0)}</CustomText>
+              <CustomText style={styles.summaryValue}>{subtotal.toFixed(0)} د.أ</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم الشحن</CustomText>
-              <CustomText style={styles.summaryValue}>${shipping}</CustomText>
+              <CustomText style={styles.summaryValue}>{shipping} د.أ</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={[styles.summaryLabel, { color: colors.primary }]}>الإجمالي</CustomText>
-              <CustomText style={[styles.summaryValue, { color: colors.primary }]}>${total.toFixed(0)}</CustomText>
+              <CustomText style={[styles.summaryValue, { color: colors.primary }]}>{total.toFixed(0)} د.أ</CustomText>
             </View>
             <PrimaryButton 
               title="تأكيد السلة" 

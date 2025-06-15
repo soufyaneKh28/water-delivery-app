@@ -29,7 +29,7 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
       id: id || `${title}-${size}-${price}`, // Use provided id or create a consistent one
       name: title,
       image,
-      price: parseFloat(price.replace('$', '')),
+      price: parseFloat(price.replace('د.أ', '')), // Changed to Jordanian Dinar
       size,
       quantity: 1, // Explicitly set quantity to 1 for quick add
     };

@@ -67,11 +67,13 @@ const CategoryScreen = () => {
         {products.map((product) => (
           <ProductCard
             key={product.id}
+            id={product.id}
             image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
             title={product.title}
             size={product.size}
-            price={`$${product.price}`}
-            oldPrice={product.old_price ? `$${product.old_price}` : undefined}
+            description={product.description}
+            price={`${product.price} د.أ`}
+            oldPrice={product.old_price ? `${product.old_price} د.أ` : undefined}
             onMenuPress={() => {}}
           />
         ))}

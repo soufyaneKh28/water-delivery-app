@@ -12,7 +12,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const { image, title, size, price, oldPrice, description, id } = route.params;
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
-
+console.log(description);
   const handleAddToCart = () => {
     const product = {
       id: id || `${title}-${size}-${price}`, // Use provided id or create a consistent one
