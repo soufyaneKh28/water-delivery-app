@@ -1,8 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -13,20 +17,37 @@ import {
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
+import PhoneInput from '../../components/common/PhoneInput';
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
 
-export default function EditProfileScreen({ navigation }) {
+const COUNTRY_CODES = [
+  { code: '+966', country: 'السعودية', flag: '🇸🇦' },
+  { code: '+971', country: 'الإمارات', flag: '🇦🇪' },
+  { code: '+973', country: 'البحرين', flag: '🇧🇭' },
+  { code: '+974', country: 'قطر', flag: '🇶🇦' },
+  { code: '+965', country: 'الكويت', flag: '🇰🇼' },
+  { code: '+968', country: 'عمان', flag: '🇴🇲' },
+  { code: '+962', country: 'الأردن', flag: '🇯🇴' },
+  { code: '+961', country: 'لبنان', flag: '🇱🇧' },
+  { code: '+20', country: 'مصر', flag: '🇪🇬' },
+];
+
+export default function EditProfileScreen() {
   const { user } = useAuth();
+  const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    full_name: "",
-    phone: "",
+    username: "",
     email: "",
+    phone: "",
   });
+  const [errors, setErrors] = useState({});
   const [phoneError, setPhoneError] = useState("");
+  const [showCountryModal, setShowCountryModal] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
 
   useEffect(() => {
     fetchProfile();
@@ -46,9 +67,16 @@ export default function EditProfileScreen({ navigation }) {
 
       setFormData({
         username: data.username || "",
-        phone: data.phone || "",
         email: user.email || "",
+        phone: data.phone ? data.phone.replace(/^\+\d+/, '') : "",
       });
+
+      if (data.phone) {
+        const storedPhone = data.phone;
+        const countryCode = COUNTRY_CODES.find(c => storedPhone.startsWith(c.code)) || COUNTRY_CODES[0];
+        setSelectedCountry(countryCode);
+        setFormData(prev => ({ ...prev, phone: storedPhone.replace(countryCode.code, '') }));
+      }
     } catch (error) {
       Alert.alert("خطأ", "تعذر تحميل بيانات الحساب");
       console.error("Error fetching profile:", error);
@@ -57,25 +85,25 @@ export default function EditProfileScreen({ navigation }) {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (formData.phone && formData.phone.length < 9) {
+      newErrors.phone = "يرجى إدخال رقم هاتف صحيح";
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
-    if (!formData.username.trim()) {
-      Alert.alert("خطأ", "اسم المستخدم مطلوب");
-      return;
-    }
-    if (!/^\d{8,}$/.test(formData.phone.trim())) {
-      setPhoneError("رقم الهاتف يجب أن يكون 8 أرقام على الأقل");
-      return;
-    } else {
-      setPhoneError("");
-    }
+    if (!validateForm()) return;
+
     setSaving(true);
     try {
+      const fullPhoneNumber = selectedCountry.code + formData.phone;
       const { error } = await supabase
         .from("profiles")
         .update({
-          username: formData.username.trim(),
-          phone: formData.phone.trim(),
-          // email: formData.email.trim(),
+          phone: fullPhoneNumber,
           updated_at: new Date(),
         })
         .eq("id", user.id);
@@ -93,14 +121,24 @@ export default function EditProfileScreen({ navigation }) {
     }
   };
 
-  // if (loading) {
-  //   return (
-  //     <View style={[globalStyles.container, styles.loadingContainer]}>
-  //       <ActivityIndicator size="large" color={colors.primary} />
-  //     </View>
-  //   );
-  // }
-console.log("formData", formData);
+  const handlePhoneChange = (phoneNumber, fullPhoneNumber) => {
+    setFormData(prev => ({ ...prev, phone: phoneNumber }));
+    if (phoneError && phoneNumber.length >= 9) setPhoneError("");
+  };
+
+  const renderCountryItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.countryItem}
+      onPress={() => {
+        setSelectedCountry(item);
+        setShowCountryModal(false);
+      }}
+    >
+      <CustomText style={styles.countryFlag}>{item.flag}</CustomText>
+      <CustomText style={styles.countryName}>{item.country}</CustomText>
+      <CustomText style={styles.countryCodeText}>{item.code}</CustomText>
+    </TouchableOpacity>
+  );
 
   return (
     <KeyboardAvoidingView
@@ -126,56 +164,38 @@ console.log("formData", formData);
             <View style={globalStyles.inputContainer}>
               <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
               <TextInput
-                style={[globalStyles.input, styles.disabledInput]}
+                style={[globalStyles.input, errors.username && globalStyles.errorInput]}
                 value={formData.username}
-                onChangeText={text => setFormData(prev => ({ ...prev, full_name: text }))}
-                placeholder="اسم المستخدم"
-                placeholderTextColor={colors.gray[400]}
-                textAlign="right"
                 editable={false}
+                placeholder="اسم المستخدم"
+                textAlign="right"
               />
-            </View>
-            {/* Phone with static country picker */}
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {/* <TouchableOpacity style={[styles.flagPicker, { marginBottom: 0 }]} activeOpacity={0.7}>
-                  <Image source={{uri: 'https://upload.wikimedia.org/wikipedia/commons/5/59/Flag_of_Lebanon.svg'}} style={styles.flag} />
-                  <Ionicons name="chevron-down" size={18} color={colors.gray[500]} style={{marginHorizontal: 2}} />
-                  <CustomText style={styles.countryCode}>+90</CustomText>
-                </TouchableOpacity> */}
-                <TextInput
-                  style={[globalStyles.input, { flex: 1}]}
-                  value={formData.phone}
-                  onChangeText={text => {
-                    setFormData(prev => ({ ...prev, phone: text }));
-                    if (phoneError && /^\d{8,}$/.test(text.trim())) setPhoneError("");
-                  }}
-                  placeholder="5356577288"
-                  placeholderTextColor={colors.gray[400]}
-                  keyboardType="phone-pad"
-                  textAlign="right"
-                />
-              </View>
-              {phoneError ? (
-                <CustomText style={{ color: colors.error, fontSize: 13, marginTop: 4, textAlign: 'right' }}>{phoneError}</CustomText>
-              ) : null}
+              {errors.username && (
+                <CustomText style={globalStyles.errorText}>{errors.username}</CustomText>
+              )}
             </View>
             {/* Email */}
             <View style={globalStyles.inputContainer}>
               <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
               <TextInput
-                style={[globalStyles.input, styles.disabledInput]}
+                style={[globalStyles.input, errors.email && globalStyles.errorInput]}
                 value={formData.email}
-                onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
+                editable={false}
                 placeholder="البريد الإلكتروني"
-                placeholderTextColor={colors.gray[400]}
                 textAlign="right"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                editable={false}
               />
+              {errors.email && (
+                <CustomText style={globalStyles.errorText}>{errors.email}</CustomText>
+              )}
             </View>
+            {/* Phone with static country picker */}
+            <PhoneInput
+              value={formData.phone}
+              onChangeText={handlePhoneChange}
+              error={errors.phone}
+            />
           </View>
 
           <TouchableOpacity
@@ -192,6 +212,31 @@ console.log("formData", formData);
           </TouchableOpacity>
         </ScrollView>
       )}
+
+      {/* Country Code Modal */}
+      <Modal
+        visible={showCountryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCountryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <CustomText type="bold" style={styles.modalTitle}>اختر رمز الدولة</CustomText>
+              <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            <FlatList
+              data={COUNTRY_CODES}
+              renderItem={renderCountryItem}
+              keyExtractor={item => item.code}
+              style={styles.countryList}
+            />
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -248,45 +293,49 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   input: {
-    backgroundColor: colors.white,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.textPrimary,
+  },
+  phoneInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.gray[200],
     borderRadius: 12,
-    padding: 14,
-    fontSize: 15,
-    color: colors.textPrimary,
-    marginBottom: 8,
-    textAlign: 'right',
-  },
-  phoneRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  flagPicker: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.gray[200],
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    marginLeft: -1,
-    zIndex: 2,
+    overflow: 'hidden',
   },
-  flag: {
-    width: 24,
-    height: 18,
-    borderRadius: 4,
-    marginLeft: 4,
-    resizeMode: 'cover',
+  countryCodeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray[100],
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRightWidth: 1,
+    borderRightColor: colors.gray[200],
+  },
+  countryFlag: {
+    fontSize: 20,
+    marginRight: 8,
   },
   countryCode: {
-    fontSize: 15,
+    fontSize: 16,
     color: colors.textPrimary,
-    marginHorizontal: 4,
+    fontWeight: '500',
+  },
+  phoneInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    textAlign: 'right',
   },
   saveButton: {
     backgroundColor: colors.primary,
@@ -302,7 +351,59 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   disabledInput: {
-    backgroundColor: colors.gray[100],
-    color: colors.gray[500],
+    backgroundColor: '#F8F9FA',
+    borderColor: '#E5E7EB',
+    borderStyle: 'dashed',
+    color: '#94A3B8',
+    opacity: 0.8,
+  },
+  disabledLabel: {
+    color: '#94A3B8',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 18,
+    color: colors.textPrimary,
+  },
+  countryList: {
+    paddingHorizontal: 20,
+  },
+  countryItem: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  countryName: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+    textAlign: 'right',
+  },
+  countryCodeText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
   },
 }); 

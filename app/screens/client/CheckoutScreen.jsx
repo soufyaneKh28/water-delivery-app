@@ -7,12 +7,14 @@ import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import { useAddress } from '../../context/AddressContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 export default function CheckoutScreen({ route, navigation }) {
   // You can pass cart, subtotal, shipping, total via route.params
-  const { cart = [], subtotal = 0, shipping = 0, total = 0, selectedAddress } = route?.params || {};
+  const { cart = [], subtotal = 0, shipping = 0, total = 0 } = route?.params || {};
+  const { selectedAddress } = useAddress();
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -93,6 +95,17 @@ export default function CheckoutScreen({ route, navigation }) {
   };
 
   const handleConfirm = () => {
+    if (!selectedAddress) {
+      Toast.show({
+        type: 'error',
+        text1: 'عنوان التوصيل مطلوب',
+        text2: 'يرجى اختيار عنوان التوصيل قبل إتمام الطلب',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
     if (paymentMethod === 'delivery' && note.trim() === '') {
       setNoteError('يرجى إدخال ملاحظة');
       return;
@@ -133,7 +146,16 @@ export default function CheckoutScreen({ route, navigation }) {
               </CustomText>
             </>
           ) : (
-            <CustomText style={{ textAlign: 'right', color: '#666' }}>يرجى اختيار عنوان التوصيل</CustomText>
+            <View style={styles.noAddressContainer}>
+              <CustomText style={{ textAlign: 'right', color: '#666', marginBottom: 12 }}>
+                يرجى اختيار عنوان التوصيل قبل إتمام الطلب
+              </CustomText>
+              <PrimaryButton 
+                title="إضافة عنوان جديد" 
+                onPress={() => navigation.navigate('MapAddLocation')}
+                style={styles.addAddressButton}
+              />
+            </View>
           )}
         </View>
         {/* Payment Method */}
@@ -146,6 +168,7 @@ export default function CheckoutScreen({ route, navigation }) {
           </TouchableOpacity>
           <TouchableOpacity style={styles.radioRow} onPress={() => setPaymentMethod('delivery')}>
             <CustomText>الدفع عند التسليم</CustomText>
+            <Image source={require('../../../assets/icons/cash.png')} style={{ width: 35, height: 35, marginHorizontal: 8, resizeMode: 'contain' }} />
             <View style={[styles.radioCircle, paymentMethod === 'delivery' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
           </TouchableOpacity>
         </View>
@@ -337,5 +360,14 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 50,
     marginTop: 20,
+  },
+  noAddressContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  addAddressButton: {
+    width: '100%',
+    height: 45,
+    borderRadius: 8,
   },
 }); 

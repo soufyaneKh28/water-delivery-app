@@ -144,7 +144,7 @@ console.log('orderDetails', orderDetails);
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>تاريخ الطلب:</CustomText>
               <CustomText style={styles.infoValue}>
-                {dayjs(orderDetails.created_at).format('DD MMM YYYY, HH:mm')}
+                {dayjs(orderDetails.created_at).format('YYYY-MM-DD HH:mm')}
               </CustomText>
             </View>
           </View>
@@ -175,7 +175,7 @@ console.log('orderDetails', orderDetails);
                   <CustomText style={styles.itemName}>{item.product?.title || 'منتج غير معروف'}</CustomText>
                   <CustomText style={styles.itemQuantity}>الكمية: {item.quantity}</CustomText>
                 </View>
-                <CustomText style={styles.itemPrice}>{item.price} دينار</CustomText>
+                <CustomText style={styles.itemPrice}>{item.unit_price} دينار</CustomText>
               </View>
             ))}
           </View>
@@ -185,10 +185,10 @@ console.log('orderDetails', orderDetails);
         <View style={styles.section}>
           <CustomText type="bold" style={styles.sectionTitle}>ملخص الطلب</CustomText>
           <View style={styles.summaryCard}>
-            <View style={styles.summaryRow}>
+            {/* <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>المجموع الفرعي:</CustomText>
               <CustomText style={styles.summaryValue}>{orderDetails.subtotal || 0} دينار</CustomText>
-            </View>
+            </View> */}
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم التوصيل:</CustomText>
               <CustomText style={styles.summaryValue}>{orderDetails.delivery_fee || 0} دينار</CustomText>
@@ -200,7 +200,11 @@ console.log('orderDetails', orderDetails);
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>طريقة الدفع:</CustomText>
               <CustomText style={styles.summaryValue}>
-                {orderDetails.order_type === 'on-delivery' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'}
+                {orderDetails.order_type === 'on-delivery' 
+                  ? 'الدفع عند الاستلام' 
+                  : orderDetails.order_type === 'coupon'
+                    ? 'كوبون'
+                    : 'بطاقة ائتمان'}
               </CustomText>
             </View>
           </View>
@@ -289,6 +293,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textPrimary,
     textAlign: 'left',
+    maxWidth: '80%',
   },
   itemsCard: {
     backgroundColor: '#fff',

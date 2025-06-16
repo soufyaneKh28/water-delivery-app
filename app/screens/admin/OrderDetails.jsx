@@ -140,6 +140,11 @@ console.log("order",order);
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>
+          <CustomText style={styles.detailLabel}>رقم الهاتف</CustomText>
+          <CustomText style={styles.detailValue}>{order.user_id?.phone || 'غير معروف'}</CustomText>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>الموقع</CustomText>
           <CustomText style={styles.detailValue}>{ formatLocation(order.location_id) || 'غير معروف'}</CustomText>
         </View>

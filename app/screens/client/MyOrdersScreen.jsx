@@ -48,14 +48,15 @@ export default function MyOrdersScreen({ navigation }) {
       const transformedOrders = data.map(order => ({
         id: order.id,
         title: order.order_items?.[0]?.product?.title || order.title || 'طلب',
-        date: new Date(order.created_at).toLocaleDateString('ar-SA', {
+        date: new Date(order.created_at).toLocaleDateString('en-US', {
           year: 'numeric',
-          month: 'long',
+          month: 'numeric',
           day: 'numeric'
         }),
-        time: new Date(order.created_at).toLocaleTimeString('ar-SA', {
+        time: new Date(order.created_at).toLocaleTimeString('en-US', {
           hour: '2-digit',
-          minute: '2-digit'
+          minute: '2-digit',
+          hour12: false
         }),
         status: order.status,
         total_amount: order.total_amount,

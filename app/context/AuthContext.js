@@ -274,6 +274,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     refreshToken,
+    setIsAuthenticated,
   };
 
   return (

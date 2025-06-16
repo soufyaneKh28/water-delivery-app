@@ -26,6 +26,7 @@ const CategoryScreen = () => {
         .from('products')
         .select('*')
         .eq('category', category.id)
+        .neq('price_type', 'coupon')
         .order('created_at', { ascending: false });
 
       if (error) {

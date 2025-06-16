@@ -21,7 +21,7 @@ import { colors } from '../../styling/colors';
 // import * as React from "react";
 
 export default function HomeScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout , isAuthenticated ,setIsAuthenticated} = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const { selectedAddress, setSelectedAddress } = useAddress();
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -87,6 +87,10 @@ const images = [
       console.error('Error logging out:', error);
     }
   };
+
+  // useEffect(() => {
+  //   setIsAuthenticated(false);
+  // }, []);
 
   const handleLocationButtonPress = () => {
     if ( savedAddresses?.length > 0) {

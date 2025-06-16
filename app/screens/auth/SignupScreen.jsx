@@ -14,6 +14,7 @@ import {
   View
 } from "react-native"
 import CustomText from "../../components/common/CustomText"
+import PhoneInput from "../../components/common/PhoneInput"
 import { useAuth } from "../../context/AuthContext"
 import { colors } from "../../styling/colors"
 import { globalStyles } from "../../styling/globalStyles"
@@ -27,6 +28,12 @@ export default function SignUpScreen({ navigation }) {
   const { signup } = useAuth()
   const [username, setUsername] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [phoneError, setPhoneError] = useState("")
+
+  const handlePhoneChange = (phoneNumber, fullPhoneNumber) => {
+    setPhoneNumber(phoneNumber);
+    if (phoneError && phoneNumber.length >= 9) setPhoneError("");
+  };
 
   const handleSignUp = async () => {
     if (!email || !password || !confirmPassword || !username || !phoneNumber) {
@@ -39,25 +46,47 @@ export default function SignUpScreen({ navigation }) {
       return
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("خطأ", "الرجاء إدخال بريد إلكتروني صحيح");
+      return;
+    }
+
+    // Validate phone number
+    if (phoneNumber.length < 9) {
+      setPhoneError("الرجاء إدخال رقم هاتف صحيح");
+      return;
+    }
+
     setIsLoading(true)
     try {
+      console.log('Attempting signup with:', { email, username, phone: phoneNumber });
+
       const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
         body: JSON.stringify({
-          email,
+          email: email.trim(),
           password,
-          username,
+          username: username.trim(),
           phone: phoneNumber,
         }),
       })
 
       const data = await response.json()
+      console.log('Signup response:', { status: response.status, data });
 
       if (!response.ok) {
-        throw new Error(data.message || "حدث خطأ أثناء إنشاء الحساب")
+        console.error('Signup error:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data
+        });
+        throw new Error(data.message || data.error || "حدث خطأ أثناء إنشاء الحساب")
       }
 
       Alert.alert(
@@ -71,7 +100,11 @@ export default function SignUpScreen({ navigation }) {
         ]
       )
     } catch (error) {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء إنشاء الحساب")
+      console.error('Signup error details:', error);
+      Alert.alert(
+        "خطأ",
+        error.message || "حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى."
+      )
     } finally {
       setIsLoading(false)
     }
@@ -79,8 +112,8 @@ export default function SignUpScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-   <StatusBar style="dark" backgroundColor={colors.primary}/>
-      <ScrollView  contentContainerStyle={globalStyles.contentContainer}>
+      <StatusBar style="dark" backgroundColor={colors.primary}/>
+      <ScrollView contentContainerStyle={globalStyles.contentContainer}>
         <View style={styles.header} />
         <View style={styles.curveContainer}>
           <View style={styles.curve} />
@@ -102,90 +135,89 @@ export default function SignUpScreen({ navigation }) {
           <CustomText style={globalStyles.subtitle}>قم بإنشاء حساب للوصول إلى خدماتنا</CustomText>
 
           <View style={styles.form}>
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
+            <View style={styles.inputContainer}>
+              <CustomText style={styles.inputLabel}>اسم المستخدم</CustomText>
               <TextInput
-                style={globalStyles.input}
+                style={styles.input}
+                placeholder="اسم المستخدم"
+                value={username}
+                onChangeText={setUsername}
+                editable={!isLoading}
+                placeholderTextColor="#94A3B8"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <CustomText style={styles.inputLabel}>البريد الإلكتروني</CustomText>
+              <TextInput
+                style={styles.input}
                 placeholder="example@email.com"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
+                placeholderTextColor="#94A3B8"
               />
             </View>
 
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>كلمة المرور</CustomText>
-              <View style={globalStyles.passwordContainer}>
+            <PhoneInput
+              value={phoneNumber}
+              onChangeText={handlePhoneChange}
+              error={phoneError}
+              disabled={isLoading}
+            />
+
+            <View style={styles.inputContainer}>
+              <CustomText style={styles.inputLabel}>كلمة المرور</CustomText>
+              <View style={styles.passwordContainer}>
                 <TouchableOpacity
-                  style={globalStyles.passwordVisibilityButton}
+                  style={styles.passwordVisibilityButton}
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
                 </TouchableOpacity>
                 <TextInput
-                  style={globalStyles.passwordInput}
+                  style={styles.passwordInput}
                   placeholder="********"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   editable={!isLoading}
+                  placeholderTextColor="#94A3B8"
                 />
               </View>
             </View>
 
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>تأكيد كلمة المرور</CustomText>
-              <View style={globalStyles.passwordContainer}>
+            <View style={styles.inputContainer}>
+              <CustomText style={styles.inputLabel}>تأكيد كلمة المرور</CustomText>
+              <View style={styles.passwordContainer}>
                 <TouchableOpacity
-                  style={globalStyles.passwordVisibilityButton}
+                  style={styles.passwordVisibilityButton}
                   onPress={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
                 >
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
                 </TouchableOpacity>
                 <TextInput
-                  style={globalStyles.passwordInput}
+                  style={styles.passwordInput}
                   placeholder="********"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showPassword}
                   editable={!isLoading}
+                  placeholderTextColor="#94A3B8"
                 />
               </View>
             </View>
 
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
-              <TextInput
-                style={globalStyles.input}
-                placeholder="اسم المستخدم"
-                value={username}
-                onChangeText={setUsername}
-                editable={!isLoading}
-              />
-            </View>
-
-            <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>رقم الهاتف</CustomText>
-              <TextInput
-                style={globalStyles.input}
-                placeholder="+905436978485"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="phone-pad"
-                editable={!isLoading}
-              />
-            </View>
-
             <TouchableOpacity
-              style={[globalStyles.button, isLoading && globalStyles.buttonDisabled]}
+              style={[styles.signupButton, isLoading && styles.buttonDisabled]}
               onPress={handleSignUp}
               disabled={isLoading}
             >
-              <CustomText type="bold" style={globalStyles.buttonText}>
+              <CustomText type="bold" style={styles.buttonText}>
                 {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب"}
               </CustomText>
             </TouchableOpacity>
@@ -268,5 +300,61 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
     color: colors.primary,
     fontWeight: "bold",
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    color: colors.textPrimary,
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  input: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.textPrimary,
+    textAlign: 'right',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    textAlign: 'right',
+  },
+  passwordVisibilityButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  signupButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 })

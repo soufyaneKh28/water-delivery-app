@@ -2,18 +2,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { testPushNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
+import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 const MENU_ITEMS = [
@@ -42,6 +43,18 @@ const MENU_ITEMS = [
     icon: require('../../../assets/icons/contact.png'), // Contact
     screen: 'Contact',
   },
+];
+
+const COUNTRY_CODES = [
+  { code: '+966', country: 'السعودية', flag: '🇸🇦' },
+  { code: '+971', country: 'الإمارات', flag: '🇦🇪' },
+  { code: '+973', country: 'البحرين', flag: '🇧🇭' },
+  { code: '+974', country: 'قطر', flag: '🇶🇦' },
+  { code: '+965', country: 'الكويت', flag: '🇰🇼' },
+  { code: '+968', country: 'عمان', flag: '🇴🇲' },
+  { code: '+962', country: 'الأردن', flag: '🇯🇴' },
+  { code: '+961', country: 'لبنان', flag: '🇱🇧' },
+  { code: '+20', country: 'مصر', flag: '🇪🇬' },
 ];
 
 export default function ProfileScreen() {
@@ -110,6 +123,20 @@ export default function ProfileScreen() {
       setIsTestingNotifications(false);
     }
   };
+
+  const renderCountryItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.countryItem}
+      onPress={() => {
+        // setSelectedCountry(item);
+        // setShowCountryModal(false);
+      }}
+    >
+      <CustomText style={styles.countryFlag}>{item.flag}</CustomText>
+      <CustomText style={styles.countryName}>{item.country}</CustomText>
+      <CustomText style={styles.countryCodeText}>{item.code}</CustomText>
+    </TouchableOpacity>
+  );
 
   // if (loading) {
   //   return (
@@ -233,7 +260,7 @@ export default function ProfileScreen() {
               />
               <View style={{ flex: 1, alignItems: 'flex-end', marginRight: 12 }}>
                 <CustomText type="bold" style={styles.title}>حسابي</CustomText>
-                <CustomText style={styles.name}>{profile?.full_name || 'اسم المستخدم'}</CustomText>
+                <CustomText style={styles.username}>@{profile?.username || 'username'}</CustomText>
               </View>
               <Ionicons name="chevron-back" size={20} color="#292D32" style={styles.menuArrow} />
             </View>
@@ -331,9 +358,9 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textAlign: 'right',
   },
-  name: {
-    fontSize: 16,
-    color: '#222',
+  username: {
+    fontSize: 14,
+    color: '#666',
     textAlign: 'right',
   },
   menuList: {
@@ -379,5 +406,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#F44336',
     textAlign: 'right',
+  },
+  countryItem: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  countryFlag: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  countryName: {
+    flex: 1,
+    fontSize: 16,
+    color: colors.textPrimary,
+    textAlign: 'right',
+  },
+  countryCodeText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
   },
 }); 
