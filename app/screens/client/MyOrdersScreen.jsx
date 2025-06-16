@@ -36,6 +36,7 @@ export default function MyOrdersScreen({ navigation }) {
           )
         `)
         .eq('user_id', user.id)
+        .neq('status', 'pending')
         .order('created_at', { ascending: false });
 
       if (error) {

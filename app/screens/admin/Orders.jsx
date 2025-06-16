@@ -80,6 +80,16 @@ const orderTypes = [
   { label: 'طلبات أخرى', value: 'other' }, // This will include both on-delivery and money orders
 ];
 
+function generateOrderNumber(uuid) {
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = ((hash << 5) - hash) + uuid.charCodeAt(i);
+    hash |= 0; // Convert to 32bit integer
+  }
+  // Make it positive and limit to 8 digits
+  return Math.abs(hash).toString().padStart(8, '0').slice(0, 8);
+}
+
 const Orders = () => {
   const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -104,6 +114,7 @@ const Orders = () => {
         location_id:locations (*),
         user_id:profiles (*)
       `, { count: 'exact' })
+      .neq('status', 'pending')  // Exclude pending orders from the count
       .order('created_at', { ascending: true });
   
     console.log("orders", data);
@@ -560,7 +571,7 @@ const Orders = () => {
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <CustomText style={styles.orderId} numberOfLines={1} ellipsizeMode="tail">#{item.id}</CustomText>
+                    <CustomText style={styles.orderId} numberOfLines={1} ellipsizeMode="tail">#{generateOrderNumber(item.id)}</CustomText>
                     <TouchableOpacity 
                       style={[styles.statusBadge, { backgroundColor: statusColors[item.status] || '#E0E0E0' }]}
                       onPress={(e) => {

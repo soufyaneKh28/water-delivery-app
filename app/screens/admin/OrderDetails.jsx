@@ -7,6 +7,7 @@ import BackBtn from '../../components/common/BackButton';
 // import CustomText from '../../components/common/CustomText';
 import dayjs from 'dayjs';
 import { Alert } from 'react-native';
+import { sendOrderStatusNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -42,7 +43,7 @@ export default function OrderDetails({ route, navigation }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(order.status);
-
+console.log("order",order);
   const handleStatusChange = async (newStatus) => {
     try {
       setIsUpdating(true);
@@ -59,6 +60,11 @@ export default function OrderDetails({ route, navigation }) {
           [{ text: 'حسناً' }]
         );
         return;
+      }
+
+      // Send notification to user about status change
+      if (order.user_id?.id) {
+        await sendOrderStatusNotification(order.id, newStatus, order.user_id.id);
       }
 
       // Show success message
@@ -92,12 +98,13 @@ export default function OrderDetails({ route, navigation }) {
     const parts = [
       location.label,
       location.description,
-      location.floor_no ? `Floor ${location.floor_no}` : null,
-      location.building_no ? `Building ${location.building_no}` : null,
+      location.address,
+      location.floor_no ? `طابق ${location.floor_no}` : null,
+      location.building_no ? `مبنى ${location.building_no}` : null,
       location.city,
       location.region,
     ];
-    return parts.filter(Boolean).join(', ');
+    return parts.filter(Boolean).join('، ');
   };
 
 
@@ -139,7 +146,11 @@ export default function OrderDetails({ route, navigation }) {
         <View style={styles.divider} />
         <View style={styles.detailRow}>
           <CustomText style={styles.detailLabel}>طريقة الدفع</CustomText>
-          <CustomText style={styles.detailValue}>{order.payment_method === 'cash' ? 'الدفع عند الاستلام' : 'بطاقة ائتمان'} </CustomText>
+          <CustomText style={styles.detailValue}>
+            {order.order_type === 'coupon' ? 'كوبونات' : 
+             order.order_type === 'on-delivery' ? 'الدفع عند الاستلام' : 
+             order.order_type === 'money' ? 'بطاقة ائتمان' : 'غير معروف'}
+          </CustomText>
         </View>
         <View style={styles.divider} />
         <View style={styles.detailRow}>

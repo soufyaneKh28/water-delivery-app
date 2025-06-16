@@ -170,7 +170,7 @@ const images = [
         },
       });
       const data = await response.json();
-      console.log('API Response Data:', data.data);
+      console.log('API Response Data:', data);
       const addresses = data.data || [];
       setSavedAddresses(addresses);
       if (addresses.length > 0 && !selectedAddress) {

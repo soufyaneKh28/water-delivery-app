@@ -1,6 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -10,7 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
-export default function CouponsScreen() {
+export default function CouponsScreen({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null); // 25 or 50
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
@@ -33,6 +35,9 @@ export default function CouponsScreen() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [productCount, setProductCount] = useState(1);
+  const [isOrderingProduct, setIsOrderingProduct] = useState(false);
+  const [selectedBottleCount, setSelectedBottleCount] = useState('0');
+  const pickerRef = useRef(null);
 
   const fetchCouponBalance = async () => {
     try {
@@ -108,6 +113,7 @@ export default function CouponsScreen() {
     setCardExpiry('');
     setCardCVV('');
     setCardErrors({});
+    setSelectedBottleCount('0');
   };
   const closeModal = () => {
     setModalVisible(false);
@@ -119,11 +125,12 @@ export default function CouponsScreen() {
     setCardExpiry('');
     setCardCVV('');
     setCardErrors({});
+    setSelectedBottleCount('0');
   };
 
   const handleConfirm = () => {
-    if (paymentMethod === 'delivery' && note.trim() === '') {
-      setNoteError('يرجى إدخال ملاحظة');
+    if (paymentMethod === 'delivery' && selectedBottleCount === undefined) {
+      setNoteError('يرجى اختيار عدد القارورات');
       return;
     }
     if (paymentMethod === 'card') {
@@ -169,83 +176,61 @@ export default function CouponsScreen() {
     }
 
     try {
+      setIsOrderingProduct(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No active session');
 
-      // First, get the current balance to ensure it hasn't changed
-      const { data: currentBalance, error: balanceError } = await supabase
-        .from('coupons')
-        .select('balance')
-        .eq('user_id', user.id)
-        .single();
+      // Prepare the order payload
+      const cartPayload = [{
+        product_id: product.id,
+        quantity: productCount,
+      }];
 
-      if (balanceError) throw balanceError;
+      const payload = {
+        order_type: 'coupon',
+        location_id: selectedAddress.id,
+        cart: cartPayload,
+      };
 
-      const totalCost = product.price * productCount;
-      if (currentBalance.balance < totalCost) {
-        Toast.show({
-          type: 'error',
-          text1: 'خطأ',
-          text2: 'تم تغيير الرصيد. يرجى تحديث الصفحة والمحاولة مرة أخرى',
-          position: 'top',
-          visibilityTime: 3000,
-        });
-        return;
-      }
+      // Get access token from Supabase
+      const token = session?.access_token;
 
-      // Create the order
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([
-          {
-            user_id: user.id,
-            address_id: selectedAddress.id,
-            status: 'new',
-            total_amount: totalCost,
-            order_items: [
-              {
-                product_id: product.id,
-                quantity: productCount,
-                price: product.price
-              }
-            ]
-          }
-        ])
-        .select()
-        .single();
+      // Create order using the API endpoint
+      await axios.post(
+        'https://water-supplier-2.onrender.com/api/k1/orders/createOrder',
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
 
-      if (orderError) throw orderError;
-
-      // Update the coupon balance
-      const { error: updateError } = await supabase
-        .from('coupons')
-        .update({ balance: currentBalance.balance - totalCost })
-        .eq('user_id', user.id);
-
-      if (updateError) throw updateError;
-
-      // Update local state
-      setCouponBalance(currentBalance.balance - totalCost);
+      // Reset UI state
       setProductModalVisible(false);
       setProductCount(1);
       setSelectedProduct(null);
 
-      Toast.show({
-        type: 'success',
-        text1: 'تم الطلب بنجاح',
-        text2: 'تم تسجيل طلبك بنجاح',
-        position: 'top',
-        visibilityTime: 3000,
+      // Navigate to success screen
+      navigation.replace('OrderSuccessScreen', {
+        order: payload,
+        cart: [{ ...product, quantity: productCount }],
+        total: product.price * productCount,
+        selectedAddress,
       });
+
     } catch (error) {
       console.error('Error processing product request:', error);
       Toast.show({
         type: 'error',
         text1: 'خطأ',
-        text2: 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
+        text2: error.response?.data?.message || error.message || 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
         position: 'top',
         visibilityTime: 3000,
       });
+    } finally {
+      setIsOrderingProduct(false);
     }
   };
 
@@ -303,6 +288,7 @@ export default function CouponsScreen() {
             bottle_count: bottleCount,
             status: 'pending',
             coupon_cost: bottleCount,
+            order_type: 'coupon',
           }
         ])
         .select()
@@ -495,10 +481,18 @@ export default function CouponsScreen() {
               <CustomText>عدد الكوبونات المراد سحبها</CustomText>
             </View>
             <PrimaryButton
-              title="تأكيد الطلب"
+              title={isOrderingProduct ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
               style={modalStyles.confirmButton}
               onPress={() => selectedProduct && handleProductRequest(selectedProduct)}
-            />
+              disabled={isOrderingProduct}
+            >
+              {isOrderingProduct && (
+                <ActivityIndicator 
+                  color="#fff" 
+                  style={{ position: 'absolute', right: 20 }} 
+                />
+              )}
+            </PrimaryButton>
           </View>
         </View>
       </Modal>
@@ -592,15 +586,70 @@ export default function CouponsScreen() {
                 </View>
               </>
             ) : (
-              <View style={{flex:1 ,alignItems:'flex-end'}}>
-                <CustomText type="bold" style={[modalStyles.label , {maxWidth:'70%'}]}>هل تريد طلب تعبئة قارورات مع الدفتر وكم عدد القارورات ؟ <CustomText style={{color:'red'}}>*</CustomText></CustomText>
-                <TextInput
-                  style={[modalStyles.input , globalStyles.input, noteError ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                  placeholder="أدخل ملاحظة للتوصيل (مطلوب)"
-                  value={note}
-                  onChangeText={text => { setNote(text); setNoteError(''); }}
-                  multiline
-                />
+              <View style={{flex: 1, alignItems: 'flex-end'}}>
+                <CustomText type="bold" style={[modalStyles.label, {maxWidth: '70%'}]}>
+                  عدد القارورات المطلوبة للتعبئة مع الدفتر
+                </CustomText>
+                <TouchableOpacity 
+                  style={[modalStyles.dropdownContainer, noteError ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                  onPress={() => {
+                    if (pickerRef.current) {
+                      pickerRef.current.togglePicker(true);
+                    }
+                  }}
+                >
+                  <RNPickerSelect
+                    ref={pickerRef}
+                    onValueChange={(value) => {
+                      setSelectedBottleCount(value);
+                      setNoteError('');
+                    }}
+                    value={selectedBottleCount}
+                    items={[
+                      { label: 'لا تريد طلب قارورات', value: '0' },
+                      ...Array.from({ length: 21 }, (_, i) => ({
+                        label: `${i} قارورة`,
+                        value: i.toString()
+                      }))
+                    ]}
+                    style={{
+                      inputIOS: {
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        paddingVertical: 12,
+                        paddingHorizontal: 10,
+                        width: '100%',
+                      },
+                      inputAndroid: {
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        paddingVertical: 12,
+                        paddingHorizontal: 10,
+                        width: '100%',
+                      },
+                      placeholder: {
+                        color: colors.textDisabled,
+                      },
+                      iconContainer: {
+                        top: 12,
+                        left: 0,
+                      },
+                    }}
+                    placeholder={{ label: 'اختر عدد القارورات', value: undefined }}
+                    useNativeAndroidPickerStyle={false}
+                    touchableWrapperProps={{
+                      style: {
+                        flex: 1,
+                      },
+                    }}
+                  />
+                  <Ionicons 
+                    name="chevron-down" 
+                    size={20} 
+                    color={colors.textPrimary} 
+                    style={modalStyles.dropdownIcon}
+                  />
+                </TouchableOpacity>
                 {noteError ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{noteError}</CustomText> : null}
               </View>
             )}
@@ -629,7 +678,7 @@ export default function CouponsScreen() {
                   !cardExpiry.trim() ||
                   !cardCVV.trim()
                 )) ||
-                (paymentMethod === 'delivery' && !note.trim())
+                (paymentMethod === 'delivery' && selectedBottleCount === undefined)
               }
             />
           </ScrollView>
@@ -982,5 +1031,33 @@ const modalStyles = StyleSheet.create({
     height: 50,
     borderRadius: 50,
     marginTop: 20,
+  },
+  pickerContainer: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: 8,
+    marginBottom: 12,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+  picker: {
+    width: '100%',
+    height: 50,
+    color: colors.textPrimary,
+  },
+  dropdownContainer: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    backgroundColor: colors.white,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48,
+  },
+  dropdownIcon: {
+    marginLeft: 10,
   },
 }); 

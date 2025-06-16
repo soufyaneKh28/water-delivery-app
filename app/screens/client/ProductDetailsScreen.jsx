@@ -1,4 +1,4 @@
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { AntDesign } from '@expo/vector-icons';
 import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from 'react-native-toast-message';
@@ -34,11 +34,8 @@ console.log(description);
 
   return (
     <View style={styles.container}>
-      {/* Top bar with share and back */}
+      {/* Top bar with back button */}
       <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconButton}>
-          <Feather name="share-2" size={22} color={colors.secondary}/>
-        </TouchableOpacity>
         <BackBtn/>
       </View>
       {/* Product Image */}
@@ -94,23 +91,11 @@ const styles = StyleSheet.create({
   topBar: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     marginTop: 40,
     paddingHorizontal: 20,
     zIndex: 2,
-  },
-  iconButton: {
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    shadowOffset: { width: 0, height: 1 },
   },
   productImage: {
     width: '100%',

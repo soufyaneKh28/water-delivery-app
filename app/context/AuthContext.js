@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import { registerForPushNotificationsAsync, savePushToken } from '../../lib/notifications';
 import { supabase } from '../../lib/supabase';
 
 // Create the context
@@ -86,20 +87,27 @@ export const AuthProvider = ({ children }) => {
     };
   }, [refreshToken]);
 
+  // Register for push notifications and save token
+  const registerPushNotifications = async (userId) => {
+    try {
+      const token = await registerForPushNotificationsAsync();
+      if (token) {
+        await savePushToken(userId, token);
+      }
+    } catch (error) {
+      console.error('Error registering for push notifications:', error);
+    }
+  };
+
   // Check active sessions and listen for auth changes
   useEffect(() => {
     // Check for existing session
-    // logout();
-    console.log("check for existing user",user);
-    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        console.log("session user",session.user);
-        
         setUser(session.user);
         setIsAuthenticated(true);
-        console.log("user after set",user);
-        
+        // Register for push notifications
+        registerPushNotifications(session.user.id);
         // Fetch user role from profiles table
         fetchUserRole(session.user.id);
       } else {
@@ -115,6 +123,8 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
+        // Register for push notifications
+        registerPushNotifications(session.user.id);
         // Fetch user role from profiles table
         await fetchUserRole(session.user.id);
       } else {
@@ -160,12 +170,9 @@ export const AuthProvider = ({ children }) => {
       
       if (error) throw error;
 
-      // Fetch user role after successful login
-      console.log("data after login",data);
-      
       if (data.user) {
-        console.log("data.user.id",data.user.id);
-        
+        // Register for push notifications after successful login
+        await registerPushNotifications(data.user.id);
         await fetchUserRole(data.user.id);
       }
 

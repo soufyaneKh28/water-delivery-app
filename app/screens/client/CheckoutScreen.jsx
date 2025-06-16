@@ -1,7 +1,8 @@
 import axios from 'axios';
 import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { sendOrderNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -20,6 +21,7 @@ export default function CheckoutScreen({ route, navigation }) {
   const [cardErrors, setCardErrors] = useState({});
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const formatAddressString = (address) => {
     if (!address) return '';
@@ -38,25 +40,24 @@ export default function CheckoutScreen({ route, navigation }) {
   // Create order function
   const createOrder = async () => {
     try {
+      setIsLoading(true);
       const order_type = paymentMethod === 'card' ? 'online-payment' : 'on-delivery';
       const location_id = selectedAddress?.id;
       const cartPayload = cart.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
-        // unit_price: item.price,
       }));
       const payload = {
         order_type,
         location_id,
         cart: cartPayload,
       };
-      console.log('payload', payload);
 
       // Get access token from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      await axios.post(
+      const response = await axios.post(
         'https://water-supplier-2.onrender.com/api/k1/orders/createOrder',
         payload,
         {
@@ -66,6 +67,12 @@ export default function CheckoutScreen({ route, navigation }) {
           },
         }
       );
+
+      // Send notification to admins
+      if (response.data) {
+        await sendOrderNotification(response.data);
+      }
+
       navigation.replace('OrderSuccessScreen', {
         order: payload,
         cart,
@@ -80,6 +87,8 @@ export default function CheckoutScreen({ route, navigation }) {
         position: 'top',
         visibilityTime: 3000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -212,10 +221,11 @@ export default function CheckoutScreen({ route, navigation }) {
           <CustomText type="bold" style={{ color: colors.primary }}>{total} دينار</CustomText>
         </View>
         <PrimaryButton
-          title="تأكيد الطلب"
+          title={isLoading ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           style={styles.confirmButton}
           onPress={handleConfirm}
           disabled={
+            isLoading ||
             (paymentMethod === 'card' && (
               !cardName.trim() ||
               !cardNumber.trim() ||
@@ -224,7 +234,14 @@ export default function CheckoutScreen({ route, navigation }) {
             )) ||
             (paymentMethod === 'delivery' && !note.trim())
           }
-        />
+        >
+          {isLoading && (
+            <ActivityIndicator 
+              color="#fff" 
+              style={{ position: 'absolute', right: 20 }} 
+            />
+          )}
+        </PrimaryButton>
       </ScrollView>
     </View>
   );
