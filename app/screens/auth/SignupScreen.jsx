@@ -28,10 +28,12 @@ export default function SignUpScreen({ navigation }) {
   const { signup } = useAuth()
   const [username, setUsername] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [fullPhoneNumber, setFullPhoneNumber] = useState("")
   const [phoneError, setPhoneError] = useState("")
 
   const handlePhoneChange = (phoneNumber, fullPhoneNumber) => {
     setPhoneNumber(phoneNumber);
+    setFullPhoneNumber(fullPhoneNumber);
     if (phoneError && phoneNumber.length >= 9) setPhoneError("");
   };
 
@@ -61,7 +63,7 @@ export default function SignUpScreen({ navigation }) {
 
     setIsLoading(true)
     try {
-      console.log('Attempting signup with:', { email, username, phone: phoneNumber });
+      console.log('Attempting signup with:', { email, username, phone: fullPhoneNumber });
 
       const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
         method: "POST",
@@ -73,7 +75,7 @@ export default function SignUpScreen({ navigation }) {
           email: email.trim(),
           password,
           username: username.trim(),
-          phone: phoneNumber,
+          phone: fullPhoneNumber,
         }),
       })
 
@@ -109,6 +111,7 @@ export default function SignUpScreen({ navigation }) {
       setIsLoading(false)
     }
   }
+console.log(username, email, password, confirmPassword, phoneNumber, fullPhoneNumber);
 
   return (
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
@@ -138,7 +141,7 @@ export default function SignUpScreen({ navigation }) {
             <View style={styles.inputContainer}>
               <CustomText style={styles.inputLabel}>اسم المستخدم</CustomText>
               <TextInput
-                style={styles.input}
+                style={globalStyles.input}
                 placeholder="اسم المستخدم"
                 value={username}
                 onChangeText={setUsername}
@@ -150,7 +153,7 @@ export default function SignUpScreen({ navigation }) {
             <View style={styles.inputContainer}>
               <CustomText style={styles.inputLabel}>البريد الإلكتروني</CustomText>
               <TextInput
-                style={styles.input}
+                style={globalStyles.input}
                 placeholder="example@email.com"
                 value={email}
                 onChangeText={setEmail}
@@ -179,7 +182,7 @@ export default function SignUpScreen({ navigation }) {
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
                 </TouchableOpacity>
                 <TextInput
-                  style={styles.passwordInput}
+                  style={globalStyles.passwordInput}
                   placeholder="********"
                   value={password}
                   onChangeText={setPassword}
@@ -201,7 +204,7 @@ export default function SignUpScreen({ navigation }) {
                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={22} color={colors.gray[500]} />
                 </TouchableOpacity>
                 <TextInput
-                  style={styles.passwordInput}
+                  style={globalStyles.passwordInput}
                   placeholder="********"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
@@ -283,6 +286,7 @@ const styles = StyleSheet.create({
   },
   form: {
     width: "100%",
+    marginTop: 20,
   },
   loginContainer: {
     flexDirection: "row",

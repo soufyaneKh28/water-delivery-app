@@ -33,7 +33,7 @@ export default function PhoneInput({
   containerStyle,
 }) {
   const [showCountryModal, setShowCountryModal] = useState(false);
-  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES.find(country => country.code === '+962'));
 
   const handlePhoneChange = (text) => {
     const cleaned = text.replace(/[^0-9]/g, '');

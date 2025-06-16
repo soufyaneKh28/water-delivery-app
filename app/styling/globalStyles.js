@@ -5,6 +5,7 @@ export const globalStyles = StyleSheet.create({
   // Input field styles
   inputContainer: {
     marginBottom: 20,
+    // paddingVertical: 12,
   },
   inputLabel: {
     fontSize: 14,
