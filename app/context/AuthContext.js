@@ -27,7 +27,13 @@ export const AuthProvider = ({ children }) => {
   const refreshToken = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw error;
+      if (error) {
+        // If there's an error getting the session, just clear the auth state
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
+        return;
+      }
 
       if (session) {
         // Check if token is about to expire (within 5 minutes)
@@ -38,7 +44,13 @@ export const AuthProvider = ({ children }) => {
         if (timeUntilExpiry < 5 * 60 * 1000) { // 5 minutes in milliseconds
           console.log('Refreshing token...');
           const { data, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) throw refreshError;
+          if (refreshError) {
+            // If refresh fails, just clear the auth state without showing an alert
+            setUser(null);
+            setIsAuthenticated(false);
+            setUserRole(null);
+            return;
+          }
           
           if (data.session) {
             setUser(data.session.user);
@@ -46,11 +58,18 @@ export const AuthProvider = ({ children }) => {
             await fetchUserRole(data.session.user.id);
           }
         }
+      } else {
+        // No session, clear auth state
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
-      // If refresh fails, log out the user
-      await logout();
+      // Clear auth state without showing an alert
+      setUser(null);
+      setIsAuthenticated(false);
+      setUserRole(null);
     }
   }, []);
 
@@ -101,8 +120,12 @@ export const AuthProvider = ({ children }) => {
 
   // Check active sessions and listen for auth changes
   useEffect(() => {
+    let mounted = true;
+
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
@@ -120,6 +143,8 @@ export const AuthProvider = ({ children }) => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
@@ -128,6 +153,7 @@ export const AuthProvider = ({ children }) => {
         // Fetch user role from profiles table
         await fetchUserRole(session.user.id);
       } else {
+        // Clear auth state without showing alerts
         setUser(null);
         setIsAuthenticated(false);
         setUserRole(null);
@@ -135,7 +161,10 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Function to fetch user role from profiles table
@@ -239,12 +268,16 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Clear auth state first to prevent any token-related alerts
+      setUser(null);
+      setIsAuthenticated(false);
       setUserRole(null);
+      
+      // Then sign out from Supabase
+      await supabase.auth.signOut();
     } catch (error) {
       console.error('Error during logout:', error);
-      throw error;
+      // Don't throw error to prevent alerts
     }
   };
 
