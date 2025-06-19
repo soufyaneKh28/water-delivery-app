@@ -297,6 +297,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Request password reset (send email)
+  const requestPasswordReset = async (email) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'water-delivery-app://reset-password', // Make sure this matches your app's deep link
+      });
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Reset password (after user clicks email link)
+  const resetPassword = async (newPassword) => {
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setUser(data.user);
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -308,6 +333,8 @@ export const AuthProvider = ({ children }) => {
     updateUser,
     refreshToken,
     setIsAuthenticated,
+    requestPasswordReset,
+    resetPassword,
   };
 
   return (

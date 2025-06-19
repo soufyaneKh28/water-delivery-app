@@ -3,6 +3,7 @@ import '../gesture-handler';
 
 import * as Font from 'expo-font';
 
+import { NavigationIndependentTree } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
@@ -92,11 +93,28 @@ export default function App() {
     );
   }
 
+  const linking = {
+    prefixes: ['water-delivery-app://'],
+    config: {
+      screens: {
+        Auth: {
+          screens: {
+            ResetPassword: 'reset-password',
+            // Add other auth screens if needed
+          },
+        },
+        // Add other navigators/screens if needed
+      },
+    },
+  };
+
   return (
     <AuthProvider>
       <CartProvider>
       <AddressProvider>
-      <AppNavigator />
+      <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
+        <AppNavigator />
+      </NavigationIndependentTree>
       <Toast config={toastConfig} />
       </AddressProvider>
       </CartProvider>

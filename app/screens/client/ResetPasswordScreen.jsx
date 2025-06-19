@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -10,74 +9,15 @@ import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 export default function ResetPasswordScreen({ navigation }) {
-  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { logout, user , setIsAuthenticated } = useAuth();
-  const updateTimeoutRef = useRef(null);
-  const [tempUser, setTempUser] = useState(user);
-
-  // Monitor user changes
-  useEffect(() => {
-    if (tempUser !== user) {
-      setLoading(false);
-      Alert.alert(
-        "تم التحديث", 
-        "تم تغيير كلمة المرور بنجاح",
-        [
-          {
-            text: 'حسناً',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]
-      );
-    }
-  }, [user]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  const verifyPasswordUpdate = async () => {
-    try {
-      console.log('Verifying password update...');
-      // Try to sign in with the new password
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: newPassword,
-      });
-
-      if (signInError) {
-        console.log('Password verification failed:', signInError);
-        throw new Error('فشل في التحقق من تحديث كلمة المرور');
-      }
-
-      console.log('Password verified successfully');
-      setTempUser(user); // This will trigger the user change effect
-      setLoading(false);
-    } catch (error) {
-      console.error('Verification error:', error);
-      Alert.alert('خطأ', error.message || 'حدث خطأ أثناء التحقق من تحديث كلمة المرور');
-      setLoading(false);
-    }
-  };
+  const { resetPassword } = useAuth();
 
   const handleUpdatePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!newPassword || !confirmPassword) {
       Alert.alert('خطأ', 'جميع الحقول مطلوبة');
       return;
     }
@@ -89,58 +29,20 @@ export default function ResetPasswordScreen({ navigation }) {
       Alert.alert('خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
       return;
     }
-  
     setLoading(true);
-
     try {
-      // Get a fresh session token
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw new Error('فشل في الحصول على جلسة جديدة');
-      if (!session?.access_token) throw new Error('لا يوجد توكن صالح');
-
-      // Make PUT request to update password with fresh token
-      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/users/updatePassword', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          password: currentPassword,
-          newPassword: newPassword,
-          confirmPassword: confirmPassword
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'فشل في تحديث كلمة المرور');
-      }
-
-      // Show success message
+      await resetPassword(newPassword);
       Alert.alert(
-        "تم التحديث",
-        "تم تغيير كلمة المرور بنجاح. سيتم تسجيل خروجك الآن.",
+        'تم التحديث',
+        'تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.',
         [
           {
             text: 'حسناً',
-            onPress: async () => {
-              // Log out the user
-              // await logout();
-              // Navigate to login screen
-              setIsAuthenticated(false);
-              // navigation.reset({
-              //   index: 0,
-              //   routes: [{ name: 'Login' }],
-              // });
-            },
+            onPress: () => navigation.navigate('Login'),
           },
         ]
       );
-
     } catch (error) {
-      console.error('Password update process failed:', error);
       Alert.alert('خطأ', error.message || 'حدث خطأ أثناء تغيير كلمة المرور');
     } finally {
       setLoading(false);
@@ -167,26 +69,6 @@ export default function ResetPasswordScreen({ navigation }) {
         </CustomText>
         {/* Form */}
         <View style={styles.form}>
-          {/* Current Password */}
-          <View style={globalStyles.inputContainer}>
-            <CustomText style={globalStyles.inputLabel}>كلمة السر الحالية</CustomText>
-            <View style={globalStyles.passwordContainer}>
-              <TouchableOpacity
-                style={globalStyles.passwordVisibilityButton}
-                onPress={() => setShowCurrent((v) => !v)}
-              >
-                <Ionicons name={showCurrent ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
-              </TouchableOpacity>
-              <TextInput
-                style={globalStyles.passwordInput}
-                placeholder="********"
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                secureTextEntry={!showCurrent}
-                textAlign="right"
-              />
-            </View>
-          </View>
           {/* New Password */}
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>كلمة السر الجديدة</CustomText>

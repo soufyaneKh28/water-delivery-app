@@ -2,23 +2,24 @@ import { Ionicons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { supabase } from "../../../lib/supabase";
 import CustomText from "../../components/common/CustomText";
+import { useAuth } from '../../context/AuthContext';
 import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
 
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const { requestPasswordReset } = useAuth();
 
   const handleResetPassword = async () => {
     if (!email) {
@@ -28,12 +29,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'water-delivery-app://reset-password',
-      });
-
-      if (error) throw error;
-
+      await requestPasswordReset(email);
       Alert.alert(
         "تم إرسال رابط إعادة تعيين كلمة المرور",
         "يرجى التحقق من بريدك الإلكتروني واتباع التعليمات لإعادة تعيين كلمة المرور",

@@ -23,7 +23,7 @@ export default function AppNavigator() {
   }
 
   return (
-    // <NavigationContainer>
+
       <>
       <StatusBar style="dark" backgroundColor='transparent' translucent />
       <Stack.Navigator   screenOptions={{
@@ -40,7 +40,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Client" component={ClientNavigator} />
         )}
       </Stack.Navigator>
-      </>
-    // </NavigationContainer>
+    </>
+  
   );
 } 
