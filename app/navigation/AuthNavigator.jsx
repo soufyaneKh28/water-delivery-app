@@ -8,8 +8,8 @@ import VerificationScreen from '../screens/auth/VerificationScreen';
 
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
-import ResetPasswordScreen from '../screens/client/ResetPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -20,11 +20,11 @@ export default function AuthNavigator() {
         gestureDirection: 'horizontal-inverted'}}>
           <Stack.Screen name="Splash" component={SplashScreen} />
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="SignUp" component={SignupScreen} />
       <Stack.Screen name="Verification" component={VerificationScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       {/* <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} /> */}
     </Stack.Navigator>
   );

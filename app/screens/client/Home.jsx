@@ -365,10 +365,11 @@ const images = [
               dataSet={{ kind: "basic-layouts", name: "parallax" }}
             >
               <Carousel
-                autoPlayInterval={2000}
+                autoPlayInterval={3000}
                 data={offers}
                 height={220}
                 loop={true}
+                autoPlay={true}
                 pagingEnabled={true}
                 snapEnabled={true}
                 width={width}

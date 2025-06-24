@@ -161,6 +161,10 @@ export default function LoginScreen({ navigation }) {
                 <CustomText type="bold" style={styles.signupLink}>قم بإنشاء حساب جديد الآن</CustomText>
               </TouchableOpacity>
               <CustomText type="bold" style={styles.signupText}>ليس لديك حساب؟</CustomText>
+
+              <TouchableOpacity onPress={() => navigation.navigate("ResetPassword")}>
+                <CustomText type="bold" style={styles.signupLink}>نسيت كلمة المرور؟</CustomText>
+              </TouchableOpacity>
             </View>
           </View>
         </View>

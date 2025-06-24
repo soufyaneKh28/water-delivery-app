@@ -5,9 +5,9 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableO
 // import BackButton from '../../components/common/BackButton';
 import BackBtn from '../../components/common/BackButton';
 // import CustomText from '../../components/common/CustomText';
+import axios from 'axios';
 import dayjs from 'dayjs';
 import { Alert } from 'react-native';
-import { sendOrderStatusNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -47,45 +47,45 @@ console.log("order",order);
   const handleStatusChange = async (newStatus) => {
     try {
       setIsUpdating(true);
+      console.log(order.id, newStatus);
       
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', order.id);
-
-      if (error) {
-        Alert.alert(
-          'خطأ',
-          'حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.',
-          [{ text: 'حسناً' }]
-        );
-        return;
-      }
-
-      // Send notification to user about status change
-      if (order.user_id?.id) {
-        await sendOrderStatusNotification(order.id, newStatus, order.user_id.id);
-      }
-
-      // Show success message
-      Alert.alert(
-        'تم التحديث',
-        'تم تحديث حالة الطلب بنجاح',
-        [
-          { 
-            text: 'حسناً',
-            onPress: () => {
-              // Navigate back to refresh the orders list
-              navigation.goBack();
-            }
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('No access token found');
+      console.log('status', newStatus);
+    
+        const response = await axios.patch(
+          `https://water-supplier-2.onrender.com/api/k1/orders/changeOrderStatus/${order.id}`,
+          { "status": newStatus },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
           }
-        ]
-      );
+        );
+
+        console.log("respppppons",response.data);
+        
+        if(response.data.status == "success") {
+          Alert.alert(
+            'تم التحديث',
+            'تم تغيير حالة الطلب بنجاح.',
+            [
+              {
+                text: 'حسناً',
+                onPress: () => navigation.goBack(),
+              },
+            ]
+          );
+        }
+        // return response.data;
+      
     } catch (error) {
-      console.error('Error updating order status:', error);
+      console.error('Order status update error:', error);
       Alert.alert(
         'خطأ',
-        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
+        error.message || 'حدث خطأ غير متوقع أثناء تغيير حالة الطلب. يرجى المحاولة مرة أخرى.',
         [{ text: 'حسناً' }]
       );
     } finally {
@@ -160,7 +160,7 @@ console.log("order",order);
         <View style={styles.divider} />
         <View style={styles.detailRow}>
            <CustomText style={styles.detailLabel}>المبلغ الإجمالي</CustomText>
-          <CustomText style={styles.detailValue}>{order.total || 'غير معروف'} دينار</CustomText> 
+          <CustomText style={styles.detailValue}>{order.total || 'غير معروف'} {order.order_type === 'coupon' ? 'كوبونات' : "دينار"}</CustomText> 
         </View>
         <View style={styles.divider} />
         <View style={styles.statusRow}>

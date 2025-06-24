@@ -303,7 +303,7 @@ export const AuthProvider = ({ children }) => {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: 'water-delivery-app://reset-password', // Make sure this matches your app's deep link
       });
-      if (error) throw error;
+      if (error) throw error; 
       return true;
     } catch (error) {
       throw error;

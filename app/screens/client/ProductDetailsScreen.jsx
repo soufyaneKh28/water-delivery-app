@@ -1,6 +1,6 @@
 import { AntDesign } from '@expo/vector-icons';
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Toast from 'react-native-toast-message';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -9,10 +9,10 @@ import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
 export default function ProductDetailsScreen({ route, navigation }) {
-  const { image, title, size, price, oldPrice, description, id } = route.params;
+  const { image, title, size, price, oldPrice, description, id, order_type } = route.params;
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
-console.log(description);
+// console.log(description);
   const handleAddToCart = () => {
     const product = {
       id: id || `${title}-${size}-${price}`, // Use provided id or create a consistent one
@@ -45,7 +45,7 @@ console.log(description);
         <View style={styles.rowBetween}>
           <View>
             <Text style={styles.oldPrice}>{oldPrice}</Text>
-            <Text style={styles.price}>{price}</Text>
+            <Text style={styles.price}>{price} {order_type === 'coupon' ? 'كوبون' : 'دينار'}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
@@ -56,9 +56,11 @@ console.log(description);
         <TouchableOpacity>
           <CustomText type="medium" style={styles.link}>الوصف</CustomText>
         </TouchableOpacity>
-        <CustomText type="regular" style={styles.description}>
-          {description || 'لا يوجد وصف متاح للمنتج'}
-        </CustomText>
+        <ScrollView style={styles.descriptionScroll} contentContainerStyle={{paddingBottom: 10}} showsVerticalScrollIndicator={false}>
+          <CustomText type="regular" style={styles.description}>
+            {description || 'لا يوجد وصف متاح للمنتج'}
+          </CustomText>
+        </ScrollView>
         {/* Quantity and Add to Cart */}
         <View style={styles.addRow}>
           <View style={styles.qtyControl}>
@@ -99,7 +101,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 350,
+    height: 400,
     marginTop: 10,
     marginBottom: 10,
     alignSelf: 'center',
@@ -159,9 +161,12 @@ const styles = StyleSheet.create({
   description: {
     color: '#888',
     fontSize: 15,
-    marginBottom: 50,
     textAlign: 'right',
     lineHeight: 27,
+  },
+  descriptionScroll: {
+    maxHeight: 100,
+    marginBottom: 20,
   },
   addRow: {
     flexDirection: 'row',

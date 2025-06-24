@@ -195,7 +195,9 @@ console.log('orderDetails', orderDetails);
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <CustomText type="bold" style={styles.totalLabel}>المجموع الكلي:</CustomText>
-              <CustomText type="bold" style={styles.totalValue}>{orderDetails.total || 0} دينار</CustomText>
+              <CustomText type="bold" style={styles.totalValue}>
+                {orderDetails.total || 0} {orderDetails.order_type === 'coupon' ? 'كوبون' : 'دينار'}
+              </CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>طريقة الدفع:</CustomText>

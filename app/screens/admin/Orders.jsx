@@ -4,9 +4,10 @@ import dayjs from 'dayjs';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
+import { patchOrderStatus } from '../../api/orders';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
@@ -92,7 +93,7 @@ function generateOrderNumber(uuid) {
 
 const Orders = () => {
   const navigation = useNavigation();
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [selectedDateFilter, setSelectedDateFilter] = useState('all');
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
@@ -345,51 +346,31 @@ const Orders = () => {
     }
   };
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      setIsUpdating(true);
-      
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
-
-      if (error) {
-        Alert.alert(
-          'خطأ',
-          'حدث خطأ أثناء تحديث حالة الطلب. يرجى المحاولة مرة أخرى.',
-          [{ text: 'حسناً' }]
-        );
-        return;
-      }
-
-      // Update local state
-      setOrders(orders.map(order => 
-        order.id === orderId ? { ...order, status: newStatus } : order
-      ));
-
-      // Show success message
-      Alert.alert(
-        'تم التحديث',
-        'تم تحديث حالة الطلب بنجاح',
-        [{ text: 'حسناً' }]
-      );
-    } catch (error) {
-      console.error('Error updating order status:', error);
-      Alert.alert(
-        'خطأ',
-        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
-        [{ text: 'حسناً' }]
-      );
-    } finally {
-      setIsUpdating(false);
-      setModalVisible(false);
-    }
-  };
-
   const openStatusModal = (order) => {
     setSelectedOrder(order);
+    setSelectedStatus(order.status);
     setModalVisible(true);
+  };
+
+  const handleStatusChange = async () => {
+    if (!selectedOrder || !selectedStatus || selectedOrder.status === selectedStatus) {
+      setModalVisible(false);
+      return;
+    }
+    try {
+      setIsUpdating(true);
+      await patchOrderStatus(selectedOrder.id, selectedStatus);
+      setOrders(orders.map(order =>
+        order.id === selectedOrder.id ? { ...order, status: selectedStatus } : order
+      ));
+      Alert.alert('تم التحديث', 'تم تحديث حالة الطلب بنجاح', [{ text: 'حسناً' }]);
+      setModalVisible(false);
+    } catch (error) {
+      console.error('Order status update error:', error);
+      Alert.alert('خطأ', error.message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.', [{ text: 'حسناً' }]);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Helper function to format location as a single string
@@ -741,24 +722,12 @@ const Orders = () => {
                   style={[
                     styles.statusOption,
                     { backgroundColor: statusColors[key] },
-                    key === selectedOrder.status && styles.selectedStatusOption,
+                    key === selectedStatus && styles.selectedStatusOption,
                   ]}
-                  onPress={() => {
-                    Alert.alert(
-                      'تأكيد',
-                      'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
-                      [
-                        { text: 'إلغاء', style: 'cancel' },
-                        {
-                          text: 'تأكيد',
-                          onPress: () => handleStatusChange(selectedOrder.id, key),
-                        },
-                      ]
-                    );
-                  }}
+                  onPress={() => setSelectedStatus(key)}
                 >
-                  <CustomText 
-                    type='regular' 
+                  <CustomText
+                    type='regular'
                     style={[
                       styles.statusOptionText,
                       key === 'delivered' && { color: '#262626' }
@@ -769,6 +738,29 @@ const Orders = () => {
                 </Pressable>
               ))}
             </View>
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={() => {
+                Alert.alert(
+                  'تأكيد',
+                  'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
+                  [
+                    { text: 'إلغاء', style: 'cancel' },
+                    {
+                      text: 'تأكيد',
+                      onPress: handleStatusChange,
+                    },
+                  ]
+                );
+              }}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <CustomText type='bold' style={styles.updateButtonText}>تحديث الحالة</CustomText>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -1088,6 +1080,19 @@ const styles = StyleSheet.create({
   },
   dropdownIcon: {
     marginLeft: 10,
+  },
+  updateButton: {
+    width: '100%',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#2196F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updateButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 export default Orders; 

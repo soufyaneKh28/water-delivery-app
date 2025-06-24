@@ -11,6 +11,10 @@ const requestLocationPermission = async () => {
   return status === 'granted';
 };
 
+// useEffect(() => {
+//   requestLocationPermission();
+// }, []);
+
 const getAddressFromCoords = async (latitude, longitude) => {
   const hasPermission = await requestLocationPermission();
   if (!hasPermission) return;

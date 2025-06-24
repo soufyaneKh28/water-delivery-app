@@ -100,6 +100,7 @@ export default function App() {
         Auth: {
           screens: {
             ResetPassword: 'reset-password',
+            ForgotPassword: 'forgot-password',
             // Add other auth screens if needed
           },
         },
@@ -109,15 +110,15 @@ export default function App() {
   };
 
   return (
+      <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
     <AuthProvider>
       <CartProvider>
       <AddressProvider>
-      <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
         <AppNavigator />
-      </NavigationIndependentTree>
       <Toast config={toastConfig} />
       </AddressProvider>
       </CartProvider>
     </AuthProvider>
+      </NavigationIndependentTree>
   );
 }

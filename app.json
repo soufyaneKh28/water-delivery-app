@@ -17,7 +17,12 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.waterdelivery.app"
+      "bundleIdentifier": "com.waterdelivery.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options.",
+        "NSLocationAlwaysUsageDescription": "This app uses your location to provide continuous delivery tracking.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to provide continuous delivery tracking."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -34,6 +39,10 @@
         "projectId": "339e3c5a-4df8-473d-b686-755557cd5877"
       }
     },
-    "owner": "soufyanekh28"
+    "owner": "soufyanekh28",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/339e3c5a-4df8-473d-b686-755557cd5877"
+    }
   }
 }
