@@ -21,7 +21,7 @@ import { colors } from '../../styling/colors';
 // import * as React from "react";
 
 export default function HomeScreen() {
-  const { user, logout , isAuthenticated ,setIsAuthenticated} = useAuth();
+  const { user, logout , isAuthenticated ,setIsAuthenticated ,accessToken} = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const { selectedAddress, setSelectedAddress } = useAddress();
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -232,7 +232,7 @@ const images = [
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
       });
       const data = await response.json();

@@ -1,10 +1,7 @@
 import axios from 'axios';
-import { supabase } from '../../lib/supabase';
 
-export async function patchOrderStatus(orderId, status) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  if (!token) throw new Error('No access token found');
+export async function patchOrderStatus(orderId, status, accessToken) {
+  if (!accessToken) throw new Error('No access token found');
   console.log('status', status);
 
   try {
@@ -14,7 +11,7 @@ export async function patchOrderStatus(orderId, status) {
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${accessToken}`,
         },
       }
     );
