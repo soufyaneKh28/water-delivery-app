@@ -162,9 +162,9 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity>
               <CustomText type="bold" style={styles.signupText}>ليس لديك حساب؟</CustomText>
 
-              <TouchableOpacity onPress={() => navigation.navigate("ResetPassword")}>
+              {/* <TouchableOpacity onPress={() => navigation.navigate("ResetPassword")}>
                 <CustomText type="bold" style={styles.signupLink}>نسيت كلمة المرور؟</CustomText>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </View>
         </View>

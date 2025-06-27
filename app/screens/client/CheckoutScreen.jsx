@@ -2,7 +2,6 @@ import axios from 'axios';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { sendOrderNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -69,11 +68,6 @@ export default function CheckoutScreen({ route, navigation }) {
           },
         }
       );
-
-      // Send notification to admins
-      if (response.data) {
-        await sendOrderNotification(response.data);
-      }
 
       navigation.replace('OrderSuccessScreen', {
         order: payload,

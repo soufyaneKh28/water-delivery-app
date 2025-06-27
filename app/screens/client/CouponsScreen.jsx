@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import Toast from 'react-native-toast-message';
 import { supabase } from '../../../lib/supabase';
@@ -10,7 +10,6 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
-import { globalStyles } from '../../styling/globalStyles';
 
 export default function CouponsScreen({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
@@ -31,6 +30,8 @@ export default function CouponsScreen({navigation}) {
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [productCount, setProductCount] = useState(1);
   const [isOrderingProduct, setIsOrderingProduct] = useState(false);
+  const [selectedBottleCount, setSelectedBottleCount] = useState();
+  const [noteError, setNoteError] = useState('');
   const pickerRef = useRef(null);
 
   const fetchCouponBalance = async () => {
@@ -117,18 +118,58 @@ export default function CouponsScreen({navigation}) {
     setCardErrors({});
   };
 
-  const handleConfirm = () => {
-    if (paymentMethod === 'card') {
-      let errors = {};
-      if (!cardName.trim()) errors.cardName = 'مطلوب';
-      if (!cardNumber.trim()) errors.cardNumber = 'مطلوب';
-      if (!cardExpiry.trim()) errors.cardExpiry = 'مطلوب';
-      if (!cardCVV.trim()) errors.cardCVV = 'مطلوب';
-      setCardErrors(errors);
-      if (Object.keys(errors).length > 0) return;
+  const handleConfirm = async () => {
+    if (!selectedAddress) {
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'يرجى اختيار عنوان التوصيل',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      return;
     }
-    // handle order confirmation logic here
-    closeModal();
+    // Validate bottle count if needed
+    if (selectedBottleCount === undefined) {
+      setNoteError('يرجى اختيار عدد القارورات أو اختيار لا تريد طلب قارورات');
+      return;
+    }
+    try {
+      const payload = {
+        numberOfCoupon: String(selectedBook),
+        priceOfCoupon: String(selectedBook),
+        location_id: selectedAddress.id,
+      };
+      if (selectedBottleCount && selectedBottleCount !== '0') {
+        payload.numberOfWater = String(selectedBottleCount);
+      }
+      // Get access token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      await axios.post('https://water-supplier-2.onrender.com/api/k1/orders/createCouponDelivery', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      Toast.show({
+        type: 'success',
+        text1: 'تم الطلب',
+        text2: 'تم إرسال طلب شراء دفتر الكوبونات بنجاح',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      closeModal();
+    } catch (error) {
+      console.error('Error creating coupon delivery:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: error.response?.data?.message || error.message || 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
   };
 
   const incrementProduct = () => setProductCount(count => count + 1);
@@ -413,11 +454,6 @@ export default function CouponsScreen({navigation}) {
             {/* Payment Method */}
             <CustomText type="bold" style={modalStyles.label}>طريقة الدفع</CustomText>
             <View style={modalStyles.paymentBox}>
-              <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('card')}>
-                <CustomText>بطاقة ائتمان</CustomText>
-                <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
-                <View style={[modalStyles.radioCircle, paymentMethod === 'card' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
-              </TouchableOpacity>
               <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('delivery')}>
                 <CustomText>الدفع عند التسليم</CustomText>
                 <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
@@ -425,57 +461,13 @@ export default function CouponsScreen({navigation}) {
               </TouchableOpacity>
             </View>
             {/* Card Details or Note */}
-            {paymentMethod === 'card' ? (
-              <>
-                <CustomText type="bold" style={modalStyles.label}>اسم حامل البطاقة</CustomText>
-                <TextInput
-                  style={[modalStyles.input,globalStyles.input, cardErrors.cardName ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                  placeholder="ادخل اسم حامل البطاقة"
-                  value={cardName}
-                  onChangeText={text => { setCardName(text); setCardErrors(e => ({ ...e, cardName: undefined })); }}
-                />
-                {cardErrors.cardName ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardName}</CustomText> : null}
-                <CustomText type="bold" style={modalStyles.label}>رقم البطاقة</CustomText>
-                <TextInput
-                  style={[modalStyles.input,globalStyles.input, cardErrors.cardNumber ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                  placeholder="1111 1111 1111 1111"
-                  keyboardType="numeric"
-                  value={cardNumber}
-                  onChangeText={text => { setCardNumber(text); setCardErrors(e => ({ ...e, cardNumber: undefined })); }}
-                />
-                {cardErrors.cardNumber ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardNumber}</CustomText> : null}
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <View style={{ flex: 1 }}>
-                    <CustomText type="bold"   style={modalStyles.label}>تاريخ انتهاء الصلاحية</CustomText>
-                    <TextInput
-                      style={[modalStyles.input,globalStyles.input, cardErrors.cardExpiry ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                      placeholder="MM/YY"
-                      value={cardExpiry}
-                      onChangeText={text => { setCardExpiry(text); setCardErrors(e => ({ ...e, cardExpiry: undefined })); }}
-                    />
-                    {cardErrors.cardExpiry ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardExpiry}</CustomText> : null}
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <CustomText type="bold" style={modalStyles.label}>رمز CVV</CustomText>
-                    <TextInput
-                      style={[globalStyles.input, cardErrors.cardCVV ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                      placeholder="123"
-                      keyboardType="numeric"
-                      value={cardCVV}
-                      // focusable={true}
-                      onChangeText={text => { setCardCVV(text); setCardErrors(e => ({ ...e, cardCVV: undefined })); }}
-                    />
-                    {cardErrors.cardCVV ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardCVV}</CustomText> : null}
-                  </View>
-                </View>
-              </>
-            ) : (
+            {paymentMethod === 'card' ? null : (
               <View style={{flex: 1, alignItems: 'flex-end'}}>
                 <CustomText type="bold" style={[modalStyles.label, {maxWidth: '70%'}]}>
                   عدد القارورات المطلوبة للتعبئة مع الدفتر
                 </CustomText>
                 <TouchableOpacity 
-                  style={[modalStyles.dropdownContainer, noteError ? { borderColor: 'red', borderWidth: 1 } : {}]}
+                  style={modalStyles.dropdownContainer}
                   onPress={() => {
                     if (pickerRef.current) {
                       pickerRef.current.togglePicker(true);

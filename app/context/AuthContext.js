@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
-import { registerForPushNotificationsAsync, savePushToken } from '../../lib/notifications';
 import { supabase } from '../../lib/supabase';
 
 // Create the context
@@ -106,18 +105,6 @@ export const AuthProvider = ({ children }) => {
     };
   }, [refreshToken]);
 
-  // Register for push notifications and save token
-  const registerPushNotifications = async (userId) => {
-    try {
-      const token = await registerForPushNotificationsAsync();
-      if (token) {
-        await savePushToken(userId, token);
-      }
-    } catch (error) {
-      console.error('Error registering for push notifications:', error);
-    }
-  };
-
   // Check active sessions and listen for auth changes
   useEffect(() => {
     let mounted = true;
@@ -129,8 +116,6 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
-        // Register for push notifications
-        registerPushNotifications(session.user.id);
         // Fetch user role from profiles table
         fetchUserRole(session.user.id);
       } else {
@@ -148,8 +133,6 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
-        // Register for push notifications
-        registerPushNotifications(session.user.id);
         // Fetch user role from profiles table
         await fetchUserRole(session.user.id);
       } else {
@@ -200,8 +183,7 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       if (data.user) {
-        // Register for push notifications after successful login
-        await registerPushNotifications(data.user.id);
+        // Fetch user role from profiles table
         await fetchUserRole(data.user.id);
       }
 
@@ -301,7 +283,7 @@ export const AuthProvider = ({ children }) => {
   const requestPasswordReset = async (email) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'water-delivery-app://reset-password', // Make sure this matches your app's deep link
+        redirectTo: 'https://v0-expo-supabase-password-reset.vercel.app/reset-password', // Updated to external web page
       });
       if (error) throw error; 
       return true;

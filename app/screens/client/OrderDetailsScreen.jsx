@@ -169,7 +169,7 @@ console.log('orderDetails', orderDetails);
         <View style={styles.section}>
           <CustomText type="bold" style={styles.sectionTitle}>المنتجات</CustomText>
           <View style={styles.itemsCard}>
-            {orderDetails.order_items?.map((item, index) => (
+            { orderDetails.order_items.length > 0 ? (orderDetails.order_items?.map((item, index) => (
               <View key={index} style={styles.itemRow}>
                 <View style={styles.itemInfo}>
                   <CustomText style={styles.itemName}>{item.product?.title || 'منتج غير معروف'}</CustomText>
@@ -177,7 +177,15 @@ console.log('orderDetails', orderDetails);
                 </View>
                 <CustomText style={styles.itemPrice}>{item.unit_price} دينار</CustomText>
               </View>
-            ))}
+            ))): (
+              <View  style={styles.itemRow}>
+              <View style={styles.itemInfo}>
+                <CustomText style={styles.itemName}>{orderDetails.title || 'منتج غير معروف'}</CustomText>
+                {/* <CustomText style={styles.itemQuantity}>الكمية: {item.quantity}</CustomText> */}
+              </View>
+              {/* <CustomText style={styles.itemPrice}>{item.unit_price} دينار</CustomText> */}
+            </View>
+            )}
           </View>
         </View>
 

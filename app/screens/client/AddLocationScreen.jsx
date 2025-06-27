@@ -106,6 +106,8 @@ export default function AddLocationScreen({ route, navigation }) {
         body: JSON.stringify(locationDetails),
       });
 
+      console.log('response',response);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || (editAddress ? 'فشل تحديث العنوان' : 'فشل إضافة العنوان'));

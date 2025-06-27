@@ -20,8 +20,13 @@
       "bundleIdentifier": "com.waterdelivery.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options.",
-        "NSLocationAlwaysUsageDescription": "This app uses your location to provide continuous delivery tracking.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to provide continuous delivery tracking."
+        "UIBackgroundModes": ["remote-notification"] 
+      },
+      "entitlements": {
+        "aps-environment": "development", 
+        "com.apple.security.application-groups": [
+          "group.${ios.bundleIdentifier}.onesignal" 
+        ]
       }
     },
     "android": {
@@ -43,6 +48,14 @@
     "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/339e3c5a-4df8-473d-b686-755557cd5877"
-    }
+    },
+    "plugins": [
+      [
+        "onesignal-expo-plugin",
+        {
+          "mode": "development"
+        }
+      ]
+    ]
   }
 }

@@ -1,9 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
-import { testPushNotification } from '../../../lib/notifications';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
@@ -20,7 +19,6 @@ export default function Profile() {
   });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isTestingNotifications, setIsTestingNotifications] = useState(false);
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
@@ -30,35 +28,6 @@ export default function Profile() {
 
   const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
-  };
-
-  const handleTestNotifications = async () => {
-    try {
-      setIsTestingNotifications(true);
-      const success = await testPushNotification(user.id, true);
-      if (success) {
-        Alert.alert(
-          'نجاح',
-          'تم إرسال إشعار اختبار. يرجى التحقق من إشعارات جهازك.',
-          [{ text: 'حسناً' }]
-        );
-      } else {
-        Alert.alert(
-          'خطأ',
-          'حدث خطأ أثناء اختبار الإشعارات. يرجى المحاولة مرة أخرى.',
-          [{ text: 'حسناً' }]
-        );
-      }
-    } catch (error) {
-      console.error('Error testing notifications:', error);
-      Alert.alert(
-        'خطأ',
-        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
-        [{ text: 'حسناً' }]
-      );
-    } finally {
-      setIsTestingNotifications(false);
-    }
   };
 
   const MENU_ITEMS = [

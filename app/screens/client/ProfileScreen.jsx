@@ -2,15 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Modal,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View
 } from 'react-native';
-import { testPushNotification } from '../../../lib/notifications';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
@@ -63,7 +62,6 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [isTestingNotifications, setIsTestingNotifications] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -93,35 +91,6 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     setShowLogoutModal(false);
     logout();
-  };
-
-  const handleTestNotifications = async () => {
-    try {
-      setIsTestingNotifications(true);
-      const success = await testPushNotification(user.id, false);
-      if (success) {
-        Alert.alert(
-          'نجاح',
-          'تم إرسال إشعار اختبار. يرجى التحقق من إشعارات جهازك.',
-          [{ text: 'حسناً' }]
-        );
-      } else {
-        Alert.alert(
-          'خطأ',
-          'حدث خطأ أثناء اختبار الإشعارات. يرجى المحاولة مرة أخرى.',
-          [{ text: 'حسناً' }]
-        );
-      }
-    } catch (error) {
-      console.error('Error testing notifications:', error);
-      Alert.alert(
-        'خطأ',
-        'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.',
-        [{ text: 'حسناً' }]
-      );
-    } finally {
-      setIsTestingNotifications(false);
-    }
   };
 
   const renderCountryItem = ({ item }) => (
@@ -268,22 +237,6 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <View style={styles.menuList}>
-          {/* Test Notifications Button */}
-          <TouchableOpacity
-            style={styles.menuItem}
-            activeOpacity={0.7}
-            onPress={handleTestNotifications}
-            disabled={isTestingNotifications}
-          >
-            <View style={[styles.menuIcon, { backgroundColor: '#E5F1FF' }]}>
-              <Ionicons name="notifications" size={18} color="#2196F3" />
-            </View>
-            <CustomText type="medium" style={styles.menuLabel}>
-              {isTestingNotifications ? 'جاري الاختبار...' : 'اختبار الإشعارات'}
-            </CustomText>
-            <Ionicons name="chevron-back" size={20} color="#292D32" style={styles.menuArrow} />
-          </TouchableOpacity>
-
           {MENU_ITEMS.map((item, idx) => (
             <TouchableOpacity
               key={item.label}

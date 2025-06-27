@@ -1,9 +1,9 @@
 import 'react-native-reanimated';
 import '../gesture-handler';
 
-import * as Font from 'expo-font';
-
 import { NavigationIndependentTree } from '@react-navigation/native';
+import * as Font from 'expo-font';
+import * as Linking from 'expo-linking';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
@@ -12,7 +12,8 @@ import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
-
+// Include the OneSignal package
+import { LogLevel, OneSignal } from 'react-native-onesignal';
 // Custom toast config with marginTop for top toasts
 const toastConfig = {
   success: (props) => (
@@ -84,7 +85,17 @@ export default function App() {
 
     loadFonts();
   }, []);
-
+  // Initialize OneSignal in useEffect to ensure it runs only once
+  useEffect(() => {
+    // Enable verbose logging for debugging (remove in production)
+    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    // Initialize with your OneSignal App ID
+    OneSignal.initialize('385eb07-724a-4a80-a88f-3b426b6a1210');
+    // Use this method to prompt for push notifications.
+    // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
+    OneSignal.Notifications.requestPermission(false);
+    }, []); // Ensure this only runs once on app mount
+  
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -92,19 +103,24 @@ export default function App() {
       </View>
     );
   }
-
+  // const resetPasswordURL = Linking.createURL("resetPassword"); 
   const linking = {
-    prefixes: ['water-delivery-app://'],
+    prefixes: [Linking.createURL('/'),'water-delivery-app:/'],
     config: {
       screens: {
         Auth: {
           screens: {
             ResetPassword: 'reset-password',
             ForgotPassword: 'forgot-password',
-            // Add other auth screens if needed
+            Splash: 'splash',
+            Onboarding: 'onboarding',
+            Login: 'login',
+            SignUp: 'signup',
+            Verification: 'verification',
           },
         },
-        // Add other navigators/screens if needed
+        Admin: '*',
+        Client: '*',
       },
     },
   };

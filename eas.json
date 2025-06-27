@@ -10,15 +10,27 @@
       "channel": "development",
       "ios": {
         "buildConfiguration": "Debug"
+      },
+      "android": {
+        "buildType": "apk"  // <-- Add this if you want direct install on device
       }
     },
     "preview": {
       "distribution": "internal",
-      "channel": "preview"
+      "channel": "preview",
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "autoIncrement": true,
-      "channel": "production"
+      "channel": "production",
+      "android": {
+        "buildType": "apk"  
+      },
+      "ios": {
+        "buildConfiguration": "Release"
+      }
     }
   },
   "submit": {

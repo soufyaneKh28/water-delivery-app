@@ -150,7 +150,8 @@ const images = [
         console.error('Error fetching products:', error);
         return;
       }
-      setProducts(data);
+      // Only show products with price_type 'money'
+      setProducts((data || []).filter(product => product.price_type === 'money'));
     } finally {
       setIsLoadingProducts(false);
     }
@@ -217,6 +218,44 @@ const images = [
     }
   };
 
+  const getAll= async () => {
+    setIsLoadingOffers(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        return;
+      }
+
+      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/users/getAllData', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      console.log('data-alllllllllll', data.data);
+      setOffers(data.data.offers || []);
+      setSavedAddresses(data.data.locations);
+      if (data.data.locations.length > 0 && !selectedAddress) {
+        setSelectedAddress(data.data.locations[0]);
+      }
+      setCategories(data.data.categories)
+      setProducts(data.data.products)
+      
+    } catch (error) {
+      console.error('Error fetching offers:', error);
+      setOffers([]);
+    } finally {
+      setIsLoadingOffers(false);
+      setIsLoadingLocations(false)
+      setIsLoadingCategories(false)
+      setIsLoadingProducts(false)
+    }
+  };
+
   const fetchActiveOrders = async () => {
     if (!user?.id) return;
     
@@ -251,18 +290,20 @@ const images = [
       setIsLoadingOrders(false);
     }
   };
+  console.log(activeOrders);
+  
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
       // Refresh all data in parallel
-      await Promise.all([
-        getCategories(),
-        getProducts(),
-        getLocations(),
-        fetchActiveOrders(),
-        getOffers()
-      ]);
+     getAll()
+        // getCategories(),
+        // getProducts(),
+        // getLocations(),
+        fetchActiveOrders()
+        // getOffers()
+         
     } catch (error) {
       console.error('Error refreshing data:', error);
     } finally {
@@ -271,11 +312,13 @@ const images = [
   }, [user?.id]);
 
   useEffect(() => {
-    getCategories();
-    getProducts();
-    getLocations();
+    getAll()
+    // getLocations();
+    // getOffers();
+    // getCategories();
+    // getProducts();
     fetchActiveOrders();
-    getOffers();
+
   }, [user?.id]);
 
   // console.log("savedAddresses", savedAddresses);
@@ -407,11 +450,13 @@ const images = [
               </TouchableOpacity>
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
                 <CustomText type="bold" style={styles.activeOrderTitle} numberOfLines={1} ellipsizeMode="tail">
-                  {activeOrders[0].order_items && activeOrders[0].order_items.length > 0
+                  { activeOrders[0].order_items.length > 0 ? (activeOrders[0].order_items && activeOrders[0].order_items.length > 0
                     ? activeOrders[0].order_items
                         .map(item => item.product?.title || 'منتج غير معروف')
                         .join('، ')
-                    : 'طلب بدون منتجات'}
+                    : 'طلب بدون منتجات') : (
+                      activeOrders[0].title
+                    )}
                 </CustomText>
                 <CustomText style={styles.activeOrderDate}>
                   تم الطلب بتاريخ: {dayjs(activeOrders[0].created_at).format('D MMMM YYYY - HH:mm')}
@@ -470,7 +515,7 @@ const images = [
             </View>
           ) : (
             <View style={styles.productsRow}>
-              {products.map((product) => (
+              {products.filter((product)=> product.price_type === 'money').map((product) => (
                 <ProductCard
                   key={product.id}
                   id={product.id}

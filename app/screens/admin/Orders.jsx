@@ -279,41 +279,40 @@ const Orders = () => {
 
       setIsUpdating(true);
 
-      // Upload image to storage
-      const fileExt = selectedImage.uri.split('.').pop();
-      const fileName = `${selectedOrder.id}_receipt.${fileExt}`;
-      const filePath = `receipts/${fileName}`;
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('image', {
+        uri: selectedImage.uri,
+        name: selectedImage.fileName || 'receipt.jpg',
+        type: 'image/jpeg',
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from('receipts')
-        .upload(filePath, {
-          uri: selectedImage.uri,
-          type: `image/${fileExt}`,
-          name: fileName,
-        });
+      // Get access token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
 
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('receipts')
-        .getPublicUrl(filePath);
-
-      // Update order with receipt URL
-      const { error: updateError } = await supabase
-        .from('orders')
-        .update({ receipt_url: publicUrl })
-        .eq('id', selectedOrder.id);
-
-      if (updateError) throw updateError;
-
-      // Update local state
+      // PATCH request to upload receipt
+      const response = await fetch(
+        `https://water-supplier-2.onrender.com/api/k1/orders/uploadReceipt/${selectedOrder.id}`,
+        {
+          method: 'PATCH',
+          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+      const result = await response.json();
+      if (!response.ok || result.status !== 'success') {
+        throw new Error(result.message || 'Network response was not ok');
+      }
+      // Update local state with new image_url
       setOrders(orders.map(order => 
         order.id === selectedOrder.id 
-          ? { ...order, receipt_url: publicUrl }
+          ? { ...order, receipt_url: result.data.image_url }
           : order
       ));
-
       Alert.alert(
         'تم التحديث',
         'تم رفع صورة الإيصال بنجاح',
