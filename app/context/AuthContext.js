@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { supabase } from '../../lib/supabase';
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
   const [refreshTokenInterval, setRefreshTokenInterval] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
 
   // Function to refresh the token
   const refreshToken = useCallback(async () => {
@@ -54,6 +56,8 @@ export const AuthProvider = ({ children }) => {
           if (data.session) {
             setUser(data.session.user);
             setIsAuthenticated(true);
+            setAccessToken(data.session.access_token);
+            AsyncStorage.setItem('access_token', data.session.access_token);
             await fetchUserRole(data.session.user.id);
           }
         }
@@ -62,6 +66,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
         setUserRole(null);
+        setAccessToken(null);
+        AsyncStorage.removeItem('access_token');
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
@@ -69,6 +75,8 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
+      setAccessToken(null);
+      AsyncStorage.removeItem('access_token');
     }
   }, []);
 
@@ -105,6 +113,15 @@ export const AuthProvider = ({ children }) => {
     };
   }, [refreshToken]);
 
+  // On app start, load token from AsyncStorage
+  useEffect(() => {
+    const loadToken = async () => {
+      const token = await AsyncStorage.getItem('access_token');
+      if (token) setAccessToken(token);
+    };
+    loadToken();
+  }, []);
+
   // Check active sessions and listen for auth changes
   useEffect(() => {
     let mounted = true;
@@ -116,12 +133,16 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
+        setAccessToken(session.access_token);
+        AsyncStorage.setItem('access_token', session.access_token);
         // Fetch user role from profiles table
         fetchUserRole(session.user.id);
       } else {
         setUser(null);
         setIsAuthenticated(false);
         setUserRole(null);
+        setAccessToken(null);
+        AsyncStorage.removeItem('access_token');
       }
       setLoading(false);
     });
@@ -133,6 +154,8 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         setUser(session.user);
         setIsAuthenticated(true);
+        setAccessToken(session.access_token);
+        AsyncStorage.setItem('access_token', session.access_token);
         // Fetch user role from profiles table
         await fetchUserRole(session.user.id);
       } else {
@@ -140,6 +163,8 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAuthenticated(false);
         setUserRole(null);
+        setAccessToken(null);
+        AsyncStorage.removeItem('access_token');
       }
       setLoading(false);
     });
@@ -254,6 +279,8 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
+      setAccessToken(null);
+      AsyncStorage.removeItem('access_token');
       
       // Then sign out from Supabase
       await supabase.auth.signOut();
@@ -309,6 +336,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated,
     userRole,
+    accessToken,
     login,
     signup,
     logout,
