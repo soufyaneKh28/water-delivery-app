@@ -4,9 +4,9 @@ import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -26,6 +26,7 @@ export default function AddProduct({ navigation }) {
   const [productSize, setProductSize] = useState('');
   const [productDescription, setProductDescription] = useState('');
   const [productPrice, setProductPrice] = useState('');
+  const [productOldPrice, setProductOldPrice] = useState('');
   const [productType, setProductType] = useState('money');
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,6 +42,7 @@ export default function AddProduct({ navigation }) {
       setProductSize(editingProduct.size || '');
       setProductDescription(editingProduct.description || '');
       setProductPrice(editingProduct.price ? String(editingProduct.price) : '');
+      setProductOldPrice(editingProduct.old_price ? String(editingProduct.old_price) : '');
       setProductType(editingProduct.price_type || 'money');
     }
   }, [editingProduct]);
@@ -121,13 +123,15 @@ export default function AddProduct({ navigation }) {
       formData.append('price', productPrice);
       formData.append('price_type', productType);
       formData.append('category', productCategory);
-      formData.append('old_price', '12'); // Or your logic
+      if (productOldPrice) {
+        formData.append('old_price', productOldPrice);
+      }
 
       let response;
       if (editingProduct) {
         response = await axios.patch(
           `https://water-supplier-2.onrender.com/api/k1/products/updateProduct/${editingProduct._id || editingProduct.id}`,
-          formData,
+          formData,   
           {
             headers: {
               'Content-Type': 'multipart/form-data',
@@ -190,13 +194,25 @@ export default function AddProduct({ navigation }) {
     }
   };
 
+  const handleOldPriceChange = (text) => {
+    // Allow numbers and one decimal point
+    const numericValue = text.replace(/[^0-9.]/g, '');
+    // Ensure only one decimal point
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      setProductOldPrice(parts[0] + '.' + parts.slice(1).join(''));
+    } else {
+      setProductOldPrice(numericValue);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
         {/* <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={28} color="#222" />
         </TouchableOpacity> */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <View style={{ flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between' }}>
           <BackBtn/>
           <CustomText type="bold" style={styles.title}>
             {editingProduct ? 'تعديل منتج' : 'إضافة منتج'}
@@ -245,10 +261,10 @@ export default function AddProduct({ navigation }) {
               onValueChange={(value) => setProductCategory(value)}
               value={productCategory}
               items={[
-                { label: 'اختر فئة المنتج', value: '' },
+               
                 ...categories.map((category) => ({
                   label: category.title,
-                  value: category.id,
+                  value: category.id || category._id,
                 }))
               ]}
               style={{
@@ -377,6 +393,17 @@ export default function AddProduct({ navigation }) {
             onChangeText={handlePriceChange}
           />
         </View>
+        <View style={globalStyles.inputContainer}>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>السعر القديم (اختياري)</CustomText>
+          <TextInput 
+            style={globalStyles.input} 
+            placeholder="أدخل السعر القديم للأرصاد" 
+            placeholderTextColor={colors.textDisabled}
+            keyboardType="decimal-pad"
+            value={productOldPrice}
+            onChangeText={handleOldPriceChange}
+          />
+        </View>
         <View style={styles.buttonRow}>
           <TouchableOpacity 
             style={[styles.saveButton, isLoading && styles.disabledButton]} 
@@ -502,7 +529,7 @@ const styles = StyleSheet.create({
   inputLabel: {
     // marginBottom: 4,
     // marginTop: 8,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   dropdownContainer: {
     borderWidth: 1,

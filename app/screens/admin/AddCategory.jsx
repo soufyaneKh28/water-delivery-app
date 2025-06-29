@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../../../lib/supabase';
 import BackButton from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -15,6 +17,7 @@ export default function AddCategory({ navigation }) {
   const [newImage, setNewImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [fetchingCategories, setFetchingCategories] = useState(false);
+  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
 
   // Fetch categories from API on mount
   useEffect(() => {
@@ -59,14 +62,50 @@ export default function AddCategory({ navigation }) {
   };
 
   const handleDeleteCategory = async (id) => {
+    setDeletingCategoryId(id);
     try {
-      await api.deleteCategory(id);
+      console.log('Attempting to delete category with ID:', id);
+      
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setDeletingCategoryId(null);
+        return;
+      }
+      
+      // Use direct axios call like in Products screen
+      await axios.delete(
+        `https://water-supplier-2.onrender.com/api/k1/product_categories/deleteProductCategory/${id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
       
       // Update local state after successful deletion
-      setCategories(prev => prev.filter(cat => cat.id !== id));
+      setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== id));
       Alert.alert('نجح', 'تم حذف القسم بنجاح');
     } catch (err) {
-      Alert.alert('خطأ', 'حدث خطأ أثناء حذف القسم: ' + (err.message || 'حدث خطأ غير متوقع'));
+      console.error('Delete category error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      
+      // Check if it's a 404 error (category not found)
+      if (err.response?.status === 404) {
+        // Category might already be deleted, remove from local state anyway
+        setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== id));
+        Alert.alert('تم الحذف', 'تم حذف القسم بنجاح (كان محذوفاً مسبقاً)');
+      } else {
+        Alert.alert('خطأ', 'حدث خطأ أثناء حذف القسم: ' + (err.response?.data?.message || err.message || 'حدث خطأ غير متوقع'));
+      }
+    } finally {
+      setDeletingCategoryId(null);
     }
   };
 
@@ -84,7 +123,7 @@ export default function AddCategory({ navigation }) {
 
   return (
     <ScrollView style={{ flex: 1 , backgroundColor: 'white' }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 }}>
+      <View style={{ flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 }}>
         <BackButton/>
         <CustomText type="bold" style={styles.title}>إضافة قسم</CustomText>
         <View style={{ width: 30 }} />
@@ -106,8 +145,13 @@ export default function AddCategory({ navigation }) {
               <TouchableOpacity 
                 onPress={() => handleDeleteCategory(item.id || item._id)}
                 style={styles.deleteButton}
+                disabled={deletingCategoryId === (item.id || item._id)}
               >
-                <Ionicons name="trash-outline" size={24} color={colors.error} />
+                {deletingCategoryId === (item.id || item._id) ? (
+                  <ActivityIndicator size="small" color={colors.error} />
+                ) : (
+                  <Ionicons name="trash-outline" size={24} color={colors.error} />
+                )}
               </TouchableOpacity>
               <View style={styles.categoryInfo}>
                 <CustomText style={styles.categoryName}>{item.title || item.name}</CustomText>
@@ -154,16 +198,17 @@ const styles = StyleSheet.create({
     // flex: 1,
     // backgroundColor: colors.white,
     paddingHorizontal: 20,
-    direction: 'rtl',
+    direction: Platform.OS === 'ios' ? 'rtl' : 'ltr',
   },
   backButton: {
-    alignSelf: 'flex-end',
+    alignSelf: Platform.OS === 'ios' ? 'flex-end' : 'flex-start',
     marginTop: 12,
-    marginBottom: 8,
+    // marginBottom: 8,
   },
   title: {
     fontSize: 22,
     textAlign: 'center',
+    marginTop: 12,
     marginBottom: 12,
     color: '#222',
   },
@@ -172,13 +217,13 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     marginBottom: 8,
     marginTop: 16,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   list: {
     marginBottom: 12,
   },
   categoryRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row',
     alignItems: 'center',
     backgroundColor: colors.backgroundLight,
     borderRadius: 10,
@@ -187,7 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   categoryInfo: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row',
     alignItems: 'center',
     gap: 10,
   },
@@ -211,7 +256,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 4,
     marginTop: 8,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   input: {
     backgroundColor: colors.backgroundLight,

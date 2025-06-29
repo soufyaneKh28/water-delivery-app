@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -165,7 +165,7 @@ export default function Offers() {
         ) : (
           <>
             <Ionicons name="add" size={24} color="#fff" />
-            <CustomText style={styles.addButtonText}>إضافة عرض جديد</CustomText>
+            <CustomText type="bold" style={styles.addButtonText}>إضافة عرض جديد</CustomText>
           </>
         )}
       </TouchableOpacity>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   headerRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 24,
@@ -236,11 +236,11 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
     marginLeft: 8,
   },
   offerRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     backgroundColor: colors.backgroundLight,
     borderRadius: 10,

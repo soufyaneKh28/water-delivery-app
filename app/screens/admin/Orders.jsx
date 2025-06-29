@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -798,8 +798,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   filtersRow: {
-    // flexDirection: 'row-reverse',
-    direction: 'rtl',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    direction: Platform.OS === 'ios' ? 'rtl' : 'ltr',
     paddingHorizontal: 8,
   },
   filterChip: {

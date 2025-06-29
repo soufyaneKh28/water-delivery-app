@@ -1,8 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CustomText from '../common/CustomText';
-const ProductCard = ({ image, title, size, price, onMenuPress }) => {
+const ProductCard = ({ image, title, size, price, price_type, onMenuPress }) => {
+  const getPriceDisplay = () => {
+    if (price_type === 'coupon') {
+      return `${price} كوبون`;
+    }
+    return `${price} دينار`;
+  };
+
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
@@ -14,7 +21,7 @@ const ProductCard = ({ image, title, size, price, onMenuPress }) => {
       <Text style={styles.title}>{title}</Text>
       <View style={styles.row}>
         <View >
-          <CustomText style={styles.price}>{price} دينار</CustomText>
+          <CustomText style={styles.price}>{getPriceDisplay()}</CustomText>
         </View>
         <View >
           <CustomText style={styles.size}>{size} لتر</CustomText>
@@ -32,7 +39,7 @@ const styles = StyleSheet.create({
     // marginBottom: 16,
     // height: 225,
     // marginHorizontal: 4,
-    alignItems: 'flex-start',
+    alignItems: Platform.OS === 'ios' ? 'flex-start' : 'flex-end',
     borderWidth: 1,
     borderColor: '#EEEEEE',
     width: '100%',
@@ -41,7 +48,8 @@ const styles = StyleSheet.create({
   menuButton: {
     position: 'absolute',
     top: 8,
-    left: 8,
+    right: Platform.OS === 'ios' ? 8 : 'auto',
+    left: Platform.OS === 'ios' ? 'auto' : 8,
     zIndex: 2,
   },
   menuButtonBg: {
@@ -60,10 +68,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#222',
     marginBottom: 2,
-    textAlign: 'right',
+        // textAlign: Platform.OS === 'ios' ? 'right' : 'right',
   },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     width: '100%',
     alignItems: 'center',

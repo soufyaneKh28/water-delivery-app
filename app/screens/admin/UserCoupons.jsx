@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -251,6 +251,7 @@ export default function UserCoupons() {
         keyExtractor={item => item.id}
         refreshing={loading}
         onRefresh={fetchUsers}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         renderItem={renderUserRow}
         ListEmptyComponent={
@@ -312,7 +313,7 @@ export default function UserCoupons() {
                 {isUpdating ? (
                   <ActivityIndicator color={colors.white} />
                 ) : (
-                  <CustomText style={[styles.modalButtonText, { color: colors.white }]}>
+                  <CustomText type="bold" style={[styles.modalButtonText, { color: colors.white }]}>
                     {isAdding ? 'إضافة الكوبونات' : 'خصم الكوبونات'}
                   </CustomText>
                 )}
@@ -335,7 +336,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   headerRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 24,
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   tableHeader: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   userRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -373,14 +374,15 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   userNameContainer: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
+    // justifyContent: 'flex-start',
   },
   userNumber: {
     fontSize: 16,
@@ -391,7 +393,9 @@ const styles = StyleSheet.create({
   username: {
     fontSize: 16,
     color: colors.textPrimary,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
+    marginLeft: Platform.OS === 'ios' ? 16 : 'auto',
+    marginRight: Platform.OS === 'ios' ? 'auto' : 16,
     flex: 1,
   },
   couponBalance: {
@@ -400,7 +404,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
   },
   actionButton: {
@@ -434,7 +438,8 @@ const styles = StyleSheet.create({
   closeIconButton: {
     position: 'absolute',
     top: 16,
-    right: 16,
+    right: Platform.OS === 'ios' ? 16 : 'auto',
+    left: Platform.OS === 'ios' ? 'auto' : 16,
     padding: 4,
     zIndex: 1,
   },
@@ -456,7 +461,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     marginBottom: 8,
-    textAlign: 'right',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   input: {
     borderWidth: 1,
@@ -469,7 +474,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   modalButtonsRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 16,
@@ -478,12 +483,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 16,
-    marginHorizontal: 8,
+    marginHorizontal: 8, 
     borderRadius: 12,
   },
   modalButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    // fontWeight: 'bold',
   },
   closeBar: {
     width: 40,
@@ -494,7 +499,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   searchContainer: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     backgroundColor: colors.backgroundLight,
     borderRadius: 8,

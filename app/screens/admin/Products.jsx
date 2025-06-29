@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
 import CustomText from '../../components/common/CustomText';
@@ -249,7 +249,7 @@ export default function Products() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={{ flexDirection: 'row', marginBottom: 10 }}
+            style={{ flexDirection: 'row', marginBottom: 10  , width: '100%'}}
             
             contentContainerStyle={styles.filtersRow}
           >
@@ -291,6 +291,7 @@ export default function Products() {
                   title={item.title}
                   size={item.size}
                   price={item.price}
+                  price_type={item.price_type}
                   onMenuPress={() => handleMenuPress(item)}
                 />
               </View>
@@ -403,13 +404,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    direction: 'rtl',
+    direction: Platform.OS === 'ios' ? 'rtl' : 'ltr',
   },
   scrollView: {
     flex: 1,
   },
   headerRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
@@ -428,12 +429,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  typeFilterContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 12, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  typeFilterChip: { paddingHorizontal: 20, paddingVertical: 10, marginHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  typeFilterContainer: {
+     flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+     justifyContent: 'center', 
+     marginBottom: 12,
+      paddingHorizontal: 16,
+       borderBottomWidth: 1,
+        borderBottomColor: '#eee' },
+
+  typeFilterChip: { 
+    paddingHorizontal: 20,
+     paddingVertical: 10,
+      marginHorizontal: 8,
+       alignItems: 'center',
+        justifyContent: 'center',
+         borderBottomWidth: 2, 
+         borderBottomColor: 'transparent' },
+
   typeFilterChipActive: { borderBottomColor: '#2196F3' },
   typeFilterText: { color: '#888', fontSize: 14 },
-  typeFilterTextActive: { color: '#2196F3' },
+  typeFilterTextActive: {
+    color: '#2196F3' 
+  },
   filterTitle: {
+
     color: '#121212',
     fontSize: 20,
     textAlign: "left",
@@ -442,7 +461,10 @@ const styles = StyleSheet.create({
   filtersRow: {
     paddingLeft: 16,
     paddingRight: 8,
+    direction: Platform.OS === 'ios' ? 'rtl' : 'ltr',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
+    // justifyContent: Platform.OS === 'ios' ? 'flex-end' : 'flex-end',   
     marginTop: 12,
   },
   filterChip: {
@@ -470,7 +492,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   productsRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     gap: 15,
     width: '100%',
@@ -495,7 +517,8 @@ const styles = StyleSheet.create({
   closeIconButton: {
     position: 'absolute',
     top: 16,
-    right: 16,
+    right: Platform.OS === 'ios' ? 16 : 'auto',
+    left: Platform.OS === 'ios' ? 'auto' : 16,
     padding: 4,
     zIndex: 1,
   },
@@ -508,7 +531,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   modalButtonsRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     width: '100%',
     marginBottom: 16,
