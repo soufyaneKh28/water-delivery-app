@@ -1,6 +1,6 @@
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Image, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 // import Svg, { Path } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../../lib/supabase';
@@ -118,7 +118,7 @@ export default function AdminDashboard() {
             end={{ x: 1, y: 0.1 }}
             style={[ styles.profitCard]}
           >
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
                 <CustomText type="regular" style={styles.profitLabel}>مبلغ الربح</CustomText>
                 <CustomText type="bold" style={styles.profitAmount}>{totalProfit} دينار</CustomText>
@@ -176,13 +176,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     direction: 'rtl',
+    // flexDirection: 'row-revers',
   },
   scrollView: {
     flex: 1,
     backgroundColor: '#fff',
   },
   welcomeRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     justifyContent: "flex-end",
@@ -192,12 +193,12 @@ const styles = StyleSheet.create({
   welcomeTitle: {
     fontSize: 18,
     color: colors.primary,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'right' : 'left',
   },
   welcomeSubtitle: {
     fontSize: 14,
     color: '#666',
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   avatarCircle: {
     width: 40,
@@ -220,12 +221,12 @@ const styles = StyleSheet.create({
   profitAmount: {
     fontSize: 28,
     color: '#fff',
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'right' : 'left',
   },
   profitLabel: {
     fontSize: 16,
     color: '#fff',
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
     // marginBottom: 8,
   },
   profitChangeRow: {
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
     right: 0,
   },
   statsGrid: {
-    flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginHorizontal: 20,
@@ -274,8 +275,8 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 10,
     // marginBottom: 10,
-    alignItems: "flex-start",
-    justifyContent: "flex-end",
+    alignItems: Platform.OS === 'ios' ? 'flex-start' : 'flex-end',
+    justifyContent: Platform.OS === 'ios' ? 'flex-end' : 'flex-start',
     // shadowColor: '#000',
     // shadowOffset: { width: 0, height: 2 },
     // shadowOpacity: 0.06,

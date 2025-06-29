@@ -12,7 +12,7 @@
         "buildConfiguration": "Debug"
       },
       "android": {
-        "buildType": "apk"  // <-- Add this if you want direct install on device
+        "buildType": "apk"  
       }
     },
     "preview": {

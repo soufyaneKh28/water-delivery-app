@@ -3,6 +3,12 @@ import React, { createContext, useCallback, useContext, useEffect, useState } fr
 import { AppState } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
+// Storage keys
+const STORAGE_KEYS = {
+  SESSION: 'auth_session',
+  USER_ROLE: 'user_role',
+};
+
 // Create the context
 const AuthContext = createContext();
 
@@ -21,89 +27,192 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const [refreshTokenInterval, setRefreshTokenInterval] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
+
+  // Function to store session data
+  const storeSession = useCallback(async (session) => {
+    try {
+      if (session) {
+        await AsyncStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+      } else {
+        await AsyncStorage.removeItem(STORAGE_KEYS.SESSION);
+        await AsyncStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+      }
+    } catch (error) {
+      console.error('Error storing session:', error);
+    }
+  }, []);
+
+  // Function to load session from storage
+  const loadSessionFromStorage = useCallback(async () => {
+    try {
+      const sessionData = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
+      const storedUserRole = await AsyncStorage.getItem(STORAGE_KEYS.USER_ROLE);
+      
+      if (sessionData) {
+        const session = JSON.parse(sessionData);
+        return { session, userRole: storedUserRole };
+      }
+      return { session: null, userRole: null };
+    } catch (error) {
+      console.error('Error loading session from storage:', error);
+      return { session: null, userRole: null };
+    }
+  }, []);
+
+  // Function to fetch user role from profiles table
+  const fetchUserRole = useCallback(async (userId) => {
+    if (!userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role_name')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+
+      const role = data?.role_name;
+      setUserRole(role);
+      
+      // Store user role
+      if (role) {
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
+      }
+      
+      return role;
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      setUserRole(null);
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+      return null;
+    }
+  }, []);
 
   // Function to refresh the token
   const refreshToken = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) {
-        // If there's an error getting the session, just clear the auth state
+      
+      if (error || !session) {
+        // Clear auth state if no valid session
         setUser(null);
         setIsAuthenticated(false);
         setUserRole(null);
+        await storeSession(null);
         return;
       }
 
-      if (session) {
-        // Check if token is about to expire (within 5 minutes)
-        const expiresAt = session.expires_at * 1000; // Convert to milliseconds
-        const now = Date.now();
-        const timeUntilExpiry = expiresAt - now;
+      // Check if token is about to expire (within 5 minutes)
+      const expiresAt = session.expires_at * 1000;
+      const now = Date.now();
+      const timeUntilExpiry = expiresAt - now;
 
-        if (timeUntilExpiry < 5 * 60 * 1000) { // 5 minutes in milliseconds
-          console.log('Refreshing token...');
-          const { data, error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-            // If refresh fails, just clear the auth state without showing an alert
-            setUser(null);
-            setIsAuthenticated(false);
-            setUserRole(null);
-            return;
-          }
-          
-          if (data.session) {
-            setUser(data.session.user);
-            setIsAuthenticated(true);
-            setAccessToken(data.session.access_token);
-            AsyncStorage.setItem('access_token', data.session.access_token);
-            await fetchUserRole(data.session.user.id);
-          }
+      if (timeUntilExpiry < 5 * 60 * 1000) {
+        console.log('Refreshing token...');
+        const { data, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !data.session) {
+          // Clear auth state if refresh fails
+          setUser(null);
+          setIsAuthenticated(false);
+          setUserRole(null);
+          await storeSession(null);
+          return;
         }
-      } else {
-        // No session, clear auth state
-        setUser(null);
-        setIsAuthenticated(false);
-        setUserRole(null);
-        setAccessToken(null);
-        AsyncStorage.removeItem('access_token');
+        
+        // Update with new session
+        setUser(data.session.user);
+        setIsAuthenticated(true);
+        await storeSession(data.session);
+        await fetchUserRole(data.session.user.id);
       }
     } catch (error) {
       console.error('Error refreshing token:', error);
-      // Clear auth state without showing an alert
+      // Clear auth state on error
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
-      setAccessToken(null);
-      AsyncStorage.removeItem('access_token');
+      await storeSession(null);
     }
-  }, []);
+  }, [storeSession, fetchUserRole]);
 
-  // Set up token refresh interval
+  // Initialize auth state on app start
   useEffect(() => {
-    // Clear any existing interval
-    if (refreshTokenInterval) {
-      clearInterval(refreshTokenInterval);
-    }
+    const initializeAuth = async () => {
+      try {
+        // First, try to get session from Supabase
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setLoading(false);
+          return;
+        }
 
-    // Set up new interval to check token every minute
-    const interval = setInterval(refreshToken, 60 * 1000); // Check every minute
-    setRefreshTokenInterval(interval);
-
-    // Clean up interval on unmount
-    return () => {
-      if (interval) {
-        clearInterval(interval);
+        if (session?.user) {
+          // Valid session exists
+          setUser(session.user);
+          setIsAuthenticated(true);
+          await storeSession(session);
+          
+          // Load user role from storage first, then fetch if needed
+          const storedUserRole = await AsyncStorage.getItem(STORAGE_KEYS.USER_ROLE);
+          if (storedUserRole) {
+            setUserRole(storedUserRole);
+          }
+          
+          // Fetch fresh user role
+          await fetchUserRole(session.user.id);
+        } else {
+          // No valid session, clear state
+          setUser(null);
+          setIsAuthenticated(false);
+          setUserRole(null);
+          await storeSession(null);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
+        await storeSession(null);
+      } finally {
+        setLoading(false);
       }
     };
-  }, [refreshToken]);
 
-  // Handle app state changes
+    initializeAuth();
+  }, [storeSession, fetchUserRole]);
+
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
+      if (session?.user) {
+        setUser(session.user);
+        setIsAuthenticated(true);
+        await storeSession(session);
+        await fetchUserRole(session.user.id);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setUserRole(null);
+        await storeSession(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [storeSession, fetchUserRole]);
+
+  // Handle app state changes for token refresh
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active') {
-        // App came to foreground, refresh token
+      if (nextAppState === 'active' && isAuthenticated) {
+        // App came to foreground, refresh token if authenticated
         refreshToken();
       }
     });
@@ -111,92 +220,8 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription.remove();
     };
-  }, [refreshToken]);
+  }, [refreshToken, isAuthenticated]);
 
-  // On app start, load token from AsyncStorage
-  useEffect(() => {
-    const loadToken = async () => {
-      const token = await AsyncStorage.getItem('access_token');
-      if (token) setAccessToken(token);
-    };
-    loadToken();
-  }, []);
-
-  // Check active sessions and listen for auth changes
-  useEffect(() => {
-    let mounted = true;
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setUser(session.user);
-        setIsAuthenticated(true);
-        setAccessToken(session.access_token);
-        AsyncStorage.setItem('access_token', session.access_token);
-        // Fetch user role from profiles table
-        fetchUserRole(session.user.id);
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        setUserRole(null);
-        setAccessToken(null);
-        AsyncStorage.removeItem('access_token');
-      }
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
-
-      if (session?.user) {
-        setUser(session.user);
-        setIsAuthenticated(true);
-        setAccessToken(session.access_token);
-        AsyncStorage.setItem('access_token', session.access_token);
-        // Fetch user role from profiles table
-        await fetchUserRole(session.user.id);
-      } else {
-        // Clear auth state without showing alerts
-        setUser(null);
-        setIsAuthenticated(false);
-        setUserRole(null);
-        setAccessToken(null);
-        AsyncStorage.removeItem('access_token');
-      }
-      setLoading(false);
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Function to fetch user role from profiles table
-  const fetchUserRole = async (userId) => {
-    console.log("userId", userId);
-    
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role_name')
-        .eq('id', userId)
-        .single()
-      if (error) throw error;
-
-      console.log("data after fetchUserRole", data);
-      setUserRole(data.role_name);
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-      setUserRole(null);
-    }
-  };
-
-  console.log("user",user);
-  
   // Login function
   const login = async (email, password) => {
     try {
@@ -208,10 +233,12 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       if (data.user) {
-        // Fetch user role from profiles table
+        setUser(data.user);
+        setIsAuthenticated(true);
+        await storeSession(data.session);
         await fetchUserRole(data.user.id);
       }
-
+      
       return data;
     } catch (error) {
       throw error;
@@ -224,13 +251,12 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-      options:{
-        data: {
-          username: "soufyane",
-          phone: '01234567890',
-      }
-
-      }
+        options: {
+          data: {
+            username: userData.username || "user",
+            phone: userData.phone || null,
+          }
+        }
       });
 
       if (error) {
@@ -240,32 +266,7 @@ export const AuthProvider = ({ children }) => {
         throw error;
       }
 
-      console.log(data);
-      
-      // If user is created, insert profile
-      const userId = data?.user?.id;
-
-      // if (userId && isAuthenticated) {
-      //   const { data, error: profileError } = await supabase
-      //     .from('profiles')
-      //     .upsert({
-      //       id: userId,
-      //       username: userData.username || email,
-      //       phone: userData.phone || null,
-      //       full_name: userData.full_name || null,
-      //       updated_at: new Date(),
-      //       role: userData.role || 'client',
-      //     });
-
-      //   if (profileError) {
-      //     if (profileError.code === '23505') {
-      //       throw new Error('هذا البريد الإلكتروني مسجل بالفعل');
-      //     }
-      //     throw profileError;
-      //   }
-      // }
-
-      // return data;
+      return data;
     } catch (error) {
       console.error('Error during signup:', error);
       throw error;
@@ -275,18 +276,16 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Clear auth state first to prevent any token-related alerts
+      // Clear auth state first
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
-      setAccessToken(null);
-      AsyncStorage.removeItem('access_token');
+      await storeSession(null);
       
       // Then sign out from Supabase
       await supabase.auth.signOut();
     } catch (error) {
       console.error('Error during logout:', error);
-      // Don't throw error to prevent alerts
     }
   };
 
@@ -298,7 +297,18 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (error) throw error;
-      setUser(data.user);
+      
+      if (data.user) {
+        setUser(data.user);
+        // Update stored session with new user data
+        const currentSession = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
+        if (currentSession) {
+          const session = JSON.parse(currentSession);
+          session.user = data.user;
+          await storeSession(session);
+        }
+      }
+      
       return data;
     } catch (error) {
       console.error('Error updating user data:', error);
@@ -306,11 +316,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Request password reset (send email)
+  // Request password reset
   const requestPasswordReset = async (email) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://v0-expo-supabase-password-reset.vercel.app/reset-password', // Updated to external web page
+        redirectTo: 'https://v0-expo-supabase-password-reset.vercel.app/reset-password',
       });
       if (error) throw error; 
       return true;
@@ -319,37 +329,59 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Reset password (after user clicks email link)
+  // Reset password
   const resetPassword = async (newPassword) => {
     try {
       const { data, error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      setUser(data.user);
+      
+      if (data.user) {
+        setUser(data.user);
+        // Update stored session
+        const currentSession = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
+        if (currentSession) {
+          const session = JSON.parse(currentSession);
+          session.user = data.user;
+          await storeSession(session);
+        }
+      }
+      
       return data;
     } catch (error) {
       throw error;
     }
   };
 
+  // Function to get current access token
+  const getAccessToken = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      return session?.access_token || null;
+    } catch (error) {
+      console.error('Error getting access token:', error);
+      return null;
+    }
+  }, []);
+
   const value = {
     user,
     loading,
     isAuthenticated,
     userRole,
-    accessToken,
     login,
     signup,
     logout,
     updateUser,
     refreshToken,
-    setIsAuthenticated,
     requestPasswordReset,
     resetPassword,
+    fetchUserRole,
+    getAccessToken,
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }; 

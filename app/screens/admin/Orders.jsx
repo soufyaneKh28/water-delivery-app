@@ -7,9 +7,9 @@ import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
-import { patchOrderStatus } from '../../api/orders';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
+import { api } from '../../utils/api';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // const FILTER_WIDTH = SCREEN_WIDTH * 0.33;
@@ -93,7 +93,7 @@ function generateOrderNumber(uuid) {
 
 const Orders = () => {
   const navigation = useNavigation();
-  const [selectedStatus, setSelectedStatus] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDateFilter, setSelectedDateFilter] = useState('all');
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
@@ -235,20 +235,8 @@ const Orders = () => {
   const handleDeleteOrder = async () => {
     try {
       setIsUpdating(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      // Use your API endpoint for deleting the order
       console.log("selectedOrder.id", selectedOrder.id);
-      const response = await fetch(`https://water-supplier-2.onrender.com/api/k1/orders/deleteOrder/${selectedOrder.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
+      await api.deleteOrder(selectedOrder.id);
       // Update local state
       setOrders(orders.filter(order => order.id !== selectedOrder.id));
       setTotalOrders(prev => prev - 1);
@@ -287,26 +275,12 @@ const Orders = () => {
         type: 'image/jpeg',
       });
 
-      // Get access token from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      // PATCH request to upload receipt
-      const response = await fetch(
-        `https://water-supplier-2.onrender.com/api/k1/orders/uploadReceipt/${selectedOrder.id}`,
-        {
-          method: 'PATCH',
-          body: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-      const result = await response.json();
-      if (!response.ok || result.status !== 'success') {
+      const result = await api.uploadReceipt(selectedOrder.id, formData);
+      
+      if (result.status !== 'success') {
         throw new Error(result.message || 'Network response was not ok');
       }
+      
       // Update local state with new image_url
       setOrders(orders.map(order => 
         order.id === selectedOrder.id 
@@ -358,7 +332,7 @@ const Orders = () => {
     }
     try {
       setIsUpdating(true);
-      await patchOrderStatus(selectedOrder.id, selectedStatus);
+      await api.updateOrderStatus(selectedOrder.id, selectedStatus);
       setOrders(orders.map(order =>
         order.id === selectedOrder.id ? { ...order, status: selectedStatus } : order
       ));

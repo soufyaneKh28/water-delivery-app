@@ -15,13 +15,14 @@ import CustomText from '../../components/common/CustomText';
 import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
+import { api } from '../../utils/api';
 // import { useFocusEffect } from '@react-navigation/native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 
 // import * as React from "react";
 
 export default function HomeScreen() {
-  const { user, logout , isAuthenticated ,setIsAuthenticated ,accessToken} = useAuth();
+  const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const { selectedAddress, setSelectedAddress } = useAddress();
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -160,29 +161,13 @@ const images = [
   const getLocations = async () => {
     setIsLoadingLocations(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        return;
-      }
-
-      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/locations/getAllLocations', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      console.log('API Response Data:', data);
+      const data = await api.getLocations();
       const addresses = data.data || [];
       setSavedAddresses(addresses);
       if (addresses.length > 0 && !selectedAddress) {
         setSelectedAddress(addresses[0]);
       }
     } catch (error) {
-      console.log("error", error);
       console.error('Error fetching locations:', error);
       setSavedAddresses([]);
     } finally {
@@ -193,22 +178,7 @@ const images = [
   const getOffers = async () => {
     setIsLoadingOffers(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        return;
-      }
-
-      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/offers/getAllOffers', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      const data = await response.json();
-      // console.log('data-offers', data);
+      const data = await api.getOffers();
       setOffers(data.data || []);
     } catch (error) {
       console.error('Error fetching offers:', error);
@@ -221,21 +191,7 @@ const images = [
   const getAll= async () => {
     setIsLoadingOffers(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        return;
-      }
-
-      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/users/getAllData', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
+      const data = await api.getAllData();
       console.log('data-alllllllllll', data.data);
       setOffers(data.data.offers || []);
       setSavedAddresses(data.data.locations);
@@ -246,7 +202,7 @@ const images = [
       setProducts(data.data.products)
       
     } catch (error) {
-      console.error('Error fetching offers:', error);
+      console.error('Error fetching data:', error);
       setOffers([]);
     } finally {
       setIsLoadingOffers(false);

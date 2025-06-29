@@ -1,7 +1,6 @@
 import 'react-native-reanimated';
 import '../gesture-handler';
 
-import { NavigationIndependentTree } from '@react-navigation/native';
 import * as Font from 'expo-font';
 import * as Linking from 'expo-linking';
 import React, { useEffect, useState } from 'react';
@@ -13,7 +12,6 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
 // Include the OneSignal package
-import { LogLevel, OneSignal } from 'react-native-onesignal';
 // Custom toast config with marginTop for top toasts
 const toastConfig = {
   success: (props) => (
@@ -88,12 +86,12 @@ export default function App() {
   // Initialize OneSignal in useEffect to ensure it runs only once
   useEffect(() => {
     // Enable verbose logging for debugging (remove in production)
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
+    // OneSignal.Debug.setLogLevel(LogLevel.Verbose);
     // Initialize with your OneSignal App ID
-    OneSignal.initialize('385eb07-724a-4a80-a88f-3b426b6a1210');
+    // OneSignal.initialize('385eb07-724a-4a80-a88f-3b426b6a1210');
     // Use this method to prompt for push notifications.
     // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-    OneSignal.Notifications.requestPermission(false);
+    // OneSignal.Notifications.requestPermission(false);
     }, []); // Ensure this only runs once on app mount
   
   if (!fontsLoaded) {
@@ -126,15 +124,17 @@ export default function App() {
   };
 
   return (
-      <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
+      // <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
     <AuthProvider>
       <CartProvider>
       <AddressProvider>
-        <AppNavigator />
+        {/* <NavigationContainer linking={linking}> */}
+          <AppNavigator />
+        {/* </NavigationContainer> */}
       <Toast config={toastConfig} />
       </AddressProvider>
       </CartProvider>
     </AuthProvider>
-      </NavigationIndependentTree>
+      // </NavigationIndependentTree>
   );
 }

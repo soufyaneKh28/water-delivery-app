@@ -1,13 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { supabase } from '../../../lib/supabase';
-import BackBtn from '../../components/common/BackButton';
+import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import BackButton from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
+import { api } from '../../utils/api';
 const placeholderImg = require('../../../assets/images/category-1.png'); // Use your placeholder image path
 
 export default function AddCategory({ navigation }) {
@@ -15,7 +14,7 @@ export default function AddCategory({ navigation }) {
   const [newCategory, setNewCategory] = useState('');
   const [newImage, setNewImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [fetchingCategories, setFetchingCategories] = useState(true);
+  const [fetchingCategories, setFetchingCategories] = useState(false);
 
   // Fetch categories from API on mount
   useEffect(() => {
@@ -25,24 +24,10 @@ export default function AddCategory({ navigation }) {
   const fetchCategories = async () => {
     setFetchingCategories(true);
     try {
-      // Get Bearer token from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        return;
-      }
-      const response = await axios.get(
-        'https://water-supplier-2.onrender.com/api/k1/product_categories/getAllCategory',
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
-      setCategories(response.data.data || []);
+      const response = await api.getCategories();
+      setCategories(response.data || []);
     } catch (err) {
-      alert('فشل تحميل الأقسام: ' + (err.response?.data?.message || err.message));
+      Alert.alert('خطأ', 'فشل تحميل الأقسام: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
       setFetchingCategories(false);
     }
@@ -52,14 +37,6 @@ export default function AddCategory({ navigation }) {
     if (!newCategory.trim() || !newImage) return;
     setLoading(true);
     try {
-      // Get Bearer token from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        setLoading(false);
-        return;
-      }
       // Prepare FormData
       const formData = new FormData();
       formData.append('title', newCategory.trim());
@@ -68,22 +45,14 @@ export default function AddCategory({ navigation }) {
         name: newImage.split('/').pop() || 'category.jpg',
         type: 'image/jpeg',
       });
-      await axios.post(
-        'https://water-supplier-2.onrender.com/api/k1/product_categories/createProductCategory',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      
+      await api.addCategory(formData);
       setNewCategory('');
       setNewImage(null);
       fetchCategories();
-      alert('تمت إضافة القسم بنجاح');
+      Alert.alert('نجح', 'تمت إضافة القسم بنجاح');
     } catch (err) {
-      alert('حدث خطأ أثناء إضافة القسم: ' + (err.response?.data?.message || err.message));
+      Alert.alert('خطأ', 'حدث خطأ أثناء إضافة القسم: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
       setLoading(false);
     }
@@ -91,28 +60,13 @@ export default function AddCategory({ navigation }) {
 
   const handleDeleteCategory = async (id) => {
     try {
-      // Get Bearer token from Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-        return;
-      }
-
-      await axios.delete(
-        `https://water-supplier-2.onrender.com/api/k1/product_categories/deleteProductCategory/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      await api.deleteCategory(id);
       
       // Update local state after successful deletion
       setCategories(prev => prev.filter(cat => cat.id !== id));
-      alert('تم حذف القسم بنجاح');
+      Alert.alert('نجح', 'تم حذف القسم بنجاح');
     } catch (err) {
-      alert('حدث خطأ أثناء حذف القسم: ' + (err.response?.data?.message || err.message));
+      Alert.alert('خطأ', 'حدث خطأ أثناء حذف القسم: ' + (err.message || 'حدث خطأ غير متوقع'));
     }
   };
 
@@ -131,7 +85,7 @@ export default function AddCategory({ navigation }) {
   return (
     <ScrollView style={{ flex: 1 , backgroundColor: 'white' }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 }}>
-        <BackBtn/>
+        <BackButton/>
         <CustomText type="bold" style={styles.title}>إضافة قسم</CustomText>
         <View style={{ width: 30 }} />
       </View>

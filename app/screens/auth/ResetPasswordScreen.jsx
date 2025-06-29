@@ -12,7 +12,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { supabase } = useAuth();
+  const { resetPassword } = useAuth();
   const token = route?.params?.access_token || route?.params?.token;
 
   const handleUpdatePassword = async () => {
@@ -30,12 +30,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
     }
     setLoading(true);
     try {
-      // Set the access token for the session (required by Supabase)
-      if (token) {
-        await supabase.auth.setSession({ access_token: token, refresh_token: token });
-      }
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
+      await resetPassword(newPassword);
       Alert.alert(
         'تم التحديث',
         'تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.',
