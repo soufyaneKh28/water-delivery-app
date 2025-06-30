@@ -15,6 +15,7 @@ import Orders from '../screens/admin/Orders';
 import Products from '../screens/admin/Products';
 import Profile from '../screens/admin/Profile';
 import Security from '../screens/admin/Security';
+import UploadReceiptScreen from '../screens/admin/UploadReceiptScreen';
 import UserCoupons from '../screens/admin/UserCoupons';
 
 const Stack = createNativeStackNavigator();
@@ -167,6 +168,11 @@ export default function AdminNavigator() {
       <Stack.Screen 
         name="UserCoupons" 
         component={UserCoupons} 
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen 
+        name="UploadReceiptScreen" 
+        component={UploadReceiptScreen} 
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

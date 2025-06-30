@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import * as Clipboard from 'expo-clipboard';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
@@ -9,6 +10,7 @@ import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
 export default function CouponsScreen({navigation}) {
@@ -24,6 +26,7 @@ export default function CouponsScreen({navigation}) {
   const [refreshing, setRefreshing] = useState(false);
   const { selectedAddress } = useAddress();
   const { user } = useAuth();
+  const { clearCart } = useCart();
   const [couponProducts, setCouponProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -32,6 +35,9 @@ export default function CouponsScreen({navigation}) {
   const [isOrderingProduct, setIsOrderingProduct] = useState(false);
   const [selectedBottleCount, setSelectedBottleCount] = useState();
   const [noteError, setNoteError] = useState('');
+  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('@water_supplier_jordan');
+  const [copyFeedback, setCopyFeedback] = useState('');
+  const [addressError, setAddressError] = useState('');
   const pickerRef = useRef(null);
 
   const fetchCouponBalance = async () => {
@@ -116,19 +122,18 @@ export default function CouponsScreen({navigation}) {
     setCardExpiry('');
     setCardCVV('');
     setCardErrors({});
+    setAddressError('');
+    setNoteError('');
   };
 
   const handleConfirm = async () => {
     if (!selectedAddress) {
-      Toast.show({
-        type: 'error',
-        text1: 'خطأ',
-        text2: 'يرجى اختيار عنوان التوصيل',
-        position: 'top',
-        visibilityTime: 3000,
-      });
+      setAddressError('يرجى اختيار عنوان التوصيل');
       return;
     }
+    // Clear any previous address error
+    setAddressError('');
+    
     // Validate bottle count if needed
     if (selectedBottleCount === undefined) {
       setNoteError('يرجى اختيار عدد القارورات أو اختيار لا تريد طلب قارورات');
@@ -230,6 +235,9 @@ export default function CouponsScreen({navigation}) {
         }
       );
 
+      // Clear the cart after successful order
+      clearCart();
+
       // Reset UI state
       setProductModalVisible(false);
       setProductCount(1);
@@ -269,6 +277,23 @@ export default function CouponsScreen({navigation}) {
       address.description
     ].filter(Boolean);
     return parts.join('، ');
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await Clipboard.setStringAsync(businessOwnerNickname);
+      setCopyFeedback('تم نسخ اسم المستخدم إلى الحافظة');
+      // Clear the feedback after 2 seconds
+      setTimeout(() => {
+        setCopyFeedback('');
+      }, 2000);
+    } catch (error) {
+      setCopyFeedback('حدث خطأ أثناء النسخ');
+      // Clear the feedback after 3 seconds
+      setTimeout(() => {
+        setCopyFeedback('');
+      }, 3000);
+    }
   };
 
   return (
@@ -431,7 +456,7 @@ export default function CouponsScreen({navigation}) {
         animationType="slide"
         onRequestClose={closeModal}
       >
-        <SafeAreaView >
+        <SafeAreaView style={{flex: 1}} >
           <ScrollView style={modalStyles.modalContainer} contentContainerStyle={{ paddingBottom: 70 ,  }}>
           <TouchableOpacity  style={{position: 'absolute', top: 10, left: 10 , width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={closeModal}>
             <Ionicons name="close" size={22} color={colors.black} />
@@ -451,15 +476,47 @@ export default function CouponsScreen({navigation}) {
                 <CustomText style={{textAlign:'right', color:'#888'}}>يرجى اختيار عنوان التوصيل</CustomText>
               )}
             </View>
+            {addressError ? (
+              <CustomText style={modalStyles.errorText}>{addressError}</CustomText>
+            ) : null}
             {/* Payment Method */}
             <CustomText type="bold" style={modalStyles.label}>طريقة الدفع</CustomText>
             <View style={modalStyles.paymentBox}>
               <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('delivery')}>
                 <CustomText>الدفع عند التسليم</CustomText>
-                <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
+                <Image source={require('../../../assets/icons/cash.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
                 <View style={[modalStyles.radioCircle, paymentMethod === 'delivery' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
               </TouchableOpacity>
+              
+              <TouchableOpacity style={modalStyles.radioRow} onPress={() => setPaymentMethod('click')}>
+                <CustomText>الدفع عبر Click</CustomText>
+                <Image source={require('../../../assets/images/click.png')} style={{ width: 35, height: 35, marginHorizontal: 8  , resizeMode: 'contain' }} />
+                <View style={[modalStyles.radioCircle, paymentMethod === 'click' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
+              </TouchableOpacity>
             </View>
+            
+            {/* Click Payment Details */}
+            {paymentMethod === 'click' && (
+              <View style={modalStyles.clickPaymentBox}>
+                <CustomText type="bold" style={modalStyles.label}>اسم المستخدم للدفع</CustomText>
+                <View style={modalStyles.nicknameContainer}>
+                  <CustomText type="medium" style={modalStyles.nicknameText}>{businessOwnerNickname}</CustomText>
+                  <TouchableOpacity style={modalStyles.copyButton} onPress={copyToClipboard}>
+                    <Ionicons name="copy-outline" size={20} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+                {copyFeedback ? (
+                  <CustomText type="regular" style={[modalStyles.feedbackText, { color: copyFeedback.includes('خطأ') ? '#FF3B30' : colors.primary }]}>
+                    {copyFeedback}
+                  </CustomText>
+                ) : (
+                  <CustomText type="regular" style={modalStyles.instructionText}>
+                    انسخ اسم المستخدم وادفع عبر تطبيق Click
+                  </CustomText>
+                )}
+              </View>
+            )}
+            
             {/* Card Details or Note */}
             {paymentMethod === 'card' ? null : (
               <View style={{flex: 1, alignItems: 'flex-end'}}>
@@ -554,7 +611,8 @@ export default function CouponsScreen({navigation}) {
                   !cardExpiry.trim() ||
                   !cardCVV.trim()
                 )) ||
-                (paymentMethod === 'delivery' && selectedBottleCount === undefined)
+                (paymentMethod === 'delivery' && selectedBottleCount === undefined) ||
+                (paymentMethod === 'click' && selectedBottleCount === undefined)
               }
             />
           </ScrollView>
@@ -840,5 +898,54 @@ const modalStyles = StyleSheet.create({
   },
   dropdownIcon: {
     marginLeft: 10,
+  },
+  clickPaymentBox: {
+    backgroundColor: colors.primaryLight,
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  nicknameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    backgroundColor: colors.white,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  nicknameText: {
+    fontSize: 16,
+    color: colors.textPrimary,
+    flex: 1,
+    textAlign: 'left',
+  },
+  copyButton: {
+    padding: 8,
+    backgroundColor: colors.white,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  instructionText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'right',
+    fontStyle: 'italic',
+  },
+  feedbackText: {
+    fontSize: 14,
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  errorText: {
+    color: '#FF3B30',
+    textAlign: 'center',
+    fontSize: 14,
+    marginBottom: 8,
   },
 }); 

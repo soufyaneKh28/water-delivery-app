@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 // import BackButton from '../../components/common/BackButton';
 // import BackButton from '../../components/common/BackButton';
 import BackBtn from '../../components/common/BackButton';
@@ -43,6 +43,7 @@ export default function OrderDetails({ route, navigation }) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(order.status);
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
 console.log("order",order);
   const handleStatusChange = async (newStatus) => {
     try {
@@ -181,7 +182,57 @@ console.log("order",order);
             </CustomText>
           </TouchableOpacity>
         </View>
+
+        {/* Receipt Image Section */}
+        {order.image_url && (
+          <>
+            <View style={styles.divider} />
+            <View style={styles.receiptSection}>
+              <CustomText style={styles.detailLabel}>إيصال الدفع</CustomText>
+              <TouchableOpacity 
+                style={styles.receiptContainer}
+                onPress={() => setReceiptModalVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Image 
+                  source={{ uri: order.image_url }} 
+                  style={styles.receiptImage}
+                  resizeMode="contain"
+                />
+                <Ionicons name="expand-outline" size={20} color="#2196F3" style={styles.expandIcon} />
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </ScrollView>
+
+      {/* Receipt Full Screen Modal */}
+      <Modal
+        visible={receiptModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setReceiptModalVisible(false)}
+      >
+        <View style={styles.receiptModalOverlay}>
+          <View style={styles.receiptModalContent}>
+            <View style={styles.receiptModalHeader}>
+              <CustomText type="bold" style={styles.receiptModalTitle}>إيصال الدفع</CustomText>
+              <TouchableOpacity 
+                onPress={() => setReceiptModalVisible(false)} 
+                style={styles.receiptCloseButton}
+              >
+                <Ionicons name="close" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <Image 
+              source={{ uri: order.image_url }} 
+              style={styles.receiptFullImage}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal for changing order status */}
       <Modal
         visible={modalVisible}
@@ -400,5 +451,69 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 4,
     marginLeft: 8,
+  },
+  receiptSection: {
+    flexDirection: 'column',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#fff',
+  },
+  receiptContainer: {
+    marginTop: 8,
+    position: 'relative',
+    width: '100%',
+  },
+  receiptImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  receiptModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  receiptModalContent: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  receiptModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    zIndex: 1,
+  },
+  receiptModalTitle: {
+    fontSize: 18,
+    color: '#fff',
+  },
+  receiptCloseButton: {
+    padding: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+  },
+  receiptFullImage: {
+    width: '100%',
+    height: '80%',
+    borderRadius: 8,
+  },
+  expandIcon: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    borderRadius: 12,
+    padding: 4,
   },
 }); 

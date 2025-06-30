@@ -1,4 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -7,6 +9,7 @@ import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { useAddress } from '../../context/AddressContext';
+import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
@@ -14,15 +17,13 @@ export default function CheckoutScreen({ route, navigation }) {
   // You can pass cart, subtotal, shipping, total via route.params
   const { cart = [], subtotal = 0, shipping = 0, total = 0 } = route?.params || {};
   const { selectedAddress } = useAddress();
-  const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
-  const [cardName, setCardName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCVV, setCardCVV] = useState('');
-  const [cardErrors, setCardErrors] = useState({});
+  const { clearCart } = useCart();
+  const [paymentMethod, setPaymentMethod] = useState('delivery'); // 'delivery' or 'click'
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('@water_supplier_jordan');
+  const [copyFeedback, setCopyFeedback] = useState('');
 
   const formatAddressString = (address) => {
     if (!address) return '';
@@ -42,7 +43,7 @@ export default function CheckoutScreen({ route, navigation }) {
   const createOrder = async () => {
     try {
       setIsLoading(true);
-      const order_type = paymentMethod === 'card' ? 'online-payment' : 'on-delivery';
+      const order_type = 'on-delivery'; // Both payment methods use the same order type
       const location_id = selectedAddress?.id;
       const cartPayload = cart.map(item => ({
         product_id: item.id,
@@ -68,6 +69,9 @@ export default function CheckoutScreen({ route, navigation }) {
           },
         }
       );
+
+      // Clear the cart after successful order
+      clearCart();
 
       navigation.replace('OrderSuccessScreen', {
         order: payload,
@@ -104,17 +108,26 @@ export default function CheckoutScreen({ route, navigation }) {
       setNoteError('يرجى إدخال ملاحظة');
       return;
     }
-    if (paymentMethod === 'card') {
-      let errors = {};
-      if (!cardName.trim()) errors.cardName = 'مطلوب';
-      if (!cardNumber.trim()) errors.cardNumber = 'مطلوب';
-      if (!cardExpiry.trim()) errors.cardExpiry = 'مطلوب';
-      if (!cardCVV.trim()) errors.cardCVV = 'مطلوب';
-      setCardErrors(errors);
-      if (Object.keys(errors).length > 0) return;
-    }
+    
     // Call createOrder for both payment methods
     createOrder();
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await Clipboard.setStringAsync(businessOwnerNickname);
+      setCopyFeedback('تم نسخ اسم المستخدم إلى الحافظة');
+      // Clear the feedback after 2 seconds
+      setTimeout(() => {
+        setCopyFeedback('');
+      }, 2000);
+    } catch (error) {
+      setCopyFeedback('حدث خطأ أثناء النسخ');
+      // Clear the feedback after 3 seconds
+      setTimeout(() => {
+        setCopyFeedback('');
+      }, 3000);
+    }
   };
 
   return (
@@ -155,62 +168,43 @@ export default function CheckoutScreen({ route, navigation }) {
         {/* Payment Method */}
         <CustomText type="bold" style={styles.label}>طريقة الدفع</CustomText>
         <View style={styles.paymentBox}>
-          <TouchableOpacity style={styles.radioRow} onPress={() => setPaymentMethod('card')}>
-            <CustomText>بطاقة ائتمان</CustomText>
-            <Image source={require('../../../assets/icons/mastercard.png')} style={{ width: 35, height: 35, marginHorizontal: 8, resizeMode: 'contain' }} />
-            <View style={[styles.radioCircle, paymentMethod === 'card' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.radioRow} onPress={() => setPaymentMethod('delivery')}>
             <CustomText>الدفع عند التسليم</CustomText>
             <Image source={require('../../../assets/icons/cash.png')} style={{ width: 35, height: 35, marginHorizontal: 8, resizeMode: 'contain' }} />
             <View style={[styles.radioCircle, paymentMethod === 'delivery' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
           </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.radioRow} onPress={() => setPaymentMethod('click')}>
+            <CustomText>الدفع عبر Click</CustomText>
+            <Image source={require('../../../assets/images/click.png')} style={{ width: 35, height: 35, marginHorizontal: 8, resizeMode: 'contain' }} />
+            <View style={[styles.radioCircle, paymentMethod === 'click' && { borderColor: colors.primary, backgroundColor: colors.primary }]} />
+          </TouchableOpacity>
         </View>
-        {/* Card Details or Note */}
-        {paymentMethod === 'card' ? (
-          <>
-            <CustomText type="bold" style={styles.label}>اسم حامل البطاقة</CustomText>
-            <TextInput
-              style={[styles.input, globalStyles.input, cardErrors.cardName ? { borderColor: 'red', borderWidth: 1 } : {}]}
-              placeholder="ادخل اسم حامل البطاقة"
-              value={cardName}
-              onChangeText={text => { setCardName(text); setCardErrors(e => ({ ...e, cardName: undefined })); }}
-            />
-            {cardErrors.cardName ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardName}</CustomText> : null}
-            <CustomText type="bold" style={styles.label}>رقم البطاقة</CustomText>
-            <TextInput
-              style={[styles.input, globalStyles.input, cardErrors.cardNumber ? { borderColor: 'red', borderWidth: 1 } : {}]}
-              placeholder="1111 1111 1111 1111"
-              keyboardType="numeric"
-              value={cardNumber}
-              onChangeText={text => { setCardNumber(text); setCardErrors(e => ({ ...e, cardNumber: undefined })); }}
-            />
-            {cardErrors.cardNumber ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardNumber}</CustomText> : null}
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <View style={{ flex: 1 }}>
-                <CustomText type="bold" style={styles.label}>تاريخ انتهاء الصلاحية</CustomText>
-                <TextInput
-                  style={[styles.input, globalStyles.input, cardErrors.cardExpiry ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                  placeholder="MM/YY"
-                  value={cardExpiry}
-                  onChangeText={text => { setCardExpiry(text); setCardErrors(e => ({ ...e, cardExpiry: undefined })); }}
-                />
-                {cardErrors.cardExpiry ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardExpiry}</CustomText> : null}
-              </View>
-              <View style={{ flex: 1 }}>
-                <CustomText type="bold" style={styles.label}>رمز CVV</CustomText>
-                <TextInput
-                  style={[globalStyles.input, cardErrors.cardCVV ? { borderColor: 'red', borderWidth: 1 } : {}]}
-                  placeholder="123"
-                  keyboardType="numeric"
-                  value={cardCVV}
-                  onChangeText={text => { setCardCVV(text); setCardErrors(e => ({ ...e, cardCVV: undefined })); }}
-                />
-                {cardErrors.cardCVV ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{cardErrors.cardCVV}</CustomText> : null}
-              </View>
+        
+        {/* Click Payment Details */}
+        {paymentMethod === 'click' && (
+          <View style={styles.clickPaymentBox}>
+            <CustomText type="bold" style={styles.label}>اسم المستخدم للدفع</CustomText>
+            <View style={styles.nicknameContainer}>
+              <CustomText type="medium" style={styles.nicknameText}>{businessOwnerNickname}</CustomText>
+              <TouchableOpacity style={styles.copyButton} onPress={copyToClipboard}>
+                <Ionicons name="copy-outline" size={20} color={colors.primary} />
+              </TouchableOpacity>
             </View>
-          </>
-        ) : (
+            {copyFeedback ? (
+              <CustomText type="regular" style={[styles.feedbackText, { color: copyFeedback.includes('خطأ') ? '#FF3B30' : colors.primary }]}>
+                {copyFeedback}
+              </CustomText>
+            ) : (
+              <CustomText type="regular" style={styles.instructionText}>
+                انسخ اسم المستخدم وادفع عبر تطبيق Click
+              </CustomText>
+            )}
+          </View>
+        )}
+        
+        {/* Note for delivery payment */}
+        {paymentMethod === 'delivery' && (
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
             <CustomText type="bold" style={[styles.label, { maxWidth: '70%' }]}>أدخل ملاحظة للتوصيل <CustomText style={{ color: 'red' }}>*</CustomText></CustomText>
             <TextInput
@@ -243,12 +237,6 @@ export default function CheckoutScreen({ route, navigation }) {
           onPress={handleConfirm}
           disabled={
             isLoading ||
-            (paymentMethod === 'card' && (
-              !cardName.trim() ||
-              !cardNumber.trim() ||
-              !cardExpiry.trim() ||
-              !cardCVV.trim()
-            )) ||
             (paymentMethod === 'delivery' && !note.trim())
           }
         >
@@ -363,5 +351,48 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 45,
     borderRadius: 8,
+  },
+  clickPaymentBox: {
+    backgroundColor: colors.primaryLight,
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  nicknameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  nicknameText: {
+    fontSize: 16,
+    color: colors.textPrimary,
+    flex: 1,
+    textAlign: 'right',
+  },
+  copyButton: {
+    padding: 8,
+    backgroundColor: colors.white,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  instructionText: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'right',
+    fontStyle: 'italic',
+  },
+  feedbackText: {
+    fontSize: 14,
+    textAlign: 'right',
+    marginTop: 4,
   },
 }); 

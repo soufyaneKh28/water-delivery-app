@@ -2,6 +2,7 @@ import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 // import Svg, { Path } from 'react-native-svg';
+import dayjs from 'dayjs';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -18,9 +19,12 @@ export default function AdminDashboard() {
   const [totalProfit, setTotalProfit] = useState('0');
 
   const fetchOrdersCount = async () => {
+    const today = dayjs().startOf('day');
     const { count, error } = await supabase
       .from('orders')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', today.toISOString())
+      .lte('created_at', today.endOf('day').toISOString());
     if (!error) setOrdersCount(count || 0);
   };
 
@@ -39,9 +43,12 @@ export default function AdminDashboard() {
   };
 
   const fetchSuccessRate = async () => {
+    const today = dayjs().startOf('day');
     const { data: orders, error } = await supabase
       .from('orders')
-      .select('status');
+      .select('status')
+      .gte('created_at', today.toISOString())
+      .lte('created_at', today.endOf('day').toISOString());
     
     if (!error && orders) {
       const totalOrders = orders.length;
@@ -52,10 +59,13 @@ export default function AdminDashboard() {
   };
 
   const fetchTotalProfit = async () => {
+    const today = dayjs().startOf('day');
     const { data, error } = await supabase
       .from('orders')
       .select('total, status')
-      .eq('status', 'delivered');
+      .eq('status', 'delivered')
+      .gte('created_at', today.toISOString())
+      .lte('created_at', today.endOf('day').toISOString());
     
     if (!error && data) {
       const sum = data.reduce((acc, order) => acc + (order.total || 0), 0);
@@ -120,7 +130,7 @@ export default function AdminDashboard() {
           >
             <View style={{ flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <CustomText type="regular" style={styles.profitLabel}>مبلغ الربح</CustomText>
+                <CustomText type="regular" style={styles.profitLabel}>ربح اليوم</CustomText>
                 <CustomText type="bold" style={styles.profitAmount}>{totalProfit} دينار</CustomText>
                 {/* <View style={styles.profitChangeRow}>
                   <CustomText type="regular" style={styles.profitChangeText}>من الشهر الماضي</CustomText>
@@ -149,14 +159,14 @@ export default function AdminDashboard() {
               <Ionicons name="cart" size={28} color="#42A5F5" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{ordersCount}</CustomText>
-            <CustomText type="medium" style={styles.statLabel}>إجمالي الطلبات</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>طلبات اليوم</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#E6F7EC' }]}> 
               <Ionicons name="checkmark-circle" size={28} color="#4CAF50" />
             </View>
             <CustomText type="bold" style={styles.statNumber}>{successRate}</CustomText>
-            <CustomText type="medium" style={styles.statLabel}>نسبة النجاح</CustomText>
+            <CustomText type="medium" style={styles.statLabel}>نسبة النجاح اليوم</CustomText>
           </View>
           <View style={styles.statCard}>
             <View style={[styles.iconCircle, { backgroundColor: '#F3E6FF' }]}> 

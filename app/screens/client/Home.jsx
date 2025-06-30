@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, Platform, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import Toast from 'react-native-toast-message';
@@ -158,35 +158,35 @@ const images = [
     }
   };
 
-  const getLocations = async () => {
-    setIsLoadingLocations(true);
-    try {
-      const data = await api.getLocations();
-      const addresses = data.data || [];
-      setSavedAddresses(addresses);
-      if (addresses.length > 0 && !selectedAddress) {
-        setSelectedAddress(addresses[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-      setSavedAddresses([]);
-    } finally {
-      setIsLoadingLocations(false);
-    }
-  };
+  // const getLocations = async () => {
+  //   setIsLoadingLocations(true);
+  //   try {
+  //     const data = await api.getLocations();
+  //     const addresses = data.data || [];
+  //     setSavedAddresses(addresses);
+  //     if (addresses.length > 0 && !selectedAddress) {
+  //       setSelectedAddress(addresses[0]);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching locations:', error);
+  //     setSavedAddresses([]);
+  //   } finally {
+  //     setIsLoadingLocations(false);
+  //   }
+  // };
 
-  const getOffers = async () => {
-    setIsLoadingOffers(true);
-    try {
-      const data = await api.getOffers();
-      setOffers(data.data || []);
-    } catch (error) {
-      console.error('Error fetching offers:', error);
-      setOffers([]);
-    } finally {
-      setIsLoadingOffers(false);
-    }
-  };
+  // const getOffers = async () => {
+  //   setIsLoadingOffers(true);
+  //   try {
+  //     const data = await api.getOffers();
+  //     setOffers(data.data || []);
+  //   } catch (error) {
+  //     console.error('Error fetching offers:', error);
+  //     setOffers([]);
+  //   } finally {
+  //     setIsLoadingOffers(false);
+  //   }
+  // };
 
   const getAll= async () => {
     setIsLoadingOffers(true);
@@ -698,6 +698,7 @@ const styles = StyleSheet.create({
 
   categoriesContainer: {
     // marginTop: 10,
+
     paddingHorizontal: 20,
   },
   categoriesTitle: {
@@ -709,16 +710,22 @@ const styles = StyleSheet.create({
   },
   categoriesScroll: {
     // marginHorizontal: -20, 
-    // flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row-reverse',
 
-    direction: 'rtl',
-    // width: '100%',
+    // direction: 'rtl',
+// paddingHorizontal: 20,
+    width: '100%',
   },
   categoriesScrollContent: {
     // paddingHorizontal: 20,
-    // flexDirection: 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    // justifyContent: 'flex-start',
+    // alignItems: 'flex-end',
+    // direction: 'rtl',
     // marginEnd: -150,
-    gap: 25,
+    gap: 20,
+    // width: '100%',
+    // paddingHorizontal: 20,
   },
   categoryCard: {
     // width: 120,

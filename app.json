@@ -27,6 +27,9 @@
         "com.apple.security.application-groups": [
           "group.${ios.bundleIdentifier}.onesignal" 
         ]
+      },
+      "config": {
+        "googleMapsApiKey": "REMOVED"
       }
     },
     "android": {
@@ -34,7 +37,12 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.waterdelivery.app"
+      "package": "com.waterdelivery.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "REMOVED"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/icon.png"

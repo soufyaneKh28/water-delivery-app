@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -94,7 +93,7 @@ function generateOrderNumber(uuid) {
 const Orders = () => {
   const navigation = useNavigation();
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedDateFilter, setSelectedDateFilter] = useState('all');
+  const [selectedDateFilter, setSelectedDateFilter] = useState('today');
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -104,8 +103,6 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
-  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
 
   const fetchOrders = async () => {
     const { data, error, count } = await supabase
@@ -258,67 +255,6 @@ const Orders = () => {
     }
   };
 
-  const handleUploadReceipt = async () => {
-    try {
-      if (!selectedImage) {
-        Alert.alert('خطأ', 'الرجاء اختيار صورة الإيصال');
-        return;
-      }
-
-      setIsUpdating(true);
-
-      // Prepare form data
-      const formData = new FormData();
-      formData.append('image', {
-        uri: selectedImage.uri,
-        name: selectedImage.fileName || 'receipt.jpg',
-        type: 'image/jpeg',
-      });
-
-      const result = await api.uploadReceipt(selectedOrder.id, formData);
-      
-      if (result.status !== 'success') {
-        throw new Error(result.message || 'Network response was not ok');
-      }
-      
-      // Update local state with new image_url
-      setOrders(orders.map(order => 
-        order.id === selectedOrder.id 
-          ? { ...order, receipt_url: result.data.image_url }
-          : order
-      ));
-      Alert.alert(
-        'تم التحديث',
-        'تم رفع صورة الإيصال بنجاح',
-        [{ text: 'حسناً' }]
-      );
-    } catch (error) {
-      console.error('Error uploading receipt:', error);
-      Alert.alert(
-        'خطأ',
-        'حدث خطأ أثناء رفع صورة الإيصال. يرجى المحاولة مرة أخرى.',
-        [{ text: 'حسناً' }]
-      );
-    } finally {
-      setIsUpdating(false);
-      setReceiptModalVisible(false);
-      setSelectedImage(null);
-    }
-  };
-
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0]);
-    }
-  };
-
   const openStatusModal = (order) => {
     setSelectedOrder(order);
     setSelectedStatus(order.status);
@@ -384,7 +320,7 @@ const Orders = () => {
           >
             <View style={{ flexDirection: 'row-reverse', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <CustomText type='bold' style={styles.topCardTitle}>إجمالي الطلبات اليوم</CustomText>
+                <CustomText type='bold' style={styles.topCardTitle}>إجمالي الطلبات</CustomText>
                 <View style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 4 }}>
                   <CustomText type='bold' style={styles.topCardNumber}>{totalOrders}</CustomText>
                 </View>
@@ -552,12 +488,24 @@ const Orders = () => {
                     </CustomText>
                   </View>
                   <View style={styles.orderFooter}>
-                    <TouchableOpacity 
-                      style={styles.menuButton}
-                      onPress={(e) => handleMenuPress(item, e)}
-                    >
-                      <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
-                    </TouchableOpacity>
+                    {item.order_type !== 'coupon' ? (
+                      <TouchableOpacity 
+                        style={styles.menuButton}
+                        onPress={(e) => handleMenuPress(item, e)}
+                      >
+                        <Ionicons name="ellipsis-horizontal" size={20} color="#2196F3" />
+                      </TouchableOpacity>
+                    ) : (
+                      // <TouchableOpacity 
+                      //   style={styles.viewButton}
+                      //   onPress={() => handleOrderPress(item)}
+                      // >
+                      //   <CustomText style={styles.viewButtonText}>عرض</CustomText>
+                      // </TouchableOpacity>
+                      <View style={{ width: 28, height: 28, alignItems: 'center', justifyContent: 'center' }}>
+                        {/* <Ionicons name="eye-outline" size={20} color="#2196F3" /> */}
+                      </View>
+                    )}
                     <CustomText type='bold' style={styles.orderPrice}>
                       {item.total} {item.order_type === 'coupon' ? 'كوبون' : 'دينار'}
                     </CustomText>
@@ -590,83 +538,14 @@ const Orders = () => {
               <TouchableOpacity 
                 style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
                 onPress={() => {
+                  console.log('Action button pressed - navigating to upload receipt');
                   setActionModalVisible(false);
-                  setReceiptModalVisible(true);
+                  navigation.navigate('UploadReceiptScreen', { order: selectedOrder });
                 }}
               >
                 <Ionicons name="receipt-outline" size={24} color="#fff" />
                 <CustomText style={styles.actionButtonText}>إضافة إيصال الدفع</CustomText>
               </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: '#F44336' }]}
-                onPress={() => {
-                  Alert.alert(
-                    'تأكيد الحذف',
-                    'هل أنت متأكد أنك تريد حذف هذا الطلب؟',
-                    [
-                      { text: 'إلغاء', style: 'cancel' },
-                      { text: 'حذف', onPress: handleDeleteOrder, style: 'destructive' }
-                    ]
-                  );
-                }}
-              >
-                <Ionicons name="trash-outline" size={24} color="#fff" />
-                <CustomText style={styles.actionButtonText}>حذف الطلب</CustomText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Receipt Upload Modal */}
-      <Modal
-        visible={receiptModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setReceiptModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHandle} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <CustomText type="bold" style={styles.modalTitle}>إضافة إيصال الدفع</CustomText>
-              <TouchableOpacity onPress={() => setReceiptModalVisible(false)} style={styles.closeIconButton}>
-                <Ionicons name="close" size={24} color="#222" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.receiptUploadContainer}>
-              {selectedImage ? (
-                <Image source={{ uri: selectedImage.uri }} style={styles.receiptPreview} />
-              ) : (
-                <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                  <Ionicons name="cloud-upload-outline" size={40} color="#2196F3" />
-                  <CustomText style={styles.uploadButtonText}>اختر صورة الإيصال</CustomText>
-                </TouchableOpacity>
-              )}
-
-              <View style={styles.receiptActions}>
-                {selectedImage && (
-                  <>
-                    <TouchableOpacity 
-                      style={[styles.receiptActionButton, { backgroundColor: '#2196F3' }]}
-                      onPress={handleUploadReceipt}
-                      disabled={isUpdating}
-                    >
-                      <CustomText style={styles.receiptActionButtonText}>
-                        {isUpdating ? 'جاري الرفع...' : 'رفع الإيصال'}
-                      </CustomText>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                      style={[styles.receiptActionButton, { backgroundColor: '#F44336' }]}
-                      onPress={() => setSelectedImage(null)}
-                    >
-                      <CustomText style={styles.receiptActionButtonText}>إلغاء</CustomText>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
             </View>
           </View>
         </View>
@@ -881,6 +760,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  viewButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#2196F3',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
   orderPrice: {
     color: '#2196F3',
     fontSize: 20,
@@ -893,8 +785,9 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
+    zIndex: 1000,
   },
   modalContent: {
     backgroundColor: '#fff',
@@ -903,6 +796,8 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 102,
     alignItems: 'center',
+    zIndex: 1001,
+    minHeight: 300,
   },
   modalHandle: {
     width: 40,
