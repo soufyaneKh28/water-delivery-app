@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
@@ -21,6 +21,7 @@ export default function AddLocationScreen({ route, navigation }) {
   const [floor, setFloor] = useState('');
   const [additionalDirections, setAdditionalDirections] = useState('');
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (editAddress) {
@@ -69,6 +70,8 @@ export default function AddLocationScreen({ route, navigation }) {
       return;
     }
 
+    setIsLoading(true);
+
     // Create the location object with all the data
     const locationDetails = {
       label,
@@ -88,6 +91,7 @@ export default function AddLocationScreen({ route, navigation }) {
       const token = session?.access_token;
       if (!token) {
         alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setIsLoading(false);
         return;
       }
 
@@ -117,6 +121,8 @@ export default function AddLocationScreen({ route, navigation }) {
       navigation.navigate('ClientTabs');
     } catch (error) {
       alert('حدث خطأ: ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -233,10 +239,19 @@ export default function AddLocationScreen({ route, navigation }) {
           </View>
 
           <PrimaryButton 
-            title="حفظ العنوان" 
+            title={isLoading ? "جاري الحفظ..." : "حفظ العنوان"}
             style={styles.saveButton} 
             onPress={handleSave}
+            disabled={isLoading}
           />
+          {isLoading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <CustomText style={styles.loadingText}>
+                {editAddress ? 'جاري تحديث العنوان...' : 'جاري إضافة العنوان...'}
+              </CustomText>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -303,5 +318,16 @@ const styles = StyleSheet.create({
   saveButton: {
     marginTop: 20,
     marginBottom: 30,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: colors.textSecondary,
+    textAlign: 'center',
   },
 }); 

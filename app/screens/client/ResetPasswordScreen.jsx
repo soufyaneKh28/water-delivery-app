@@ -9,15 +9,17 @@ import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
 export default function ResetPasswordScreen({ navigation }) {
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showOld, setShowOld] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const { resetPassword } = useAuth();
 
   const handleUpdatePassword = async () => {
-    if (!newPassword || !confirmPassword) {
+    if (!oldPassword || !newPassword || !confirmPassword) {
       Alert.alert('خطأ', 'جميع الحقول مطلوبة');
       return;
     }
@@ -31,14 +33,17 @@ export default function ResetPasswordScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      await resetPassword(newPassword);
+      await resetPassword(newPassword, oldPassword);
       Alert.alert(
         'تم التحديث',
         'تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.',
         [
           {
             text: 'حسناً',
-            onPress: () => navigation.navigate('Login'),
+            onPress: () => navigation.reset({
+              index: 0,
+              routes: [{ name: 'Login' }],
+            }),
           },
         ]
       );
@@ -69,6 +74,26 @@ export default function ResetPasswordScreen({ navigation }) {
         </CustomText>
         {/* Form */}
         <View style={styles.form}>
+          {/* Old Password */}
+          <View style={globalStyles.inputContainer}>
+            <CustomText style={globalStyles.inputLabel}>كلمة السر الحالية</CustomText>
+            <View style={globalStyles.passwordContainer}>
+              <TouchableOpacity
+                style={globalStyles.passwordVisibilityButton}
+                onPress={() => setShowOld((v) => !v)}
+              >
+                <Ionicons name={showOld ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
+              </TouchableOpacity>
+              <TextInput
+                style={globalStyles.passwordInput}
+                placeholder="********"
+                value={oldPassword}
+                onChangeText={setOldPassword}
+                secureTextEntry={!showOld}
+                textAlign="right"
+              />
+            </View>
+          </View>
           {/* New Password */}
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>كلمة السر الجديدة</CustomText>

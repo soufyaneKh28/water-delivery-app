@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Linking, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, Platform, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -11,6 +11,7 @@ export default function ContactScreen({ navigation }) {
   const handleMail = () => Linking.openURL('mailto:support@email.com');
   const handleInstagram = () => Linking.openURL('https://www.instagram.com/');
   const handleFacebook = () => Linking.openURL('https://www.facebook.com/');
+  const handleWhatsApp = () => Linking.openURL('https://wa.me/123456789');
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,6 +43,13 @@ export default function ContactScreen({ navigation }) {
         </View>
         <CustomText type="regular" style={styles.socialLabel}>اتصل بنا عبر وسائل التواصل الاجتماعي</CustomText>
         {/* Social Media Buttons */}
+        <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8} onPress={handleWhatsApp}>
+        
+            {/* WhatsApp icon - using phone icon as placeholder */}
+            <Image source={require('../../../assets/icons/whatsapp.png')} style={styles.socialIcon} />
+         
+          <CustomText type='bold' style={styles.socialText}>واتساب</CustomText>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8} onPress={handleInstagram}>
         
             {/* Replace with Instagram icon if available */}
@@ -54,7 +62,7 @@ export default function ContactScreen({ navigation }) {
             {/* Replace with Facebook icon if available */}
             <Image source={require('../../../assets/icons/facebook.png')} style={styles.socialIcon} />
           
-          <CustomText type='bold' style={styles.socialText}>إنستقرام</CustomText>
+          <CustomText type='bold' style={styles.socialText}>فيسبوك</CustomText>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -69,7 +77,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     paddingTop: 20,
     justifyContent: 'space-between',
@@ -92,17 +100,17 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.black,
     marginBottom: 8,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
     marginBottom: 24,
     lineHeight: 22,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     },
   cardsRow: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     justifyContent: 'space-between',
     marginBottom: 24,
     gap: 10,
@@ -152,11 +160,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 12,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     // textAlign: 'center',
   },
   socialBtn: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -174,16 +182,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
+    marginRight: 12,
   },
   socialIcon: {
     width: 50,
     height: 50,
-    marginLeft: 15,
+    marginRight: Platform.OS === 'ios' ? 15 : 0,
+    marginLeft: Platform.OS === 'ios' ? 0 : 15,
     resizeMode: 'contain',
   },
   socialText: {
     fontSize: 15,
     color: colors.textPrimary,
-    textAlign: 'right',
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
 }); 

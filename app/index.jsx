@@ -11,7 +11,8 @@ import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
-// Include the OneSignal package
+import notificationService from './services/NotificationService';
+
 // Custom toast config with marginTop for top toasts
 const toastConfig = {
   success: (props) => (
@@ -83,17 +84,20 @@ export default function App() {
 
     loadFonts();
   }, []);
-  // Initialize OneSignal in useEffect to ensure it runs only once
+
+  // Initialize OneSignal
   useEffect(() => {
-    // Enable verbose logging for debugging (remove in production)
-    // OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    // Initialize with your OneSignal App ID
-    // OneSignal.initialize('385eb07-724a-4a80-a88f-3b426b6a1210');
-    // Use this method to prompt for push notifications.
-    // We recommend removing this method after testing and instead use In-App Messages to prompt for notification permission.
-    // OneSignal.Notifications.requestPermission(false);
-    }, []); // Ensure this only runs once on app mount
-  
+    const initializeNotifications = async () => {
+      try {
+        await notificationService.initialize();
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+  }, []);
+
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     paddingTop: 20,
     justifyContent: 'space-between',
@@ -170,13 +171,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: colors.black,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 24,
     lineHeight: 22,
   },
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     // marginBottom: 8,
     borderWidth: 1,
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.black,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   accordionBody: {
     backgroundColor: '#EAF2FF',
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     lineHeight: 22,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   box: {
     width: 100,

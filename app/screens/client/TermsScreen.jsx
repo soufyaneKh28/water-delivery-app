@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     paddingTop: 24,
     justifyContent: 'space-between',
@@ -62,13 +62,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: colors.black,
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
-    textAlign: "left",
+    textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 24,
     lineHeight: 28,
   },

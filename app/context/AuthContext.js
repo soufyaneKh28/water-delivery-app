@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { supabase } from '../../lib/supabase';
+import notificationService from '../services/NotificationService';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -78,6 +80,8 @@ export const AuthProvider = ({ children }) => {
       // Store user role
       if (role) {
         await AsyncStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
+        // Register user for notifications
+        await notificationService.registerUser(userId, role);
       }
       
       return role;
@@ -276,14 +280,21 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Clear auth state first
+      // Unregister from notifications
+      await notificationService.unregisterUser();
+      
+      // Clear auth state
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
+      
+      // Clear stored session
       await storeSession(null);
       
-      // Then sign out from Supabase
+      // Sign out from Supabase
       await supabase.auth.signOut();
+      
+      console.log('User logged out successfully');
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -330,25 +341,29 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Reset password
-  const resetPassword = async (newPassword) => {
+  const resetPassword = async (newPassword, oldPassword) => {
     try {
-      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      
-      if (data.user) {
-        setUser(data.user);
-        // Update stored session
-        const currentSession = await AsyncStorage.getItem(STORAGE_KEYS.SESSION);
-        if (currentSession) {
-          const session = JSON.parse(currentSession);
-          session.user = data.user;
-          await storeSession(session);
+      const token = await getAccessToken();
+      const response = await axios.patch(
+        'https://water-supplier-2.onrender.com/api/k1/users/updatePassword',
+        {
+          password: oldPassword, // current password
+          newPassword: newPassword,
+          confirmPassword: newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      }
-      
-      return data;
+      );
+      // After successful password change, log the user out
+      setIsAuthenticated(false);
+      setUser(null);
+      await storeSession(null);
+      return response.data;
     } catch (error) {
-      throw error;
+      throw error.response?.data || error;
     }
   };
 
