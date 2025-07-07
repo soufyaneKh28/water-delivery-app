@@ -13,15 +13,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.waterdelivery.app",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options.",
-        "UIBackgroundModes": ["remote-notification"] 
-      },
+              "infoPlist": {
+          "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
+        },
       "entitlements": {
-        "aps-environment": "development", 
-        "com.apple.security.application-groups": [
-          "group.${ios.bundleIdentifier}.onesignal" 
-        ]
+        "aps-environment": "development"
       },
       "config": {
         "googleMapsApiKey": "REMOVED"
@@ -52,13 +48,6 @@
     "updates": {
       "url": "https://u.expo.dev/339e3c5a-4df8-473d-b686-755557cd5877"
     },
-    "plugins": [
-      [
-        "onesignal-expo-plugin",
-        {
-          "mode": "development"
-        }
-      ]
-    ]
+    "plugins": []
   }
 }

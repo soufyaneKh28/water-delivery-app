@@ -9,7 +9,7 @@ import AddCategory from '../screens/admin/AddCategory';
 import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
 import EditProfile from '../screens/admin/EditProfile';
-import NotificationSettingsScreen from '../screens/admin/NotificationSettingsScreen';
+
 import Offers from '../screens/admin/Offers';
 import OrderDetails from '../screens/admin/OrderDetails';
 import Orders from '../screens/admin/Orders';
@@ -176,11 +176,7 @@ export default function AdminNavigator() {
         component={UploadReceiptScreen} 
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="AdminNotificationSettings" 
-        component={NotificationSettingsScreen}
-        options={{ headerShown: false }}
-      />
+
     </Stack.Navigator>
   );
 } 

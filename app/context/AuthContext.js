@@ -3,7 +3,7 @@ import axios from 'axios';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { supabase } from '../../lib/supabase';
-import notificationService from '../services/NotificationService';
+
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -80,8 +80,7 @@ export const AuthProvider = ({ children }) => {
       // Store user role
       if (role) {
         await AsyncStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
-        // Register user for notifications
-        await notificationService.registerUser(userId, role);
+
       }
       
       return role;
@@ -280,8 +279,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      // Unregister from notifications
-      await notificationService.unregisterUser();
+
       
       // Clear auth state
       setUser(null);

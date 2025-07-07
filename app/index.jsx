@@ -11,7 +11,6 @@ import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AppNavigator from './navigation/AppNavigator';
-import notificationService from './services/NotificationService';
 
 // Custom toast config with marginTop for top toasts
 const toastConfig = {
@@ -85,18 +84,7 @@ export default function App() {
     loadFonts();
   }, []);
 
-  // Initialize OneSignal
-  useEffect(() => {
-    const initializeNotifications = async () => {
-      try {
-        await notificationService.initialize();
-      } catch (error) {
-        console.error('Error initializing notifications:', error);
-      }
-    };
 
-    initializeNotifications();
-  }, []);
 
   if (!fontsLoaded) {
     return (

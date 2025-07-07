@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 12,
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
     marginBottom: 6,
-    textAlign: 'left',
+    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   inputError: {
     borderColor: colors.error,

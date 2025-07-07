@@ -16,7 +16,7 @@ import FAQScreen from '../screens/client/FAQScreen';
 import HomeScreen from '../screens/client/Home';
 import MapScreen from '../screens/client/MapScreen';
 import MyOrdersScreen from '../screens/client/MyOrdersScreen';
-import NotificationSettingsScreen from '../screens/client/NotificationSettingsScreen';
+
 import OrderDetailsScreen from '../screens/client/OrderDetailsScreen';
 import OrderSuccessScreen from '../screens/client/OrderSuccessScreen';
 import ProductDetailsScreen from '../screens/client/ProductDetailsScreen';
@@ -219,11 +219,7 @@ export default function ClientNavigator() {
         component={OrderSuccessScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="NotificationSettings" 
-        component={NotificationSettingsScreen}
-        options={{ headerShown: false }}
-      />
+
     </Stack.Navigator>
   );
 } 
