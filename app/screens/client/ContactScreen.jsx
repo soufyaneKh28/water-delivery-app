@@ -6,12 +6,12 @@ import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 
 export default function ContactScreen({ navigation }) {
-  // Dummy handlers for contact actions
-  const handleCall = () => Linking.openURL('tel:123456789');
-  const handleMail = () => Linking.openURL('mailto:support@email.com');
-  const handleInstagram = () => Linking.openURL('https://www.instagram.com/');
-  const handleFacebook = () => Linking.openURL('https://www.facebook.com/');
-  const handleWhatsApp = () => Linking.openURL('https://wa.me/123456789');
+  // Contact handlers with real contact information
+  const handleCall = () => Linking.openURL('tel:00962796129595');
+  const handleMail = () => Linking.openURL('mailto:aljunaidiwater1@gmail.com');
+  const handleInstagram = () => Linking.openURL('https://www.instagram.com/al_junaidi_water?igsh=bzZnNWZpbXU5N2c2');
+  const handleFacebook = () => Linking.openURL('https://www.facebook.com/share/16qwAA3Jj6/?mibextid=wwXIfr');
+  const handleWhatsApp = () => Linking.openURL('https://wa.me/00962796129595');
 
   return (
     <SafeAreaView style={styles.container}>

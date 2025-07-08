@@ -1,15 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
-import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
 import { useAuth } from "../../context/AuthContext";
@@ -17,11 +17,14 @@ import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
 
 export default function Security({ navigation }) {
-  const { user } = useAuth();
+  const { user, resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -41,36 +44,23 @@ export default function Security({ navigation }) {
 
     setLoading(true);
     try {
-      // First, verify the current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
-      });
-
-      if (signInError) {
-        throw new Error("كلمة المرور الحالية غير صحيحة");
-      }
-
-      // If current password is correct, update to new password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      Alert.alert("تم التحديث", "تم تغيير كلمة المرور بنجاح", [
-        {
-          text: "حسناً",
-          onPress: () => {
-            setCurrentPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
-            navigation.goBack();
+      await resetPassword(newPassword, currentPassword);
+      Alert.alert(
+        "تم التحديث",
+        "تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
+        [
+          {
+            text: "حسناً",
+            onPress: () => {
+              setCurrentPassword("");
+              setNewPassword("");
+              setConfirmPassword("");
+              // The user will be automatically logged out by the resetPassword function
+              // and redirected to the login screen
+            },
           },
-        },
-      ]);
+        ]
+      );
     } catch (error) {
       Alert.alert("خطأ", error.message || "تعذر تغيير كلمة المرور");
       console.error("Error changing password:", error);
@@ -98,43 +88,64 @@ export default function Security({ navigation }) {
           {/* Current Password */}
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>كلمة المرور الحالية</CustomText>
-            <TextInput
-              style={globalStyles.input}
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="أدخل كلمة المرور الحالية"
-              placeholderTextColor={colors.gray[400]}
-              secureTextEntry
-              textAlign="right"
-            />
+            <View style={globalStyles.passwordContainer}>
+              <TouchableOpacity
+                style={globalStyles.passwordVisibilityButton}
+                onPress={() => setShowCurrent((v) => !v)}
+              >
+                <Ionicons name={showCurrent ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
+              </TouchableOpacity>
+              <TextInput
+                style={globalStyles.passwordInput}
+                placeholder="********"
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                secureTextEntry={!showCurrent}
+                textAlign="right"
+              />
+            </View>
           </View>
 
           {/* New Password */}
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>كلمة المرور الجديدة</CustomText>
-            <TextInput
-              style={globalStyles.input}
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="أدخل كلمة المرور الجديدة"
-              placeholderTextColor={colors.gray[400]}
-              secureTextEntry
-              textAlign="right"
-            />
+            <View style={globalStyles.passwordContainer}>
+              <TouchableOpacity
+                style={globalStyles.passwordVisibilityButton}
+                onPress={() => setShowNew((v) => !v)}
+              >
+                <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
+              </TouchableOpacity>
+              <TextInput
+                style={globalStyles.passwordInput}
+                placeholder="********"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={!showNew}
+                textAlign="right"
+              />
+            </View>
           </View>
 
           {/* Confirm New Password */}
           <View style={globalStyles.inputContainer}>
             <CustomText style={globalStyles.inputLabel}>تأكيد كلمة المرور الجديدة</CustomText>
-            <TextInput
-              style={globalStyles.input}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="أعد إدخال كلمة المرور الجديدة"
-              placeholderTextColor={colors.gray[400]}
-              secureTextEntry
-              textAlign="right"
-            />
+            <View style={globalStyles.passwordContainer}>
+              <TouchableOpacity
+                style={globalStyles.passwordVisibilityButton}
+                onPress={() => setShowConfirm((v) => !v)}
+              >
+                <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
+              </TouchableOpacity>
+              <TextInput
+                style={globalStyles.passwordInput}
+                placeholder="********"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showConfirm}
+                textAlign="right"
+              />
+            </View>
           </View>
         </View>
 

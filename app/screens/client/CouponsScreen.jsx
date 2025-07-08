@@ -594,11 +594,11 @@ export default function CouponsScreen({navigation}) {
             </View>
             <View style={modalStyles.summaryRow}>
               <CustomText>رسوم الشحن</CustomText>
-              <CustomText>2 دينار</CustomText>
+              <CustomText>0 دينار</CustomText>
             </View>
             <View style={modalStyles.summaryRow}>
               <CustomText type="bold">الإجمالي</CustomText>
-              <CustomText type="bold" style={{ color: colors.primary }}>{selectedBook === 25 ? '25 دينار' : '50 دينار'}</CustomText>
+              <CustomText type="bold" style={{ color: colors.primary }}>23 دينار</CustomText>
             </View>
             <PrimaryButton
               title="تأكيد الطلب"

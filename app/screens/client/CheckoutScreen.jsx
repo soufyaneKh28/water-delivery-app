@@ -103,11 +103,6 @@ export default function CheckoutScreen({ route, navigation }) {
       });
       return;
     }
-
-    if (paymentMethod === 'delivery' && note.trim() === '') {
-      setNoteError('يرجى إدخال ملاحظة');
-      return;
-    }
     
     // Call createOrder for both payment methods
     createOrder();
@@ -206,15 +201,14 @@ export default function CheckoutScreen({ route, navigation }) {
         {/* Note for delivery payment */}
         {paymentMethod === 'delivery' && (
           <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <CustomText type="bold" style={[styles.label, { maxWidth: '70%' }]}>أدخل ملاحظة للتوصيل <CustomText style={{ color: 'red' }}>*</CustomText></CustomText>
+            <CustomText type="bold" style={[styles.label, { maxWidth: '70%' }]}>أدخل ملاحظة للتوصيل (اختياري)</CustomText>
             <TextInput
-              style={[styles.input, globalStyles.input, noteError ? { borderColor: 'red', borderWidth: 1 } : {}]}
-              placeholder="أدخل ملاحظة للتوصيل (مطلوب)"
+              style={[styles.input, globalStyles.input]}
+              placeholder="أدخل ملاحظة للتوصيل (اختياري)"
               value={note}
               onChangeText={text => { setNote(text); setNoteError(''); }}
               multiline
             />
-            {noteError ? <CustomText style={{ color: 'red', marginBottom: 8 }}>{noteError}</CustomText> : null}
           </View>
         )}
         {/* Payment Summary */}
@@ -235,10 +229,7 @@ export default function CheckoutScreen({ route, navigation }) {
           title={isLoading ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
           style={styles.confirmButton}
           onPress={handleConfirm}
-          disabled={
-            isLoading ||
-            (paymentMethod === 'delivery' && !note.trim())
-          }
+          disabled={isLoading}
         >
           {isLoading && (
             <ActivityIndicator 

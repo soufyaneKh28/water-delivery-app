@@ -507,7 +507,7 @@ const images = [
         onRequestClose={() => setAddressModalVisible(false)}
         >
         <SafeAreaView style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
-       
+       <ScrollView  showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
           <View style={{ width: '100%', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, flexDirection: 'row', marginBottom: 16 }}>
           <TouchableOpacity  style={{   width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setAddressModalVisible(false)}>
             <Ionicons name="close" size={22} color={colors.black} />
@@ -545,6 +545,7 @@ const images = [
             <CustomText type="bold" style={{ color: '#222', fontSize: 15, marginLeft: 8 }}>أضف عنواناً جديداً</CustomText>
             <CustomText style={{ fontSize: 24, color: '#222' }}>+</CustomText>
           </TouchableOpacity>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
           </SafeAreaView>

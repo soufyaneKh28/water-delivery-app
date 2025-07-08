@@ -199,7 +199,7 @@ console.log('orderDetails', orderDetails);
             </View> */}
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم التوصيل:</CustomText>
-              <CustomText style={styles.summaryValue}>{orderDetails.delivery_fee || 0} دينار</CustomText>
+              <CustomText style={styles.summaryValue}>0 دينار</CustomText>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <CustomText type="bold" style={styles.totalLabel}>المجموع الكلي:</CustomText>

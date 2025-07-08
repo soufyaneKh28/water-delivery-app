@@ -1,15 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import CustomText from "../../components/common/CustomText";
 import { useAuth } from '../../context/AuthContext';
@@ -48,13 +47,15 @@ export default function ForgotPasswordScreen({ navigation }) {
   };
 
   return (
+    <View style={{flex:1 , backgroundColor:'white'}}>
+
     <KeyboardAvoidingView
-      style={globalStyles.container}
+      style={[ {flex:1 , backgroundColor:'red'}]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
-    >
-      <StatusBar style="dark" />
-      <ScrollView contentContainerStyle={globalStyles.contentContainer}>
+      >
+    
+      <ScrollView style={{flex:1 , backgroundColor:'white'}} contentContainerStyle={[globalStyles.contentContainer , {flex:1 , backgroundColor:'white'}]}>
         {/* Blue header with curve */}
         <View style={styles.header} />
 
@@ -67,7 +68,7 @@ export default function ForgotPasswordScreen({ navigation }) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
             disabled={isLoading}
-          >
+            >
             <Ionicons name="arrow-forward" size={24} color={colors.primary} />
           </TouchableOpacity>
 
@@ -94,7 +95,7 @@ export default function ForgotPasswordScreen({ navigation }) {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
-              />
+                />
             </View>
 
             {/* Reset Password Button */}
@@ -106,7 +107,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               ]}
               onPress={handleResetPassword}
               disabled={isLoading}
-            >
+              >
               <CustomText type="bold" style={globalStyles.buttonText}>
                 {isLoading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
               </CustomText>
@@ -123,6 +124,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+              </View>
   );
 }
 

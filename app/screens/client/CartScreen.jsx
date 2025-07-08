@@ -21,7 +21,7 @@ export default function CartScreen() {
     addToCart
   } = useCart();
 
-  const shipping = 4;
+  const shipping = 0;
   const subtotal = getCartTotal();
   const total = subtotal + shipping;
 
