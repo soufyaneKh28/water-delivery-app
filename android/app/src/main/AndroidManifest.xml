@@ -31,7 +31,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="water-delivery-app"/>
-        <data android:scheme="com.waterdelivery.app"/>
+        <data android:scheme="com.aljunaidiwater.app"/>
         <data android:scheme="exp+water-delivery-app"/>
       </intent-filter>
     </activity>

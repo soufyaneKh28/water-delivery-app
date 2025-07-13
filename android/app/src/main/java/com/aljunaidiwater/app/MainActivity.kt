@@ -1,4 +1,4 @@
-package com.waterdelivery.app
+package com.aljunaidiwater.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
@@ -62,4 +62,4 @@ class MainActivity : ReactActivity() {
       // because it's doing more than [Activity.moveTaskToBack] in fact.
       super.invokeDefaultOnBackPressed()
   }
-}
+} 

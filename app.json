@@ -12,7 +12,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.waterdelivery.app",
+      "bundleIdentifier": "com.aljunaidiwater.app",
               "infoPlist": {
           "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
         },
@@ -28,7 +28,7 @@
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0078D7"
       },
-      "package": "com.waterdelivery.app",
+      "package": "com.aljunaidiwater.app",
       "config": {
         "googleMaps": {
           "apiKey": "REMOVED"
