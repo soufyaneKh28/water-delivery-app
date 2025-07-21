@@ -63,7 +63,9 @@ export default function SignUpScreen({ navigation }) {
 
     setIsLoading(true)
     try {
-      console.log('Attempting signup with:', { email, username, phone: fullPhoneNumber });
+      // Replace spaces in username with underscores
+      const sanitizedUsername = username.trim().replace(/\s+/g, "_");
+      console.log('Attempting signup with:', { email, username: sanitizedUsername, phone: fullPhoneNumber });
 
       const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
         method: "POST",
@@ -74,7 +76,7 @@ export default function SignUpScreen({ navigation }) {
         body: JSON.stringify({
           email: email.trim(),
           password,
-          username: username.trim(),
+          username: sanitizedUsername,
           phone: fullPhoneNumber,
         }),
       })
