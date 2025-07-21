@@ -7,8 +7,10 @@ import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Platform,
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
+import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 import { api } from '../../utils/api';
+
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 // const FILTER_WIDTH = SCREEN_WIDTH * 0.33;
@@ -92,6 +94,8 @@ function generateOrderNumber(uuid) {
 
 const Orders = () => {
   const navigation = useNavigation();
+  const { expoPushToken, notification, adminNotifications } = useNotification();
+  
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDateFilter, setSelectedDateFilter] = useState('today');
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
@@ -329,6 +333,23 @@ const Orders = () => {
             <Image source={require('../../../assets/images/linear_chart.png')} style={{width:'100%',height:60 ,marginTop:12}}/>
           </LinearGradient>
         </View>
+
+        {/* Notification Test Section */}
+        {/* <View style={styles.notificationSection}>
+          <CustomText type="bold" style={styles.notificationTitle}>Push Notification Test</CustomText>
+          <Text style={styles.notificationText}>Your Expo push token: {expoPushToken}</Text>
+          <View style={styles.notificationInfo}>
+            <Text style={styles.notificationText}>Title: {notification && notification.request.content.title} </Text>
+            <Text style={styles.notificationText}>Body: {notification && notification.request.content.body}</Text>
+            <Text style={styles.notificationText}>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
+          </View>
+          <Button
+            title="Send Test Notification"
+            onPress={async () => {
+              await adminNotifications.sendTestNotification(expoPushToken);
+            }}
+          />
+        </View> */}
 
         {/* Order Type Tabs */}
         <View style={styles.tabContainer}>
@@ -961,6 +982,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  notificationSection: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#F2F4F7',
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  notificationTitle: {
+    color: '#121212',
+    fontSize: 18,
+    marginBottom: 12,
+    textAlign: 'right',
+  },
+  notificationText: {
+    color: '#222',
+    fontSize: 16,
+    marginBottom: 8,
+    textAlign: 'right',
+  },
+  notificationInfo: {
+    backgroundColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    width: '100%',
   },
 });
 export default Orders; 

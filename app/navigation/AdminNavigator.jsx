@@ -3,12 +3,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Image, View } from 'react-native';
 import CustomText from '../components/common/CustomText';
+import { NotificationProvider } from '../context/NotificationContext';
 
 // Import admin screens
 import AddCategory from '../screens/admin/AddCategory';
 import AddProduct from '../screens/admin/AddProduct';
 import AdminDashboard from '../screens/admin/Dashboard';
 import EditProfile from '../screens/admin/EditProfile';
+import NotificationPermissionScreen from '../screens/auth/NotificationPermissionScreen';
 
 import Offers from '../screens/admin/Offers';
 import OrderDetails from '../screens/admin/OrderDetails';
@@ -124,59 +126,66 @@ export function AdminTabs() {
 
 export default function AdminNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        // animation: 'slide_from_left',
-        animation:"ios_from_left",
-        animationDuration: 200,
-      }}
-    >
-      <Stack.Screen 
-        name="AdminTabs" 
-        component={AdminTabs} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="AddProduct" 
-        component={AddProduct} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="OrderDetails" 
-        component={OrderDetails} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="AddCategory" 
-        component={AddCategory} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="EditProfile" 
-        component={EditProfile} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="Security" 
-        component={Security} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="Offers" 
-        component={Offers} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="UserCoupons" 
-        component={UserCoupons} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="UploadReceiptScreen" 
-        component={UploadReceiptScreen} 
-        options={{ headerShown: false }}
-      />
+    <NotificationProvider>
+      <Stack.Navigator
+        screenOptions={{
+          // animation: 'slide_from_left',
+          animation:"ios_from_left",
+          animationDuration: 200,
+        }}
+      >
+        <Stack.Screen 
+          name="AdminTabs" 
+          component={AdminTabs} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="AddProduct" 
+          component={AddProduct} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="OrderDetails" 
+          component={OrderDetails} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="AddCategory" 
+          component={AddCategory} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="EditProfile" 
+          component={EditProfile} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Security" 
+          component={Security} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Offers" 
+          component={Offers} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="UserCoupons" 
+          component={UserCoupons} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="UploadReceiptScreen" 
+          component={UploadReceiptScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="NotificationPermission" 
+          component={NotificationPermissionScreen} 
+          options={{ headerShown: false }}
+        />
 
-    </Stack.Navigator>
+      </Stack.Navigator>
+    </NotificationProvider>
   );
 } 

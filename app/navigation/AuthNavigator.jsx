@@ -8,6 +8,7 @@ import VerificationScreen from '../screens/auth/VerificationScreen';
 
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import NotificationPermissionScreen from '../screens/auth/NotificationPermissionScreen';
 import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 
@@ -25,6 +26,7 @@ export default function AuthNavigator() {
       <Stack.Screen name="SignUp" component={SignupScreen} />
       <Stack.Screen name="Verification" component={VerificationScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="NotificationPermission" component={NotificationPermissionScreen} />
       {/* <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} /> */}
     </Stack.Navigator>
   );

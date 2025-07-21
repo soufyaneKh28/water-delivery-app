@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 
 // Base API URL
-const API_BASE_URL = 'https://water-supplier-2.onrender.com/api/k1';
+export const API_BASE_URL = 'https://water-supplier-2.onrender.com/api/k1';
 
 // Helper function to get access token
-const getAccessToken = async () => {
+export const getAccessToken = async () => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || null;
@@ -14,8 +14,10 @@ const getAccessToken = async () => {
   }
 };
 
-// Generic API call function with authentication
-export const apiCall = async (endpoint, options = {}) => {
+// Generic API call function with authentication and retry logic
+export const apiCall = async (endpoint, options = {}, retryCount = 0) => {
+  const maxRetries = 2;
+  
   try {
     const token = await getAccessToken();
     
@@ -25,14 +27,21 @@ export const apiCall = async (endpoint, options = {}) => {
 
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Add timeout to prevent hanging requests
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(url, {
       ...options,
+      signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
         ...options.headers,
       },
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -42,14 +51,20 @@ export const apiCall = async (endpoint, options = {}) => {
           // Retry the request with new token
           const newToken = await getAccessToken();
           if (newToken) {
+            const retryController = new AbortController();
+            const retryTimeoutId = setTimeout(() => retryController.abort(), 10000);
+            
             const retryResponse = await fetch(url, {
               ...options,
+              signal: retryController.signal,
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${newToken}`,
                 ...options.headers,
               },
             });
+            
+            clearTimeout(retryTimeoutId);
             
             if (!retryResponse.ok) {
               throw new Error(`API call failed: ${retryResponse.status}`);
@@ -62,11 +77,30 @@ export const apiCall = async (endpoint, options = {}) => {
           throw new Error('Authentication failed. Please login again.');
         }
       }
+      
+      // Retry on server errors (5xx) or network errors
+      if ((response.status >= 500 || response.status === 0) && retryCount < maxRetries) {
+        console.log(`Retrying API call (${retryCount + 1}/${maxRetries}) for endpoint: ${endpoint}`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+        return apiCall(endpoint, options, retryCount + 1);
+      }
+      
       throw new Error(`API call failed: ${response.status}`);
     }
 
     return await response.json();
   } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout. Please check your internet connection.');
+    }
+    
+    // Retry on network errors
+    if (retryCount < maxRetries && (error.message.includes('Network') || error.message.includes('fetch'))) {
+      console.log(`Retrying API call (${retryCount + 1}/${maxRetries}) for endpoint: ${endpoint}`);
+      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+      return apiCall(endpoint, options, retryCount + 1);
+    }
+    
     console.error('API call error:', error);
     throw error;
   }

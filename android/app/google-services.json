@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171360339853",
+    "project_id": "aljunaidiwater-de20e",
+    "storage_bucket": "aljunaidiwater-de20e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171360339853:android:94577857edbababa08dfc4",
+        "android_client_info": {
+          "package_name": "com.aljunaidiwater.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAMJdQnWhLh6wtDaHx1DnVxfL7RyCqRpns"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

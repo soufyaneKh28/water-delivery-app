@@ -5,6 +5,7 @@ import { Image, View } from 'react-native';
 
 // Import client screens
 import CustomText from '../components/common/CustomText';
+import { NotificationProvider } from '../context/NotificationContext';
 import AddLocationScreen from '../screens/client/AddLocationScreen';
 import CartScreen from '../screens/client/CartScreen';
 import CategoryScreen from '../screens/client/CategoryScreen';
@@ -138,88 +139,94 @@ export function ClientTabs() {
 
 export default function ClientNavigator() {
   return (
-    <Stack.Navigator
-      screenOptions={{
-        // animation: 'slide_from_right',
-        // animation:"slide_from_left",
-        // animationDuration: 100,
-        animation:"ios_from_left",
+    <NotificationProvider>
+      <Stack.Navigator
+        screenOptions={{
+          // animation: 'slide_from_right',
+          // animation:"slide_from_left",
+          // animationDuration: 100,
+          animation:"ios_from_left",
 
-        // cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-        // gestureDirection: 'horizontal-inverted'
-      }}
-    >
-      <Stack.Screen 
-        name="ClientTabs" 
-        component={ClientTabs} 
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen 
-        name="EditProfile" 
-        component={EditProfileScreen}
-        options={{ headerShown: false }}
-      />
-       <Stack.Screen 
-        name="ProductDetails" 
-        component={ProductDetailsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ClientFAQ"
-        component={FAQScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="ResetPassword"
-        component={ResetPasswordScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Contact"
-        component={ContactScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Terms"
-        component={TermsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="AddLocation"
-        component={AddLocationScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Category"
-        component={CategoryScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MapAddLocation"
-        component={MapScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Checkout"
-        component={CheckoutScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="MyOrders"
-        component={MyOrdersScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrderDetails"
-        component={OrderDetailsScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="OrderSuccessScreen"
-        component={OrderSuccessScreen}
-        options={{ headerShown: false }}
-      />
-
-    </Stack.Navigator>
+          // cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+          // gestureDirection: 'horizontal-inverted'
+        }}
+      >
+        <Stack.Screen 
+          name="ClientTabs" 
+          component={ClientTabs} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="EditProfile" 
+          component={EditProfileScreen}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen 
+          name="ProductDetails" 
+          component={ProductDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ClientFAQ"
+          component={FAQScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Contact"
+          component={ContactScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Terms"
+          component={TermsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddLocation"
+          component={AddLocationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Category"
+          component={CategoryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MapAddLocation"
+          component={MapScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={CartScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Checkout"
+          component={CheckoutScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderSuccess"
+          component={OrderSuccessScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="MyOrders"
+          component={MyOrdersScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="OrderDetails"
+          component={OrderDetailsScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    </NotificationProvider>
   );
 } 

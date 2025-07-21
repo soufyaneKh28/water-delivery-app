@@ -2,9 +2,8 @@ import 'react-native-reanimated';
 import '../gesture-handler';
 
 import * as Font from 'expo-font';
-import * as Linking from 'expo-linking';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import { FONTS } from './constants/fonts';
 import { AddressProvider } from './context/AddressContext';
@@ -64,6 +63,7 @@ const toastConfig = {
 
 export default function App() {
   const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadFonts() {
@@ -78,13 +78,25 @@ export default function App() {
         setFontsLoaded(true);
       } catch (error) {
         console.error('Error loading fonts:', error);
+        setError('Failed to load fonts');
       }
     }
 
     loadFonts();
   }, []);
 
-
+  if (error) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
+          {error}
+        </Text>
+        <Text style={{ fontSize: 14, textAlign: 'center', color: '#666' }}>
+          Please restart the app
+        </Text>
+      </View>
+    );
+  }
 
   if (!fontsLoaded) {
     return (
@@ -93,40 +105,15 @@ export default function App() {
       </View>
     );
   }
-  // const resetPasswordURL = Linking.createURL("resetPassword"); 
-  const linking = {
-    prefixes: [Linking.createURL('/'),'water-delivery-app:/'],
-    config: {
-      screens: {
-        Auth: {
-          screens: {
-            ResetPassword: 'reset-password',
-            ForgotPassword: 'forgot-password',
-            Splash: 'splash',
-            Onboarding: 'onboarding',
-            Login: 'login',
-            SignUp: 'signup',
-            Verification: 'verification',
-          },
-        },
-        Admin: '*',
-        Client: '*',
-      },
-    },
-  };
 
   return (
-      // <NavigationIndependentTree  linking={linking} fallback={<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#007AFF" /></View>}>
     <AuthProvider>
       <CartProvider>
-      <AddressProvider>
-        {/* <NavigationContainer linking={linking}> */}
+        <AddressProvider>
           <AppNavigator />
-        {/* </NavigationContainer> */}
-      <Toast config={toastConfig} />
-      </AddressProvider>
+          <Toast config={toastConfig} />
+        </AddressProvider>
       </CartProvider>
     </AuthProvider>
-      // </NavigationIndependentTree>
   );
 }

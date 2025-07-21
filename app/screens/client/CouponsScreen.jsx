@@ -35,7 +35,7 @@ export default function CouponsScreen({navigation}) {
   const [isOrderingProduct, setIsOrderingProduct] = useState(false);
   const [selectedBottleCount, setSelectedBottleCount] = useState();
   const [noteError, setNoteError] = useState('');
-  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('@water_supplier_jordan');
+  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('00962796129595');
   const [copyFeedback, setCopyFeedback] = useState('');
   const [addressError, setAddressError] = useState('');
   const pickerRef = useRef(null);

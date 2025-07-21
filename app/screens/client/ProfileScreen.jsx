@@ -1,18 +1,23 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  Linking,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
@@ -58,15 +63,97 @@ const COUNTRY_CODES = [
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
+  const { 
+    permissionStatus, 
+    requestNotificationPermission, 
+    refreshPermissionStatus,
+    expoPushToken 
+  } = useNotification();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
   const navigation = useNavigation();
 
   useEffect(() => {
     fetchProfile();
+    checkNotificationStatus();
   }, []);
+
+  useEffect(() => {
+    setNotificationEnabled(permissionStatus === 'granted');
+  }, [permissionStatus]);
+
+  const checkNotificationStatus = async () => {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      setNotificationEnabled(status === 'granted');
+    } catch (error) {
+      console.error('Error checking notification status:', error);
+    }
+  };
+
+  const handleNotificationToggle = async (value) => {
+    setIsToggling(true);
+    
+    if (value) {
+      // Enable notifications
+      try {
+        const success = await requestNotificationPermission();
+        if (success) {
+          setNotificationEnabled(true);
+          Alert.alert('تم التفعيل', 'تم تفعيل الإشعارات بنجاح!');
+        } else {
+          setNotificationEnabled(false);
+          Alert.alert(
+            'تم الرفض',
+            'لتفعيل الإشعارات، يرجى الذهاب إلى إعدادات التطبيق والسماح بالإشعارات',
+            [
+              { text: 'إلغاء', style: 'cancel' },
+              { 
+                text: 'فتح الإعدادات', 
+                onPress: () => {
+                  if (Platform.OS === 'ios') {
+                    Linking.openURL('app-settings:');
+                  } else {
+                    Linking.openSettings();
+                  }
+                }
+              }
+            ]
+          );
+        }
+      } catch (error) {
+        console.error('Error enabling notifications:', error);
+        setNotificationEnabled(false);
+        Alert.alert('خطأ', 'حدث خطأ أثناء تفعيل الإشعارات');
+      }
+    } else {
+      // Disable notifications
+      Alert.alert(
+        'إيقاف الإشعارات',
+        'لإيقاف الإشعارات، يرجى الذهاب إلى إعدادات التطبيق وإيقاف الإشعارات للتطبيق',
+        [
+          { text: 'إلغاء', style: 'cancel', onPress: () => setNotificationEnabled(true) },
+          { 
+            text: 'فتح الإعدادات', 
+            onPress: () => {
+              if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+              } else {
+                Linking.openSettings();
+              }
+            }
+          }
+        ]
+      );
+      setNotificationEnabled(true); // Keep it enabled since we can't disable programmatically
+    }
+    
+    setIsToggling(false);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -237,6 +324,40 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <View style={styles.menuList}>
+          {/* Notification Settings Section */}
+          <View style={styles.sectionHeader}>
+            <CustomText type="bold" style={styles.sectionTitle}>
+              الإشعارات
+            </CustomText>
+          </View>
+          
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <View style={styles.menuIcon}>
+                <Image source={require('../../../assets/icons/security.png')} style={{ width: 18, height: 18 }} />
+              </View>
+              <View style={styles.notificationText}>
+                <CustomText type="medium" style={styles.menuLabel}>
+                  إشعارات التطبيق
+                </CustomText>
+                <CustomText style={styles.notificationDescription}>
+                  {notificationEnabled 
+                    ? 'ستتلقى إشعارات عن الطلبات والعروض' 
+                    : 'لن تتلقى إشعارات من التطبيق'
+                  }
+                </CustomText>
+              </View>
+            </View>
+            <Switch
+              value={notificationEnabled}
+              onValueChange={handleNotificationToggle}
+              disabled={isToggling}
+              trackColor={{ false: '#E0E0E0', true: colors.primary }}
+              thumbColor={notificationEnabled ? '#fff' : '#f4f3f4'}
+              ios_backgroundColor="#E0E0E0"
+            />
+          </View>
+
           {MENU_ITEMS.map((item, idx) => (
             <TouchableOpacity
               key={item.label}
@@ -381,5 +502,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginLeft: 8,
+  },
+  sectionHeader: {
+    paddingHorizontal: 18,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F4F7',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    color: '#222',
+  },
+  notificationItem: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F4F7',
+  },
+  notificationInfo: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    flex: 1,
+  },
+  notificationText: {
+    marginLeft: 12,
+  },
+  notificationDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
 }); 

@@ -1,14 +1,14 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
-
 
 // Storage keys
 const STORAGE_KEYS = {
   SESSION: 'auth_session',
   USER_ROLE: 'user_role',
+  BACKEND_PUSH_REGISTRATION: 'pushTokenSentToBackend',
 };
 
 // Create the context
@@ -23,12 +23,81 @@ export const useAuth = () => {
   return context;
 };
 
+// Send push token to backend
+const sendTokenToBackend = async (userId, accessToken, expoPushToken) => {
+  try {
+    // Check if token was already sent to avoid duplicates
+    const alreadySent = await AsyncStorage.getItem(STORAGE_KEYS.BACKEND_PUSH_REGISTRATION);
+    if (alreadySent === 'true') {
+      console.log('📦 Token already sent to backend. Skipping...');
+      return true;
+    }
+
+    if (!expoPushToken) {
+      console.log('❌ No push token available to send to backend');
+      return false;
+    }
+
+    console.log('📤 Sending push token to backend...');
+    console.log('👤 User ID:', userId);
+    console.log('🔑 Token:', expoPushToken.substring(0, 20) + '...');
+    console.log('📱 Device Type:', Platform.OS);
+
+    const deviceType = Platform.OS;
+    const requestBody = {
+      user_id: userId,
+      player_id: expoPushToken,
+      device_type: deviceType,
+    };
+
+    console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+
+    const response = await fetch('https://water-supplier-2.onrender.com/api/k1/notifications/registerDevice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+
+    if (response.ok) {
+      const responseData = await response.json();
+      console.log('✅ Token registered with backend successfully');
+      console.log('📦 Response data:', responseData);
+      await AsyncStorage.setItem(STORAGE_KEYS.BACKEND_PUSH_REGISTRATION, 'true');
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error('❌ Failed to register token with backend:', response.status, response.statusText);
+      console.error('❌ Error response body:', errorText);
+      
+      // Try to parse error as JSON for more details
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('❌ Parsed error:', errorJson);
+      } catch (parseError) {
+        console.error('❌ Could not parse error response as JSON');
+      }
+      
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error sending token to backend:', error);
+    return false;
+  }
+};
+
 // Provider component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [expoPushToken, setExpoPushToken] = useState('');
 
   // Function to store session data
   const storeSession = useCallback(async (session) => {
@@ -38,6 +107,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         await AsyncStorage.removeItem(STORAGE_KEYS.SESSION);
         await AsyncStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+        await AsyncStorage.removeItem(STORAGE_KEYS.BACKEND_PUSH_REGISTRATION);
       }
     } catch (error) {
       console.error('Error storing session:', error);
@@ -80,7 +150,6 @@ export const AuthProvider = ({ children }) => {
       // Store user role
       if (role) {
         await AsyncStorage.setItem(STORAGE_KEYS.USER_ROLE, role);
-
       }
       
       return role;
@@ -89,6 +158,22 @@ export const AuthProvider = ({ children }) => {
       setUserRole(null);
       await AsyncStorage.removeItem(STORAGE_KEYS.USER_ROLE);
       return null;
+    }
+  }, []);
+
+  // Function to handle token registration after login
+  const handleTokenRegistration = useCallback(async (userId, accessToken) => {
+    try {
+      // Get push token from notification context or storage
+      const storedToken = await AsyncStorage.getItem('admin_push_token');
+      if (storedToken) {
+        setExpoPushToken(storedToken);
+        await sendTokenToBackend(userId, accessToken, storedToken);
+      } else {
+        console.log('📱 No push token available for registration');
+      }
+    } catch (error) {
+      console.error('❌ Error handling token registration:', error);
     }
   }, []);
 
@@ -167,6 +252,9 @@ export const AuthProvider = ({ children }) => {
           
           // Fetch fresh user role
           await fetchUserRole(session.user.id);
+          
+          // Handle token registration for existing session
+          await handleTokenRegistration(session.user.id, session.access_token);
         } else {
           // No valid session, clear state
           setUser(null);
@@ -186,7 +274,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, [storeSession, fetchUserRole]);
+  }, [storeSession, fetchUserRole, handleTokenRegistration]);
 
   // Listen for auth state changes
   useEffect(() => {
@@ -198,6 +286,11 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         await storeSession(session);
         await fetchUserRole(session.user.id);
+        
+        // Handle token registration for new login
+        if (event === 'SIGNED_IN') {
+          await handleTokenRegistration(session.user.id, session.access_token);
+        }
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -209,7 +302,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [storeSession, fetchUserRole]);
+  }, [storeSession, fetchUserRole, handleTokenRegistration]);
 
   // Handle app state changes for token refresh
   useEffect(() => {
@@ -240,6 +333,9 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         await storeSession(data.session);
         await fetchUserRole(data.user.id);
+        
+        // Handle token registration after successful login
+        await handleTokenRegistration(data.user.id, data.session.access_token);
       }
       
       return data;
@@ -279,9 +375,9 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-
+      console.log('🚪 Starting logout process...');
       
-      // Clear auth state
+      // Clear auth state immediately
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
@@ -289,12 +385,26 @@ export const AuthProvider = ({ children }) => {
       // Clear stored session
       await storeSession(null);
       
-      // Sign out from Supabase
-      await supabase.auth.signOut();
+      // Sign out from Supabase with timeout
+      try {
+        const logoutPromise = supabase.auth.signOut();
+        await Promise.race([
+          logoutPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Logout timeout')), 3000))
+        ]);
+        console.log('✅ Supabase logout successful');
+      } catch (timeoutError) {
+        console.log('⏰ Supabase logout timed out, continuing...');
+      }
       
-      console.log('User logged out successfully');
+      console.log('✅ User logged out successfully');
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('❌ Error during logout:', error);
+      // Ensure auth state is cleared even if there's an error
+      setUser(null);
+      setIsAuthenticated(false);
+      setUserRole(null);
+      await storeSession(null);
     }
   };
 
@@ -376,11 +486,23 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // Function to manually send token to backend (for testing)
+  const sendTokenToBackendManually = useCallback(async () => {
+    if (user?.id && expoPushToken) {
+      const accessToken = await getAccessToken();
+      if (accessToken) {
+        return await sendTokenToBackend(user.id, accessToken, expoPushToken);
+      }
+    }
+    return false;
+  }, [user?.id, expoPushToken, getAccessToken]);
+
   const value = {
     user,
     loading,
     isAuthenticated,
     userRole,
+    expoPushToken,
     login,
     signup,
     logout,
@@ -390,6 +512,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     fetchUserRole,
     getAccessToken,
+    sendTokenToBackendManually,
   };
 
   return (

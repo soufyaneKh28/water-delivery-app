@@ -7,17 +7,12 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.aljunaidiwater.app",
-              "infoPlist": {
-          "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
-        },
-      "entitlements": {
-        "aps-environment": "development"
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
       },
       "config": {
         "googleMapsApiKey": "REMOVED"
@@ -33,7 +28,8 @@
         "googleMaps": {
           "apiKey": "REMOVED"
         }
-      }
+      },
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/icon.png"
@@ -48,6 +44,16 @@
     "updates": {
       "url": "https://u.expo.dev/339e3c5a-4df8-473d-b686-755557cd5877"
     },
-    "plugins": []
+    "plugins": [
+      "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "googleServicesFile": "./google-services.json"
+          }
+        }
+      ]
+    ]
   }
 }

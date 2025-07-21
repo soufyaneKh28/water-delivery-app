@@ -22,7 +22,7 @@ export default function CheckoutScreen({ route, navigation }) {
   const [note, setNote] = useState('');
   const [noteError, setNoteError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('@water_supplier_jordan');
+  const [businessOwnerNickname, setBusinessOwnerNickname] = useState('00962796129595');
   const [copyFeedback, setCopyFeedback] = useState('');
 
   const formatAddressString = (address) => {
@@ -73,7 +73,7 @@ export default function CheckoutScreen({ route, navigation }) {
       // Clear the cart after successful order
       clearCart();
 
-      navigation.replace('OrderSuccessScreen', {
+      navigation.replace('OrderSuccess', {
         order: payload,
         cart,
         total,
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     flex: 1,
-    textAlign: 'right',
+    textAlign: 'left',
   },
   copyButton: {
     padding: 8,
