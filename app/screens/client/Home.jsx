@@ -269,6 +269,7 @@ const { width } = Dimensions.get('window');
 
   // Optimized single API call for all data
   const getAll = async () => {
+    if (!user) return;
     setIsLoadingOffers(true);
     setIsLoadingLocations(true);
     setIsLoadingCategories(true);
@@ -358,6 +359,7 @@ const { width } = Dimensions.get('window');
   
 
   const onRefresh = React.useCallback(async () => {
+    if (!user) return;
     setRefreshing(true);
     try {
       // Refresh all data in parallel
@@ -376,6 +378,7 @@ const { width } = Dimensions.get('window');
   }, [user?.id]);
 
   useEffect(() => {
+    if (!user) return;
     getAll()
     // getLocations();
     // getOffers();

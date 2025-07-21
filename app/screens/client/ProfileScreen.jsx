@@ -78,6 +78,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
 
   useEffect(() => {
+    if (!user) return;
     fetchProfile();
     checkNotificationStatus();
   }, []);
@@ -87,6 +88,7 @@ export default function ProfileScreen() {
   }, [permissionStatus]);
 
   const checkNotificationStatus = async () => {
+    if (!user) return;
     try {
       const { status } = await Notifications.getPermissionsAsync();
       setNotificationEnabled(status === 'granted');
@@ -156,6 +158,7 @@ export default function ProfileScreen() {
   };
 
   const fetchProfile = async () => {
+    if (!user) return;
     try {
       const { data, error } = await supabase
         .from('profiles')
