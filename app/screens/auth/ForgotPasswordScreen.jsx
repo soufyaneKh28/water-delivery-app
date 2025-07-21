@@ -4,6 +4,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -48,14 +49,12 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   return (
     <View style={{flex:1 , backgroundColor:'white'}}>
-
+<SafeAreaView style={{flex:1 , backgroundColor:'white'}}>
     <KeyboardAvoidingView
-      style={[ {flex:1 , backgroundColor:'red'}]}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 100}
+    style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
       >
     
-      <ScrollView style={{flex:1 , backgroundColor:'white'}} contentContainerStyle={[globalStyles.contentContainer , {flex:1 , backgroundColor:'white'}]}>
+      <ScrollView style={{flex:1 , backgroundColor:'white'}} contentContainerStyle={[globalStyles.contentContainer , {  backgroundColor:'white', paddingBottom: 100}]}>
         {/* Blue header with curve */}
         <View style={styles.header} />
 
@@ -124,6 +123,7 @@ export default function ForgotPasswordScreen({ navigation }) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+              </SafeAreaView>
               </View>
   );
 }

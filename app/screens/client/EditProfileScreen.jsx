@@ -2,17 +2,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    FlatList,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
@@ -44,6 +44,11 @@ export default function EditProfileScreen() {
     email: "",
     phone: "",
   });
+  const [originalData, setOriginalData] = useState({
+    username: "",
+    email: "",
+    phone: "",
+  });
   const [errors, setErrors] = useState({});
   const [phoneError, setPhoneError] = useState("");
   const [showCountryModal, setShowCountryModal] = useState(false);
@@ -65,17 +70,18 @@ export default function EditProfileScreen() {
         throw error;
       }
 
-      setFormData({
-        username: data.username || "",
-        email: user.email || "",
-        phone: data.phone ? data.phone.replace(/^\+\d+/, '') : "",
-      });
+      const username = data.username || "";
+      const email = user.email || "";
+      const phone = data.phone ? data.phone.replace(/^\+\d+/, '') : "";
+      setFormData({ username, email, phone });
+      setOriginalData({ username, email, phone });
 
       if (data.phone) {
         const storedPhone = data.phone;
         const countryCode = COUNTRY_CODES.find(c => storedPhone.startsWith(c.code)) || COUNTRY_CODES[0];
         setSelectedCountry(countryCode);
         setFormData(prev => ({ ...prev, phone: storedPhone.replace(countryCode.code, '') }));
+        setOriginalData(prev => ({ ...prev, phone: storedPhone.replace(countryCode.code, '') }));
       }
     } catch (error) {
       Alert.alert("خطأ", "تعذر تحميل بيانات الحساب");
@@ -126,6 +132,15 @@ export default function EditProfileScreen() {
     if (phoneError && phoneNumber.length >= 9) setPhoneError("");
   };
 
+  // Helper to check if form data has changed
+  const isFormChanged = () => {
+    return (
+      formData.username !== originalData.username ||
+      formData.email !== originalData.email ||
+      formData.phone !== originalData.phone
+    );
+  };
+
   const renderCountryItem = ({ item }) => (
     <TouchableOpacity
       style={styles.countryItem}
@@ -162,9 +177,9 @@ export default function EditProfileScreen() {
           <View style={styles.form}>
             {/* Username */}
             <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>اسم المستخدم</CustomText>
+              <CustomText style={[globalStyles.inputLabel, styles.disabledLabel]}>اسم المستخدم</CustomText>
               <TextInput
-                style={[globalStyles.input, errors.username && globalStyles.errorInput]}
+                style={[globalStyles.input, styles.disabledInput, errors.username && globalStyles.errorInput]}
                 value={formData.username}
                 editable={false}
                 placeholder="اسم المستخدم"
@@ -176,9 +191,9 @@ export default function EditProfileScreen() {
             </View>
             {/* Email */}
             <View style={globalStyles.inputContainer}>
-              <CustomText style={globalStyles.inputLabel}>البريد الإلكتروني</CustomText>
+              <CustomText style={[globalStyles.inputLabel, styles.disabledLabel]}>البريد الإلكتروني</CustomText>
               <TextInput
-                style={[globalStyles.input, errors.email && globalStyles.errorInput]}
+                style={[globalStyles.input, styles.disabledInput, errors.email && globalStyles.errorInput]}
                 value={formData.email}
                 editable={false}
                 placeholder="البريد الإلكتروني"
@@ -199,9 +214,9 @@ export default function EditProfileScreen() {
           </View>
 
           <TouchableOpacity
-            style={styles.saveButton}
+            style={[styles.saveButton, (saving || !isFormChanged()) && styles.saveButtonDisabled]}
             onPress={handleSave}
-            disabled={saving}
+            disabled={saving || !isFormChanged()}
             activeOpacity={0.8}
           >
             {saving ? (
@@ -349,6 +364,10 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     textAlign: 'center',
+  },
+  saveButtonDisabled: {
+    backgroundColor: colors.textSecondary,
+    opacity: 0.6,
   },
   disabledInput: {
     backgroundColor: '#F8F9FA',

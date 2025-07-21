@@ -328,11 +328,11 @@ export default function ProfileScreen() {
 
         <View style={styles.menuList}>
           {/* Notification Settings Section */}
-          <View style={styles.sectionHeader}>
+          {/* <View style={styles.sectionHeader}>
             <CustomText type="bold" style={styles.sectionTitle}>
               الإشعارات
             </CustomText>
-          </View>
+          </View> */}
           
           <View style={styles.notificationItem}>
             <View style={styles.notificationInfo}>

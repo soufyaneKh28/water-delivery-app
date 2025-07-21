@@ -110,6 +110,12 @@ export default function AddCategory({ navigation }) {
   };
 
   const pickImage = async () => {
+    // Request permission first
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('صلاحيات مفقودة', 'يجب السماح للتطبيق بالوصول إلى الصور لاختيار صورة من المعرض.');
+      return;
+    }
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
