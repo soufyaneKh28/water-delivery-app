@@ -630,7 +630,7 @@ const { width } = Dimensions.get('window');
         onRequestClose={() => setAddressModalVisible(false)}
         >
         <SafeAreaView style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
-       <ScrollView  showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
+       <ScrollView  style={{flex:1}} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
           <View style={{ width: '100%', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, flexDirection: 'row', marginBottom: 16 }}>
           <TouchableOpacity  style={{   width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setAddressModalVisible(false)}>
             <Ionicons name="close" size={22} color={colors.black} />

@@ -251,7 +251,7 @@ export default function Profile() {
           <View style={styles.notificationItem}>
             <View style={styles.notificationInfo}>
               <View style={styles.menuIcon}>
-                <Image source={require('../../../assets/icons/security.png')} style={{ width: 18, height: 18 }} />
+                <Image source={require('../../../assets/icons/notification.png')} style={{ width: 18, height: 18 }} />
               </View>
               <View style={styles.notificationText}>
                 <CustomText type="medium" style={styles.menuLabel}>

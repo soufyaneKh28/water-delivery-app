@@ -277,26 +277,35 @@ export default function Products() {
 
         {/* Products Grid with Fade Animation */}
         <Animated.View style={{ opacity: fadeAnim }}>
-          <FlatList
-            data={filteredProducts}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            scrollEnabled={false}
-            contentContainerStyle={styles.productsGrid}
-            columnWrapperStyle={styles.productsRow}
-            renderItem={({ item }) => (
-              <View style={[styles.productWrapper]}>
-                <ProductCard
-                  image={item.image_url}
-                  title={item.title}
-                  size={item.size}
-                  price={item.price}
-                  price_type={item.price_type}
-                  onMenuPress={() => handleMenuPress(item)}
-                />
-              </View>
-            )}
-          />
+          {filteredProducts.length === 0 ? (
+            <View style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 40 }}>
+              <Ionicons name="cube-outline" size={48} color="#ccc" style={{ marginBottom: 12 }} />
+              <CustomText type="bold" style={{ fontSize: 16, color: '#888', textAlign: 'center' }}>
+                لا توجد منتجات في هذا القسم
+              </CustomText>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={(item) => item.id}
+              numColumns={2}
+              scrollEnabled={false}
+              contentContainerStyle={styles.productsGrid}
+              columnWrapperStyle={styles.productsRow}
+              renderItem={({ item }) => (
+                <View style={[styles.productWrapper]}>
+                  <ProductCard
+                    image={item.image_url}
+                    title={item.title}
+                    size={item.size}
+                    price={item.price}
+                    price_type={item.price_type}
+                    onMenuPress={() => handleMenuPress(item)}
+                  />
+                </View>
+              )}
+            />
+          )}
         </Animated.View>
       </ScrollView>
 
