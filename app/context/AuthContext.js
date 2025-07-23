@@ -3,6 +3,7 @@ import axios from 'axios';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
+import { useNotification } from './NotificationContext';
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -164,13 +165,19 @@ export const AuthProvider = ({ children }) => {
   // Function to handle token registration after login
   const handleTokenRegistration = useCallback(async (userId, accessToken) => {
     try {
-      // Get push token from notification context or storage
-      const storedToken = await AsyncStorage.getItem('admin_push_token');
+      let storedToken = await AsyncStorage.getItem('expo_push_token');
+      if (!storedToken) {
+        // Wait a bit and try again (token may be generated soon)
+        console.log('⏳ No push token found, retrying in 2 seconds...');
+        await new Promise(res => setTimeout(res, 2000));
+        storedToken = await AsyncStorage.getItem('expo_push_token');
+        console.log('🔑 Stored token:', storedToken);
+      }
       if (storedToken) {
         setExpoPushToken(storedToken);
         await sendTokenToBackend(userId, accessToken, storedToken);
       } else {
-        console.log('📱 No push token available for registration');
+        console.log('📱 No push token available for registration (after retry)');
       }
     } catch (error) {
       console.error('❌ Error handling token registration:', error);
@@ -376,15 +383,40 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       console.log('🚪 Starting logout process...');
-      
+      // Use notification context for device removal
+      let removeDeviceToken, clearStoredNotificationData;
+      try {
+        ({ removeDeviceToken, clearStoredNotificationData } = useNotification());
+      } catch (e) {
+        // If not in a component, skip device removal
+        removeDeviceToken = null;
+        clearStoredNotificationData = null;
+      }
+      let accessToken = null;
+      if (user?.id && expoPushToken && removeDeviceToken) {
+        try {
+          accessToken = await getAccessToken();
+          const deviceRemovalPromise = removeDeviceToken(user.id, accessToken, expoPushToken);
+          // Clear notification data immediately
+          if (clearStoredNotificationData) await clearStoredNotificationData();
+          // Wait for device removal with a maximum timeout
+          try {
+            await Promise.race([
+              deviceRemovalPromise,
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+            ]);
+          } catch (timeoutError) {
+            console.log('Device removal timed out, proceeding with logout');
+          }
+        } catch (e) {
+          console.log('Device removal failed, proceeding with logout');
+        }
+      }
       // Clear auth state immediately
       setUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
-      
-      // Clear stored session
       await storeSession(null);
-      
       // Sign out from Supabase with timeout
       try {
         const logoutPromise = supabase.auth.signOut();
@@ -396,7 +428,6 @@ export const AuthProvider = ({ children }) => {
       } catch (timeoutError) {
         console.log('⏰ Supabase logout timed out, continuing...');
       }
-      
       console.log('✅ User logged out successfully');
     } catch (error) {
       console.error('❌ Error during logout:', error);

@@ -19,7 +19,7 @@ const NotificationContext = createContext();
 
 // Storage keys
 const STORAGE_KEYS = {
-  PUSH_TOKEN: 'admin_push_token',
+  PUSH_TOKEN: 'expo_push_token',
   NOTIFICATION_PERMISSION: 'admin_notification_permission',
 };
 
@@ -98,6 +98,9 @@ async function registerForPushNotificationsAsync() {
         })
       ).data;
       console.log('✅ Push token generated successfully:', pushTokenString);
+      // Store the token for all users
+      await AsyncStorage.setItem('expo_push_token', pushTokenString);
+      console.log('Stored expo_push_token:', pushTokenString);
       return pushTokenString;
     } catch (e) {
       console.log('❌ Error generating push token:', e);
@@ -199,7 +202,7 @@ export const NotificationProvider = ({ children }) => {
     try {
       if (expoPushToken) {
         // Store token in a location accessible by auth context
-        await AsyncStorage.setItem('admin_push_token', expoPushToken);
+        await AsyncStorage.setItem('expo_push_token', expoPushToken);
         console.log('🔄 Push token synced with auth context:', expoPushToken.substring(0, 20) + '...');
         return true;
       }
@@ -216,10 +219,6 @@ export const NotificationProvider = ({ children }) => {
       console.log('🔑 Storing push token:', token);
       await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
       setExpoPushToken(token);
-      
-      // Also sync with auth context
-      await AsyncStorage.setItem('admin_push_token', token);
-      
       console.log('✅ Push token stored successfully');
     } catch (error) {
       console.error('❌ Error storing push token:', error);
@@ -526,13 +525,14 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
 };
   // Remove device token from backend
   const removeDeviceToken = useCallback(async (userId, accessToken, expoPushToken) => {
-    if (!expoPushToken) {
-      console.log('No push token available to remove');
-      return false;
-    }
+    // if (!expoPushToken) {
+    //   console.log('No push token available to remove');
+    //   return false;
+    // }
 
     try {
-      console.log('🗑️ Removing device token from backend:', expoPushToken);
+      const pushToken = await AsyncStorage.getItem('expo_push_token');
+      console.log('🗑️ Removing deviiiiiiiiiice token from backend:', pushToken);
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
@@ -545,7 +545,7 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
           'Authorization': `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          player_id: expoPushToken
+          player_id: pushToken
         }),
         signal: controller.signal
       });
@@ -591,6 +591,7 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
   const value = {
     expoPushToken,
     notification,
+    setExpoPushToken,
     permissionStatus,
     isLoading,
     hasRequestedPermission,

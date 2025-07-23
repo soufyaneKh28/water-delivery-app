@@ -39,6 +39,8 @@ export default function CouponsScreen({navigation}) {
   const [copyFeedback, setCopyFeedback] = useState('');
   const [addressError, setAddressError] = useState('');
   const pickerRef = useRef(null);
+  const [isOrderingCoupon, setIsOrderingCoupon] = useState(false);
+  const [productOrderError, setProductOrderError] = useState('');
 
   const fetchCouponBalance = async () => {
     try {
@@ -131,32 +133,37 @@ export default function CouponsScreen({navigation}) {
       setAddressError('يرجى اختيار عنوان التوصيل');
       return;
     }
-    // Clear any previous address error
     setAddressError('');
     
-    // Validate bottle count if needed
     if (selectedBottleCount === undefined) {
       setNoteError('يرجى اختيار عدد القارورات أو اختيار لا تريد طلب قارورات');
       return;
     }
+    setIsOrderingCoupon(true);
     try {
       const payload = {
-        numberOfCoupon: String(selectedBook),
         priceOfCoupon: String(selectedBook),
         location_id: selectedAddress.id,
+        numberOfCoupon: String(selectedBook),
       };
       if (selectedBottleCount && selectedBottleCount !== '0') {
         payload.numberOfWater = String(selectedBottleCount);
       }
-      // Get access token from Supabase
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
-      await axios.post('https://water-supplier-2.onrender.com/api/k1/orders/createCouponDelivery', payload, {
+      const response = await fetch('https://water-supplier-2.onrender.com/api/k1/orders/createCouponDelivery', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
+        body: JSON.stringify(payload),
       });
+      const data = await response.json();
+      console.log('dataaaaaa', data.message);
+      if (!response.ok) {
+        throw new Error(data.message || 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى');
+      }
       Toast.show({
         type: 'success',
         text1: 'تم الطلب',
@@ -165,17 +172,27 @@ export default function CouponsScreen({navigation}) {
         visibilityTime: 3000,
       });
       closeModal();
+      // navigation.replace('OrderSuccess', {
+      //   order: payload,
+      //   cart: [{ product_id: selectedBook, quantity: 1 }],
+      //   total: selectedBook,
+      //   selectedAddress,
+      // });
     } catch (error) {
       console.error('Error creating coupon delivery:', error);
       Toast.show({
         type: 'error',
         text1: 'خطأ',
-        text2: error.response?.data?.message || error.message || 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
+        text2: error.message || 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى',
         position: 'top',
         visibilityTime: 3000,
       });
+    } finally {
+      setIsOrderingCoupon(false);
     }
   };
+
+  // console.log(selectedBook, 'selectedBook' , selectedAddress , 'selectedAddress' , couponBalance , 'couponBalance' );
 
   const incrementProduct = () => setProductCount(count => count + 1);
   const decrementProduct = () => setProductCount(count => (count > 1 ? count - 1 : 1));
@@ -193,14 +210,10 @@ export default function CouponsScreen({navigation}) {
     }
 
     if (couponBalance < (product.price * productCount)) {
-      Toast.show({
-        type: 'error',
-        text1: 'خطأ',
-        text2: 'رصيد الكوبونات غير كافي. يرجى شراء المزيد من الكوبونات',
-        position: 'top',
-        visibilityTime: 3000,
-      });
+      setProductOrderError('رصيد الكوبونات غير كافي. يرجى شراء المزيد من الكوبونات أولاً.');
       return;
+    } else {
+      setProductOrderError('');
     }
 
     try {
@@ -244,7 +257,7 @@ export default function CouponsScreen({navigation}) {
       setSelectedProduct(null);
 
       // Navigate to success screen
-      navigation.replace('OrderSuccessScreen', {
+      navigation.replace('OrderSuccess', {
         order: payload,
         cart: [{ ...product, quantity: productCount }],
         total: product.price * productCount,
@@ -432,6 +445,9 @@ export default function CouponsScreen({navigation}) {
               </CustomText>
               <CustomText>عدد الكوبونات المراد سحبها</CustomText>
             </View>
+            {productOrderError ? (
+              <CustomText style={{ color: 'red', textAlign: 'center', marginBottom: 8 }}>{productOrderError}</CustomText>
+            ) : null}
             <PrimaryButton
               title={isOrderingProduct ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
               style={modalStyles.confirmButton}
@@ -601,10 +617,10 @@ export default function CouponsScreen({navigation}) {
               <CustomText type="bold" style={{ color: colors.primary }}>23 دينار</CustomText>
             </View>
             <PrimaryButton
-              title="تأكيد الطلب"
+              title={isOrderingCoupon ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
               style={modalStyles.confirmButton}
               onPress={handleConfirm}
-              disabled={
+              disabled={isOrderingCoupon ||
                 (paymentMethod === 'card' && (
                   !cardName.trim() ||
                   !cardNumber.trim() ||
@@ -614,7 +630,14 @@ export default function CouponsScreen({navigation}) {
                 (paymentMethod === 'delivery' && selectedBottleCount === undefined) ||
                 (paymentMethod === 'click' && selectedBottleCount === undefined)
               }
-            />
+            >
+              {isOrderingCoupon && (
+                <ActivityIndicator 
+                  color="#fff" 
+                  style={{ position: 'absolute', right: 20 }} 
+                />
+              )}
+            </PrimaryButton>
           </ScrollView>
         </SafeAreaView>
       </Modal>

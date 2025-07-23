@@ -32,11 +32,11 @@ const MENU_ITEMS = [
     icon: require('../../../assets/icons/security.png'), // Security
     screen: 'Security',
   },
-  {
-    label: 'الشروط والأحكام',
-    icon: require('../../../assets/icons/terms.png'), // Terms
-    screen: 'Terms',
-  },
+  // {
+  //   label: 'الشروط والأحكام',
+  //   icon: require('../../../assets/icons/terms.png'), // Terms
+  //   screen: 'Terms',
+  // },
   {
     label: 'الأسئلة الشائعة',
     icon: require('../../../assets/icons/faq.png'), // FAQ
@@ -62,12 +62,14 @@ const COUNTRY_CODES = [
 ];
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth();
+  const { user, logout, getAccessToken } = useAuth();
   const { 
     permissionStatus, 
     requestNotificationPermission, 
     refreshPermissionStatus,
-    expoPushToken 
+    expoPushToken,
+    removeDeviceToken,
+    clearStoredNotificationData
   } = useNotification();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -180,7 +182,29 @@ export default function ProfileScreen() {
 
   const handleLogout = async () => {
     setShowLogoutModal(false);
-    logout();
+    try {
+      // Always get a fresh access token BEFORE logout
+      const accessToken = await getAccessToken();
+      // Start device removal but don't wait for it to complete
+      const deviceRemovalPromise = removeDeviceToken(user?.id, accessToken, expoPushToken);
+      // Clear notification data immediately
+      await clearStoredNotificationData();
+      // Wait for device removal with a maximum timeout
+      try {
+        await Promise.race([
+          deviceRemovalPromise,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+        ]);
+      } catch (timeoutError) {
+        console.log('Device removal timed out, proceeding with logout');
+      }
+      // Proceed with logout regardless of device removal result
+      await logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Still logout even if anything fails
+      await logout();
+    }
   };
 
   const renderCountryItem = ({ item }) => (

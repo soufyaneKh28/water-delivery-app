@@ -2,6 +2,7 @@ import 'react-native-reanimated';
 import '../gesture-handler';
 
 import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
@@ -9,6 +10,7 @@ import { FONTS } from './constants/fonts';
 import { AddressProvider } from './context/AddressContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { NotificationProvider } from './context/NotificationContext';
 import AppNavigator from './navigation/AppNavigator';
 
 // Custom toast config with marginTop for top toasts
@@ -66,6 +68,7 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
     async function loadFonts() {
       try {
         await Font.loadAsync({
@@ -76,9 +79,11 @@ export default function App() {
           [FONTS.light]: require('../assets/fonts/IBMPlexSansArabic-Light.ttf'),
         });
         setFontsLoaded(true);
+        await SplashScreen.hideAsync();
       } catch (error) {
         console.error('Error loading fonts:', error);
         setError('Failed to load fonts');
+        await SplashScreen.hideAsync();
       }
     }
 
@@ -107,6 +112,7 @@ export default function App() {
   }
 
   return (
+    <NotificationProvider>
     <AuthProvider>
       <CartProvider>
         <AddressProvider>
@@ -115,5 +121,6 @@ export default function App() {
         </AddressProvider>
       </CartProvider>
     </AuthProvider>
+    </NotificationProvider>
   );
 }

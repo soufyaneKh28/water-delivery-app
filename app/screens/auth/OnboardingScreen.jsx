@@ -29,7 +29,7 @@ const onboardingData = [
   },
   {
     id: "2",
-    image: require("../../../assets/images/onBoarding1.png"),
+    image: require("../../../assets/images/onBoarding2.png"),
     title: "وفّر أكثر مع العروض والخصومات",
     description: "استمتع بكوبونات وخصومات حصرية داخل التطبيق، وادفع بالطريقة التي تناسبك",
     buttonText: "ابدأ الآن",

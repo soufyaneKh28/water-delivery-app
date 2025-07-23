@@ -18,6 +18,7 @@ import { colors } from '../../styling/colors';
 import { api } from '../../utils/api';
 // import { useFocusEffect } from '@react-navigation/native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -93,6 +94,7 @@ async function registerForPushNotificationsAsync() {
         })
       ).data;
       console.log("pushTokenStringggggg", pushTokenString);
+      AsyncStorage.setItem('expo_push_token', pushTokenString);
       return pushTokenString;
     } catch (e) {
       handleRegistrationError(`${e}`);
@@ -565,7 +567,7 @@ const { width } = Dimensions.get('window');
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoriesScrollContent}
-              style={styles.categoriesScroll}
+              style={[styles.categoriesScroll, categories.length > 3 ? {flexDirection: 'row'} : {flexDirection: 'row-reverse'}]}
             >
               {categories.map((category) => (
                 <TouchableOpacity 
@@ -837,9 +839,10 @@ const styles = StyleSheet.create({
   },
   categoriesScroll: {
     // marginHorizontal: -20, 
-    flexDirection: Platform.OS === 'ios' ? 'row-reverse' : 'row-reverse',
 
-    // direction: 'rtl',
+
+    direction: 'rtl',
+    //  flexDirection: 'row-reverse',
 // paddingHorizontal: 20,
     width: '100%',
   },
@@ -848,7 +851,7 @@ const styles = StyleSheet.create({
     flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     // justifyContent: 'flex-start',
     // alignItems: 'flex-end',
-    // direction: 'rtl',
+    direction: 'rtl',
     // marginEnd: -150,
     gap: 20,
     // width: '100%',

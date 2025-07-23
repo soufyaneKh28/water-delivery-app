@@ -38,20 +38,33 @@ export default function SignUpScreen({ navigation }) {
   };
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirmPassword || !username || !phoneNumber) {
-      Alert.alert("خطأ", "الرجاء ملء جميع الحقول المطلوبة")
-      return
+    // Trim inputs for validation
+    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
+    const sanitizedUsername = trimmedUsername.replace(/\s+/g, "_");
+
+    // Validate required fields
+    if (!trimmedEmail || !password || !confirmPassword || !trimmedUsername || !phoneNumber) {
+      Alert.alert("خطأ", "الرجاء ملء جميع الحقول المطلوبة");
+      return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert("خطأ", "كلمات المرور غير متطابقة")
-      return
+    // Username should not be the same as email
+    if (trimmedUsername.toLowerCase() === trimmedEmail.toLowerCase()) {
+      Alert.alert("خطأ", "اسم المستخدم لا يمكن أن يكون نفس البريد الإلكتروني");
+      return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
       Alert.alert("خطأ", "الرجاء إدخال بريد إلكتروني صحيح");
+      return;
+    }
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      Alert.alert("خطأ", "كلمات المرور غير متطابقة");
       return;
     }
 
@@ -61,11 +74,9 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // Replace spaces in username with underscores
-      const sanitizedUsername = username.trim().replace(/\s+/g, "_");
-      console.log('Attempting signup with:', { email, username: sanitizedUsername, phone: fullPhoneNumber });
+      console.log('Attempting signup with:', { email: trimmedEmail, username: sanitizedUsername, phone: fullPhoneNumber });
 
       const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
         method: "POST",
@@ -74,12 +85,12 @@ export default function SignUpScreen({ navigation }) {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          email: email.trim(),
+          email: trimmedEmail,
           password,
           username: sanitizedUsername,
           phone: fullPhoneNumber,
         }),
-      })
+      });
 
       const data = await response.json()
       console.log('Signup response:', { status: response.status, data });
