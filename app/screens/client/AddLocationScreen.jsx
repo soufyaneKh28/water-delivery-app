@@ -5,6 +5,7 @@ import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
 
@@ -22,6 +23,7 @@ export default function AddLocationScreen({ route, navigation }) {
   const [additionalDirections, setAdditionalDirections] = useState('');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     if (editAddress) {
@@ -117,8 +119,8 @@ export default function AddLocationScreen({ route, navigation }) {
         throw new Error(errorData.message || (editAddress ? 'فشل تحديث العنوان' : 'فشل إضافة العنوان'));
       }
 
-      alert(editAddress ? 'تم تحديث العنوان بنجاح' : 'تمت إضافة العنوان بنجاح');
-      navigation.navigate('ClientTabs');
+      // Show success modal instead of alert
+      setShowSuccessModal(true);
     } catch (error) {
       alert('حدث خطأ: ' + error.message);
     } finally {
@@ -254,6 +256,18 @@ export default function AddLocationScreen({ route, navigation }) {
           )}
         </View>
       </ScrollView>
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title={editAddress ? "تم تحديث العنوان بنجاح" : "تمت إضافة العنوان بنجاح"}
+        message={editAddress ? "تم تحديث بيانات العنوان بنجاح" : "تم حفظ العنوان الجديد بنجاح"}
+        onClose={() => setShowSuccessModal(false)}
+        buttonText="حسناً"
+        onButtonPress={() => {
+          setShowSuccessModal(false);
+          navigation.navigate('ClientTabs');
+        }}
+      />
     </SafeAreaView>
   );
 }

@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import ErrorModal from '../../components/common/ErrorModal';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import SuccessModal from '../../components/common/SuccessModal';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
@@ -16,39 +18,46 @@ export default function ResetPasswordScreen({ navigation }) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
   const { resetPassword } = useAuth();
 
   const handleUpdatePassword = async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert('خطأ', 'جميع الحقول مطلوبة');
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'جميع الحقول مطلوبة'
+      });
+      setShowErrorModal(true);
       return;
     }
     if (newPassword !== confirmPassword) {
-      Alert.alert('خطأ', 'كلمة المرور الجديدة غير متطابقة');
+      setErrorMessage({
+        title: 'كلمات مرور غير متطابقة',
+        message: 'كلمة المرور الجديدة غير متطابقة'
+      });
+      setShowErrorModal(true);
       return;
     }
     if (newPassword.length < 6) {
-      Alert.alert('خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      setErrorMessage({
+        title: 'كلمة مرور ضعيفة',
+        message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      });
+      setShowErrorModal(true);
       return;
     }
     setLoading(true);
     try {
       await resetPassword(newPassword, oldPassword);
-      Alert.alert(
-        'تم التحديث',
-        'تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.',
-        [
-          {
-            text: 'حسناً',
-            onPress: () => navigation.reset({
-              index: 0,
-              routes: [{ name: 'Login' }],
-            }),
-          },
-        ]
-      );
+      setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert('خطأ', error.message || 'حدث خطأ أثناء تغيير كلمة المرور');
+      setErrorMessage({
+        title: 'خطأ في تغيير كلمة المرور',
+        message: error.message || 'حدث خطأ أثناء تغيير كلمة المرور'
+      });
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -143,6 +152,29 @@ export default function ResetPasswordScreen({ navigation }) {
           disabled={loading}
         />
       </ScrollView>
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title="تم التحديث"
+        message="تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة."
+        onClose={() => setShowSuccessModal(false)}
+        buttonText="حسناً"
+        onButtonPress={() => {
+          setShowSuccessModal(false);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          });
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

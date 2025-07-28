@@ -172,12 +172,41 @@ export default function CouponsScreen({navigation}) {
         visibilityTime: 3000,
       });
       closeModal();
-      // navigation.replace('OrderSuccess', {
-      //   order: payload,
-      //   cart: [{ product_id: selectedBook, quantity: 1 }],
-      //   total: selectedBook,
-      //   selectedAddress,
-      // });
+      
+      // Navigate to success screen with better error handling
+      try {
+        console.log('Attempting to navigate to OrderSuccess for coupon purchase with params:', {
+          order: payload,
+          cart: [{ product_id: selectedBook, quantity: 1 }],
+          total: selectedBook,
+          selectedAddress,
+        });
+        
+        // Use setTimeout to ensure modal is fully closed before navigation
+        setTimeout(() => {
+          navigation.replace('OrderSuccess', {
+            order: payload,
+            cart: [{ product_id: selectedBook, quantity: 1 }],
+            total: selectedBook,
+            selectedAddress,
+          });
+        }, 100);
+        
+      } catch (navigationError) {
+        console.error('Navigation error for coupon purchase:', navigationError);
+        // Fallback: try navigate instead of replace
+        try {
+          navigation.navigate('OrderSuccess', {
+            order: payload,
+            cart: [{ product_id: selectedBook, quantity: 1 }],
+            total: selectedBook,
+            selectedAddress,
+          });
+        } catch (fallbackError) {
+          console.error('Fallback navigation also failed for coupon purchase:', fallbackError);
+          // Success message already shown, just stay on current screen
+        }
+      }
     } catch (error) {
       console.error('Error creating coupon delivery:', error);
       Toast.show({
@@ -256,13 +285,48 @@ export default function CouponsScreen({navigation}) {
       setProductCount(1);
       setSelectedProduct(null);
 
-      // Navigate to success screen
-      navigation.replace('OrderSuccess', {
-        order: payload,
-        cart: [{ ...product, quantity: productCount }],
-        total: product.price * productCount,
-        selectedAddress,
-      });
+      // Navigate to success screen with better error handling
+      try {
+        console.log('Attempting to navigate to OrderSuccess with params:', {
+          order: payload,
+          cart: [{ ...product, quantity: productCount }],
+          total: product.price * productCount,
+          selectedAddress,
+        });
+        
+        // Use setTimeout to ensure modal is fully closed before navigation
+        setTimeout(() => {
+          navigation.replace('OrderSuccess', {
+            order: payload,
+            cart: [{ ...product, quantity: productCount }],
+            total: product.price * productCount,
+            selectedAddress,
+          });
+        }, 100);
+        
+      } catch (navigationError) {
+        console.error('Navigation error:', navigationError);
+        // Fallback: try navigate instead of replace
+        try {
+          navigation.navigate('OrderSuccess', {
+            order: payload,
+            cart: [{ ...product, quantity: productCount }],
+            total: product.price * productCount,
+            selectedAddress,
+          });
+        } catch (fallbackError) {
+          console.error('Fallback navigation also failed:', fallbackError);
+          // Show success message and go back to coupons screen
+          // Toast.show({
+          //   type: 'success',
+          //   text1: 'تم الطلب بنجاح',
+          //   text2: 'تم إرسال طلبك بنجاح!',
+          //   position: 'top',
+          //   visibilityTime: 3000,
+          // });
+          navigation.goBack();
+        }
+      }
 
     } catch (error) {
       console.error('Error processing product request:', error);

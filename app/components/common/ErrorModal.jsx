@@ -5,11 +5,11 @@ import { colors } from '../../styling/colors';
 import CustomText from './CustomText';
 import PrimaryButton from './PrimaryButton';
 
-export default function SuccessModal({
+export default function ErrorModal({
   visible,
   onClose,
-  title = 'تم بنجاح',
-  message = 'تم تنفيذ العملية بنجاح',
+  title = 'خطأ',
+  message = 'حدث خطأ غير متوقع',
   buttonText = 'حسناً',
   onButtonPress,
   showIcon = true,
@@ -23,19 +23,17 @@ export default function SuccessModal({
   };
 
   return (
-    <View> 
-
     <Modal
       visible={visible}
       transparent
       animationType="fade"
       onRequestClose={onClose}
-      >
+    >
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           {showIcon && (
             <View style={styles.iconContainer}>
-              <Ionicons name="checkmark-circle" size={60} color={colors.success} />
+              <Ionicons name="alert-circle" size={60} color={colors.error} />
             </View>
           )}
           
@@ -51,11 +49,10 @@ export default function SuccessModal({
             title={buttonText}
             style={styles.button}
             onPress={handleButtonPress}
-            />
+          />
         </View>
       </View>
     </Modal>
-            </View>
   );
 }
 
@@ -79,7 +76,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     marginBottom: 12,
-    color: colors.success,
+    color: colors.error,
     textAlign: 'center',
   },
   message: {

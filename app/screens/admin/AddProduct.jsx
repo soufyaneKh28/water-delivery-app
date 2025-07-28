@@ -10,6 +10,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import ErrorModal from '../../components/common/ErrorModal';
 import SuccessModal from '../../components/common/SuccessModal';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
@@ -31,7 +32,9 @@ export default function AddProduct({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
 
   // Prefill fields if editing
   useEffect(() => {
@@ -55,6 +58,11 @@ export default function AddProduct({ navigation }) {
         .order('created_at', { ascending: false });
       if (error) {
         console.error('Error fetching categories:', error);
+        setErrorMessage({
+          title: 'خطأ في التحميل',
+          message: 'فشل في تحميل فئات المنتجات'
+        });
+        setShowErrorModal(true);
         return;
       }
       setCategories(data);
@@ -67,7 +75,11 @@ export default function AddProduct({ navigation }) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (status !== 'granted') {
-      alert('عذراً، نحتاج إلى إذن للوصول إلى معرض الصور!');
+      setErrorMessage({
+        title: 'خطأ في الصلاحيات',
+        message: 'عذراً، نحتاج إلى إذن للوصول إلى معرض الصور!'
+      });
+      setShowErrorModal(true);
       return;
     }
 
@@ -88,11 +100,19 @@ export default function AddProduct({ navigation }) {
 
   const handleSave = async () => {
     if (!image) {
-      alert('الرجاء اختيار صورة للمنتج');
+      setErrorMessage({
+        title: 'صورة مطلوبة',
+        message: 'الرجاء اختيار صورة للمنتج'
+      });
+      setShowErrorModal(true);
       return;
     }
     if (!productName || !productSize || !productDescription || !productPrice) {
-      alert('الرجاء ملء جميع الحقول المطلوبة');
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'الرجاء ملء جميع الحقول المطلوبة'
+      });
+      setShowErrorModal(true);
       return;
     }
 
@@ -102,7 +122,11 @@ export default function AddProduct({ navigation }) {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setErrorMessage({
+          title: 'خطأ في المصادقة',
+          message: 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.'
+        });
+        setShowErrorModal(true);
         return;
       }
 
@@ -161,15 +185,19 @@ export default function AddProduct({ navigation }) {
       }
 
       setShowSuccessModal(true);
-      // Auto dismiss after 2 seconds
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        navigation.goBack();
-      }, 2000);
+      // Remove auto dismiss and navigation - let user manually close
+      // setTimeout(() => {
+      //   setShowSuccessModal(false);
+      //   navigation.goBack();
+      // }, 2000);
 
     } catch (err) {
-      alert('حدث خطأ: ' + (err.response?.data?.message || err.message));
       console.log("err", err);
+      setErrorMessage({
+        title: 'خطأ في الحفظ',
+        message: err.response?.data?.message || err.message || 'حدث خطأ أثناء حفظ المنتج'
+      });
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -430,10 +458,20 @@ export default function AddProduct({ navigation }) {
         visible={showSuccessModal}
         title={successMessage.title}
         message={successMessage.message}
-        onDismiss={() => {
+        onClose={() => setShowSuccessModal(false)}
+        onButtonPress={() => {
           setShowSuccessModal(false);
           navigation.goBack();
         }}
+        buttonText="حسناً"
+      />
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
       />
     </SafeAreaView>
   );

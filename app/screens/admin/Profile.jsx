@@ -6,7 +6,6 @@ import {
   Alert,
   Image,
   Linking,
-  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -16,6 +15,7 @@ import {
   View
 } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -292,72 +292,31 @@ export default function Profile() {
         </View>
       </ScrollView>
 
-      {/* Logout Modal */}
-      <Modal
+      <ConfirmationModal
         visible={showLogoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => !isLoggingOut && setShowLogoutModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <CustomText type="bold" style={styles.modalTitle}>
-              {isLoggingOut ? 'جاري تسجيل الخروج...' : 'تسجيل الخروج'}
-            </CustomText>
-            <CustomText style={styles.modalText}>
-              {isLoggingOut 
-                ? 'يرجى الانتظار أثناء إزالة الجهاز من الإشعارات...'
-                : 'هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟'
-              }
-            </CustomText>
-            <TouchableOpacity
-              style={[styles.modalButton, isLoggingOut && styles.modalButtonDisabled]}
-              onPress={handleLogout}
-              disabled={isLoggingOut}
-            >
-              <CustomText style={styles.modalButtonText}>
-                {isLoggingOut ? 'جاري المعالجة...' : 'تسجيل الخروج'}
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonSecondary]}
-              onPress={() => setShowLogoutModal(false)}
-              disabled={isLoggingOut}
-            >
-              <CustomText style={styles.modalButtonTextSecondary}>إلغاء</CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Delete Account Modal */}
-      <Modal
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title={isLoggingOut ? 'جاري تسجيل الخروج...' : 'تسجيل الخروج'}
+        message={isLoggingOut 
+          ? 'يرجى الانتظار أثناء إزالة الجهاز من الإشعارات...'
+          : 'هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟'
+        }
+        confirmText={isLoggingOut ? 'جاري المعالجة...' : 'تسجيل الخروج'}
+        cancelText="إلغاء"
+        type="default"
+        loading={isLoggingOut}
+      />
+      
+      <ConfirmationModal
         visible={showDeleteModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <CustomText type="bold" style={styles.modalTitle}>حذف الحساب</CustomText>
-            <CustomText style={styles.modalText}>
-              هل أنت متأكد أنك تريد حذف حسابك؟ سيؤدي هذا الإجراء إلى حذف جميع بياناتك بشكل دائم ولن تتمكن من استعادتها لاحقًا.
-            </CustomText>
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={handleDeleteAccount}
-            >
-              <CustomText style={styles.modalButtonText}>حذف</CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonSecondary]}
-              onPress={() => setShowDeleteModal(false)}
-            >
-              <CustomText style={styles.modalButtonTextSecondary}>إلغاء</CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        title="حذف الحساب"
+        message="هل أنت متأكد أنك تريد حذف حسابك؟ سيؤدي هذا الإجراء إلى حذف جميع بياناتك بشكل دائم ولن تتمكن من استعادتها لاحقًا."
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+      />
     </SafeAreaView>
   );
 }

@@ -45,7 +45,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         <View style={styles.rowBetween}>
           <View>
             <Text style={styles.oldPrice}>{oldPrice}</Text>
-            <Text style={styles.price}>{price} {order_type === 'coupon' ? 'كوبون' : 'دينار'}</Text>
+            <Text style={styles.price}>{price}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <CustomText type="semiBold" style={styles.title}>{title}</CustomText>

@@ -3,9 +3,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import BackBtn from '../../components/common/BackButton';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import ErrorModal from '../../components/common/ErrorModal';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 import { api } from '../../utils/api';
 
@@ -17,6 +20,10 @@ export default function UploadReceiptScreen() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isProcessingImage, setIsProcessingImage] = useState(false);
+  const [showImageSourceModal, setShowImageSourceModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
 
   const pickImage = async () => {
     try {
@@ -26,7 +33,11 @@ export default function UploadReceiptScreen() {
       // Request permissions first
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إذن الوصول إلى المعرض لاختيار الصورة');
+        setErrorMessage({
+          title: 'إذن مطلوب',
+          message: 'نحتاج إذن الوصول إلى المعرض لاختيار الصورة'
+        });
+        setShowErrorModal(true);
         return;
       }
       
@@ -43,7 +54,11 @@ export default function UploadReceiptScreen() {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء اختيار الصورة. يرجى المحاولة مرة أخرى.');
+      setErrorMessage({
+        title: 'خطأ في اختيار الصورة',
+        message: 'حدث خطأ أثناء اختيار الصورة. يرجى المحاولة مرة أخرى.'
+      });
+      setShowErrorModal(true);
     }
   };
 
@@ -55,7 +70,11 @@ export default function UploadReceiptScreen() {
       // Request camera permissions first
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('خطأ', 'نحتاج إذن الوصول إلى الكاميرا لالتقاط صورة');
+        setErrorMessage({
+          title: 'إذن مطلوب',
+          message: 'نحتاج إذن الوصول إلى الكاميرا لالتقاط صورة'
+        });
+        setShowErrorModal(true);
         return;
       }
       
@@ -72,20 +91,25 @@ export default function UploadReceiptScreen() {
       }
     } catch (error) {
       console.error('Error taking photo:', error);
-      Alert.alert('خطأ', 'حدث خطأ أثناء التقاط الصورة. يرجى المحاولة مرة أخرى.');
+      setErrorMessage({
+        title: 'خطأ في التقاط الصورة',
+        message: 'حدث خطأ أثناء التقاط الصورة. يرجى المحاولة مرة أخرى.'
+      });
+      setShowErrorModal(true);
     }
   };
 
   const showImageSourceOptions = () => {
-    Alert.alert(
-      'اختر مصدر الصورة',
-      'من أين تريد اختيار الصورة؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'الكاميرا', onPress: takePhoto },
-        { text: 'المعرض', onPress: pickImage }
-      ]
-    );
+    setShowImageSourceModal(true);
+  };
+
+  const handleImageSourceSelection = (source) => {
+    setShowImageSourceModal(false);
+    if (source === 'camera') {
+      takePhoto();
+    } else if (source === 'gallery') {
+      pickImage();
+    }
   };
 
   const resetImage = () => {
@@ -136,7 +160,11 @@ export default function UploadReceiptScreen() {
       setSelectedImage(processedImage);
     } catch (error) {
       console.error('Error processing image:', error);
-      Alert.alert('خطأ', error.message || 'حدث خطأ أثناء معالجة الصورة');
+      setErrorMessage({
+        title: 'خطأ في معالجة الصورة',
+        message: error.message || 'حدث خطأ أثناء معالجة الصورة'
+      });
+      setShowErrorModal(true);
     } finally {
       setIsProcessingImage(false);
     }
@@ -145,12 +173,20 @@ export default function UploadReceiptScreen() {
   const handleUploadReceipt = async () => {
     try {
       if (!selectedImage) {
-        Alert.alert('خطأ', 'الرجاء اختيار صورة الإيصال');
+        setErrorMessage({
+          title: 'صورة مطلوبة',
+          message: 'الرجاء اختيار صورة الإيصال'
+        });
+        setShowErrorModal(true);
         return;
       }
 
       if (!selectedImage.uri) {
-        Alert.alert('خطأ', 'صورة غير صالحة، يرجى اختيار صورة أخرى');
+        setErrorMessage({
+          title: 'صورة غير صالحة',
+          message: 'صورة غير صالحة، يرجى اختيار صورة أخرى'
+        });
+        setShowErrorModal(true);
         return;
       }
 
@@ -177,16 +213,7 @@ export default function UploadReceiptScreen() {
         throw new Error(result.message || 'فشل في رفع الصورة');
       }
       
-      Alert.alert(
-        'تم التحديث',
-        'تم رفع صورة الإيصال بنجاح',
-        [
-          { 
-            text: 'حسناً',
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error uploading receipt:', error);
       let errorMessage = 'حدث خطأ أثناء رفع صورة الإيصال. يرجى المحاولة مرة أخرى.';
@@ -197,7 +224,11 @@ export default function UploadReceiptScreen() {
         errorMessage = error.message;
       }
       
-      Alert.alert('خطأ', errorMessage, [{ text: 'حسناً' }]);
+      setErrorMessage({
+        title: 'خطأ في رفع الإيصال',
+        message: errorMessage
+      });
+      setShowErrorModal(true);
     } finally {
       setIsUpdating(false);
     }
@@ -228,6 +259,18 @@ export default function UploadReceiptScreen() {
 
   return (
     <View style={styles.container}>
+      <ConfirmationModal
+        visible={showImageSourceModal}
+        onClose={() => setShowImageSourceModal(false)}
+        onConfirm={() => handleImageSourceSelection('camera')}
+        title="اختر مصدر الصورة"
+        message="من أين تريد اختيار الصورة؟"
+        confirmText="الكاميرا"
+        cancelText="المعرض"
+        type="default"
+        onCancel={() => handleImageSourceSelection('gallery')}
+      />
+      
       <View style={styles.header}>
         <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>إضافة إيصال الدفع</CustomText>
@@ -321,6 +364,26 @@ export default function UploadReceiptScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title="تم التحديث"
+        message="تم رفع صورة الإيصال بنجاح"
+        onClose={() => setShowSuccessModal(false)}
+        buttonText="حسناً"
+        onButtonPress={() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }}
+      />
     </View>
   );
 }

@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Dimensions, FlatList, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, FlatList, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -56,6 +58,9 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [products, setProducts] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
 
   const filters = [
@@ -164,50 +169,63 @@ export default function Products() {
 
   const handleDeleteProduct = () => {
     if (!selectedProduct) return;
-    Alert.alert(
-      'تأكيد الحذف',
-      'هل أنت متأكد أنك تريد حذف هذا المنتج؟',
-      [
-        { text: 'إلغاء', style: 'cancel' },
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteProduct = async () => {
+    try {
+      setIsDeleting(true);
+      // Get Bearer token from Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setIsDeleting(false);
+        return;
+      }
+      await axios.delete(
+        `https://water-supplier-2.onrender.com/api/k1/products/deleteProduct/${selectedProduct._id || selectedProduct.id}`,
         {
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setIsDeleting(true);
-              // Get Bearer token from Supabase
-              const { data: { session } } = await supabase.auth.getSession();
-              const token = session?.access_token;
-              if (!token) {
-                alert('لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-                setIsDeleting(false);
-                return;
-              }
-              await axios.delete(
-                `https://water-supplier-2.onrender.com/api/k1/products/deleteProduct/${selectedProduct._id || selectedProduct.id}`,
-                {
-                  headers: {
-                    'Authorization': `Bearer ${token}`,
-                  },
-                }
-              );
-              setProductActionModalVisible(false);
-              setProducts((prev) => prev.filter((p) => (p._id || p.id) !== (selectedProduct._id || selectedProduct.id)));
-              setSelectedProduct(null);
-              alert('تم حذف المنتج بنجاح');
-            } catch (err) {
-              alert('حدث خطأ أثناء حذف المنتج: ' + (err.response?.data?.message || err.message));
-            } finally {
-              setIsDeleting(false);
-            }
-          }
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
         }
-      ]
-    );
+      );
+      setProductActionModalVisible(false);
+      setProducts((prev) => prev.filter((p) => (p._id || p.id) !== (selectedProduct._id || selectedProduct.id)));
+      setSelectedProduct(null);
+      setSuccessMessage('تم حذف المنتج بنجاح');
+      setShowSuccessModal(true);
+    } catch (err) {
+      alert('حدث خطأ أثناء حذف المنتج: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirmation(false);
+    }
   };
 
   return (
     <View style={styles.container}>
+      <ConfirmationModal
+        visible={showDeleteConfirmation}
+        onClose={() => setShowDeleteConfirmation(false)}
+        onConfirm={confirmDeleteProduct}
+        title="تأكيد الحذف"
+        message="هل أنت متأكد أنك تريد حذف هذا المنتج؟"
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+        loading={isDeleting}
+      />
+      
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="تم الحذف"
+        message={successMessage}
+        buttonText="حسناً"
+      />
+      
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}

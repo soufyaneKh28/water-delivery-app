@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons"
 import { StatusBar } from "expo-status-bar"
 import { useState } from "react"
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,7 +13,9 @@ import {
   View
 } from "react-native"
 import CustomText from "../../components/common/CustomText"
+import ErrorModal from "../../components/common/ErrorModal"
 import PhoneInput from "../../components/common/PhoneInput"
+import SuccessModal from "../../components/common/SuccessModal"
 import { useAuth } from "../../context/AuthContext"
 import { colors } from "../../styling/colors"
 import { globalStyles } from "../../styling/globalStyles"
@@ -25,6 +26,9 @@ export default function SignUpScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' })
   const { signup } = useAuth()
   const [username, setUsername] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -45,26 +49,52 @@ export default function SignUpScreen({ navigation }) {
 
     // Validate required fields
     if (!trimmedEmail || !password || !confirmPassword || !trimmedUsername || !phoneNumber) {
-      Alert.alert("خطأ", "الرجاء ملء جميع الحقول المطلوبة");
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'الرجاء ملء جميع الحقول المطلوبة'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     // Username should not be the same as email
     if (trimmedUsername.toLowerCase() === trimmedEmail.toLowerCase()) {
-      Alert.alert("خطأ", "اسم المستخدم لا يمكن أن يكون نفس البريد الإلكتروني");
+      setErrorMessage({
+        title: 'خطأ في البيانات',
+        message: 'اسم المستخدم لا يمكن أن يكون نفس البريد الإلكتروني'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
-      Alert.alert("خطأ", "الرجاء إدخال بريد إلكتروني صحيح");
+      setErrorMessage({
+        title: 'خطأ في البريد الإلكتروني',
+        message: 'الرجاء إدخال بريد إلكتروني صحيح'
+      });
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      setErrorMessage({
+        title: 'كلمة مرور ضعيفة',
+        message: 'كلمة المرور يجب أن تكون 8 أحرف على الأقل'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     // Validate password match
     if (password !== confirmPassword) {
-      Alert.alert("خطأ", "كلمات المرور غير متطابقة");
+      setErrorMessage({
+        title: 'كلمات مرور غير متطابقة',
+        message: 'كلمات المرور غير متطابقة'
+      });
+      setShowErrorModal(true);
       return;
     }
 
@@ -76,7 +106,20 @@ export default function SignUpScreen({ navigation }) {
 
     setIsLoading(true);
     try {
-      console.log('Attempting signup with:', { email: trimmedEmail, username: sanitizedUsername, phone: fullPhoneNumber });
+      const requestBody = {
+        email: trimmedEmail,
+        password: password,
+        username: sanitizedUsername,
+        phone: fullPhoneNumber,
+      };
+      
+      console.log('Attempting signup with:', requestBody);
+      console.log('Full phone number:', fullPhoneNumber);
+      console.log('Phone number length:', fullPhoneNumber?.length);
+
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
       const response = await fetch("https://water-supplier-2.onrender.com/api/k1/users/signup", {
         method: "POST",
@@ -84,15 +127,13 @@ export default function SignUpScreen({ navigation }) {
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
-        body: JSON.stringify({
-          email: trimmedEmail,
-          password,
-          username: sanitizedUsername,
-          phone: fullPhoneNumber,
-        }),
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
       });
 
-      const data = await response.json()
+      clearTimeout(timeoutId);
+
+      const data = await response.json();
       console.log('Signup response:', { status: response.status, data });
 
       if (!response.ok) {
@@ -101,27 +142,73 @@ export default function SignUpScreen({ navigation }) {
           statusText: response.statusText,
           data: data
         });
-        throw new Error(data.message || data.error || "حدث خطأ أثناء إنشاء الحساب")
+
+        // Handle specific error cases
+        if (response.status === 400) {
+          if (data.message?.includes('email')) {
+            throw new Error("البريد الإلكتروني مستخدم بالفعل");
+          } else if (data.message?.includes('username')) {
+            throw new Error("اسم المستخدم مستخدم بالفعل");
+          } else if (data.message?.includes('phone')) {
+            throw new Error("رقم الهاتف مستخدم بالفعل");
+          } else {
+            throw new Error(data.message || "بيانات غير صحيحة");
+          }
+        } else if (response.status === 409) {
+          throw new Error("المستخدم موجود بالفعل");
+        } else if (response.status === 422) {
+          throw new Error("بيانات غير صحيحة أو غير مكتملة");
+        } else if (response.status >= 500) {
+          throw new Error("خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً");
+        } else {
+          throw new Error(data.message || data.error || "حدث خطأ أثناء إنشاء الحساب");
+        }
       }
 
-      Alert.alert(
-        "تم التسجيل بنجاح",
-        "يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك",
-        [
-          {
-            text: "حسناً",
-            onPress: () => navigation.navigate("Login"),
-          },
-        ]
-      )
+      // Success case - handle different possible success responses
+      if (response.status === 200 || response.status === 201 || data.status === "success" || data.message?.includes("success")) {
+        // Show success modal
+        setShowSuccessModal(true);
+      } else if (data.message && !data.message.includes("error")) {
+        // If there's a message but it's not an error, treat as success
+        setShowSuccessModal(true);
+      } else {
+        // Log the actual response for debugging
+        console.log('Unexpected response structure:', {
+          status: response.status,
+          data: data,
+          statusText: response.statusText
+        });
+        throw new Error(data.message || data.error || "حدث خطأ غير متوقع");
+      }
+
     } catch (error) {
       console.error('Signup error details:', error);
-      Alert.alert(
-        "خطأ",
-        error.message || "حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى."
-      )
+      
+      // Handle timeout errors
+      if (error.name === 'AbortError') {
+        setErrorMessage({
+          title: 'خطأ في الاتصال',
+          message: 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى'
+        });
+        setShowErrorModal(true);
+      }
+      // Handle network errors
+      else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setErrorMessage({
+          title: 'خطأ في الاتصال',
+          message: 'يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى'
+        });
+        setShowErrorModal(true);
+      } else {
+        setErrorMessage({
+          title: 'خطأ في التسجيل',
+          message: error.message || 'حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.'
+        });
+        setShowErrorModal(true);
+      }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 console.log(username, email, password, confirmPassword, phoneNumber, fullPhoneNumber);
@@ -247,6 +334,26 @@ console.log(username, email, password, confirmPassword, phoneNumber, fullPhoneNu
           </View>
         </View>
       </ScrollView>
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        title="تم إنشاء الحساب بنجاح"
+        message="يرجى التحقق من بريدك الإلكتروني لتأكيد حسابك"
+        onClose={() => setShowSuccessModal(false)}
+        buttonText="تسجيل الدخول"
+        onButtonPress={() => {
+          setShowSuccessModal(false);
+          navigation.navigate("Login");
+        }}
+      />
     </KeyboardAvoidingView>
   )
 }

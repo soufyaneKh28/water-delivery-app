@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons"
 import { StatusBar } from "expo-status-bar"
 import { useState } from "react"
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -14,6 +13,8 @@ import {
   View,
 } from "react-native"
 import CustomText from "../../components/common/CustomText"
+import ErrorModal from "../../components/common/ErrorModal"
+import SuccessModal from "../../components/common/SuccessModal"
 import { useAuth } from "../../context/AuthContext"
 import { colors } from "../../styling/colors"
 import { globalStyles } from "../../styling/globalStyles"
@@ -23,33 +24,50 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' })
   const { login } = useAuth()
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("خطأ", "الرجاء إدخال البريد الإلكتروني وكلمة المرور")
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور'
+      });
+      setShowErrorModal(true);
       return
     }
 
     setIsLoading(true)
     try {
       await login(email, password)
+      // Show success modal on successful login
+      setShowSuccessModal(true)
     } catch (error) {
       console.log("error",error);
       if (error.message.includes('Email not confirmed')) {
-        Alert.alert(
-          "البريد الإلكتروني غير مفعل",
-          "يرجى تفعيل بريدك الإلكتروني قبل تسجيل الدخول. تحقق من بريدك الإلكتروني واضغط على رابط التفعيل.",
-          [{ text: "حسناً" }]
-        )
+        setErrorMessage({
+          title: 'البريد الإلكتروني غير مفعل',
+          message: 'يرجى تفعيل بريدك الإلكتروني قبل تسجيل الدخول. تحقق من بريدك الإلكتروني واضغط على رابط التفعيل.'
+        });
+        setShowErrorModal(true);
       } else if (
         error.message?.toLowerCase().includes('invalid login credentials') ||
         error.message?.toLowerCase().includes('invalid credentials') ||
         error.status === 400
       ) {
-        Alert.alert("خطأ", "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setErrorMessage({
+          title: 'خطأ في البيانات',
+          message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة'
+        });
+        setShowErrorModal(true);
       } else {
-        Alert.alert("خطأ", error.message || "حدث خطأ أثناء تسجيل الدخول")
+        setErrorMessage({
+          title: 'خطأ في تسجيل الدخول',
+          message: error.message || 'حدث خطأ أثناء تسجيل الدخول'
+        });
+        setShowErrorModal(true);
       }
     } finally {
       setIsLoading(false)
@@ -65,10 +83,10 @@ export default function LoginScreen({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'red' }}>
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
 
         <StatusBar style="dark" translucent={true} backgroundColor={colors.primary} />
-    <SafeAreaView style={{ flex: 1, backgroundColor: 'red' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
      
 
     <KeyboardAvoidingView style={globalStyles.container} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
@@ -170,6 +188,23 @@ export default function LoginScreen({ navigation }) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+
+    <ErrorModal
+      visible={showErrorModal}
+      title={errorMessage.title}
+      message={errorMessage.message}
+      onClose={() => setShowErrorModal(false)}
+      buttonText="حسناً"
+    />
+
+    <SuccessModal
+      visible={showSuccessModal}
+      title="تم تسجيل الدخول بنجاح"
+      message="مرحباً بك في تطبيق توصيل المياه"
+      onClose={() => setShowSuccessModal(false)}
+      buttonText="حسناً"
+      onButtonPress={() => setShowSuccessModal(false)}
+    />
     </SafeAreaView>
                   </View>
   )

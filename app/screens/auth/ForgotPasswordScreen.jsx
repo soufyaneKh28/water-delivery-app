@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -12,6 +11,8 @@ import {
   View,
 } from "react-native";
 import CustomText from "../../components/common/CustomText";
+import ErrorModal from "../../components/common/ErrorModal";
+import SuccessModal from "../../components/common/SuccessModal";
 import { useAuth } from '../../context/AuthContext';
 import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
@@ -19,29 +20,31 @@ import { globalStyles } from "../../styling/globalStyles";
 export default function ForgotPasswordScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
   const { requestPasswordReset } = useAuth();
 
   const handleResetPassword = async () => {
     if (!email) {
-      Alert.alert("خطأ", "الرجاء إدخال البريد الإلكتروني");
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'الرجاء إدخال البريد الإلكتروني'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     setIsLoading(true);
     try {
       await requestPasswordReset(email);
-      Alert.alert(
-        "تم إرسال رابط إعادة تعيين كلمة المرور",
-        "يرجى التحقق من بريدك الإلكتروني واتباع التعليمات لإعادة تعيين كلمة المرور",
-        [
-          {
-            text: "حسناً",
-            onPress: () => navigation.navigate("Login"),
-          },
-        ]
-      );
+      setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert("خطأ", error.message || "حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور");
+      setErrorMessage({
+        title: 'خطأ في إرسال الرابط',
+        message: error.message || 'حدث خطأ أثناء إرسال رابط إعادة تعيين كلمة المرور'
+      });
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -123,6 +126,26 @@ export default function ForgotPasswordScreen({ navigation }) {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+
+    <ErrorModal
+      visible={showErrorModal}
+      title={errorMessage.title}
+      message={errorMessage.message}
+      onClose={() => setShowErrorModal(false)}
+      buttonText="حسناً"
+    />
+
+    <SuccessModal
+      visible={showSuccessModal}
+      title="تم إرسال رابط إعادة تعيين كلمة المرور"
+      message="يرجى التحقق من بريدك الإلكتروني واتباع التعليمات لإعادة تعيين كلمة المرور. إذا لم تستلم البريد الإلكتروني، يرجى التحقق من مجلد الرسائل غير المرغوب فيها (Spam)."
+      onClose={() => setShowSuccessModal(false)}
+      buttonText="العودة لتسجيل الدخول"
+      onButtonPress={() => {
+        setShowSuccessModal(false);
+        navigation.navigate("Login");
+      }}
+    />
               </SafeAreaView>
               </View>
   );

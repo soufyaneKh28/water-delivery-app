@@ -6,7 +6,9 @@ import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { supabase } from '../../../lib/supabase';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import SuccessModal from '../../components/common/SuccessModal';
 import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 import { api } from '../../utils/api';
@@ -17,6 +19,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const orderStatuses = [
   { label: 'كل الطلبات', value: 'all' },
+  { label: 'قيد الانتظار', value: 'new' },
   { label: 'قيد المعالجة', value: 'processing' },
   { label: 'في الطريق', value: 'on-the-way' },
   { label: 'تم التوصيل', value: 'delivered' },
@@ -107,6 +110,10 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const fetchOrders = async () => {
     const { data, error, count } = await supabase
@@ -116,7 +123,6 @@ const Orders = () => {
         location_id:locations (*),
         user_id:profiles (*)
       `, { count: 'exact' })
-      .neq('status', 'pending')  // Exclude pending orders from the count
       .order('created_at', { ascending: true });
   
     console.log("orders", data);
@@ -175,9 +181,7 @@ const Orders = () => {
 
   const filteredOrders = orders
     .filter(order => {
-      // First filter out pending orders
-      if (order.status === 'pending') return false;
-      // Then apply the status filter if not 'all'
+      // Apply the status filter if not 'all'
       return selectedStatus === 'all' || order.status === selectedStatus;
     })
     .filter(order => {
@@ -241,11 +245,8 @@ const Orders = () => {
       // Update local state
       setOrders(orders.filter(order => order.id !== selectedOrder.id));
       setTotalOrders(prev => prev - 1);
-      Alert.alert(
-        'تم الحذف',
-        'تم حذف الطلب بنجاح',
-        [{ text: 'حسناً' }]
-      );
+      setSuccessMessage('تم حذف الطلب بنجاح');
+      setShowSuccessModal(true);
     } catch (error) {
       console.error('Error deleting order:', error);
       Alert.alert(
@@ -256,6 +257,7 @@ const Orders = () => {
     } finally {
       setIsUpdating(false);
       setActionModalVisible(false);
+      setShowDeleteConfirmation(false);
     }
   };
 
@@ -276,13 +278,15 @@ const Orders = () => {
       setOrders(orders.map(order =>
         order.id === selectedOrder.id ? { ...order, status: selectedStatus } : order
       ));
-      Alert.alert('تم التحديث', 'تم تحديث حالة الطلب بنجاح', [{ text: 'حسناً' }]);
+      setSuccessMessage('تم تحديث حالة الطلب بنجاح');
+      setShowSuccessModal(true);
       setModalVisible(false);
     } catch (error) {
       console.error('Order status update error:', error);
       Alert.alert('خطأ', error.message || 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.', [{ text: 'حسناً' }]);
     } finally {
       setIsUpdating(false);
+      setShowStatusConfirmation(false);
     }
   };
 
@@ -614,17 +618,7 @@ const Orders = () => {
             <TouchableOpacity
               style={styles.updateButton}
               onPress={() => {
-                Alert.alert(
-                  'تأكيد',
-                  'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
-                  [
-                    { text: 'إلغاء', style: 'cancel' },
-                    {
-                      text: 'تأكيد',
-                      onPress: handleStatusChange,
-                    },
-                  ]
-                );
+                setShowStatusConfirmation(true);
               }}
               disabled={isUpdating}
             >
@@ -637,6 +631,38 @@ const Orders = () => {
           </View>
         </View>
       </Modal>
+
+      <ConfirmationModal
+        visible={showDeleteConfirmation}
+        onClose={() => setShowDeleteConfirmation(false)}
+        onConfirm={handleDeleteOrder}
+        title="تأكيد الحذف"
+        message="هل أنت متأكد أنك تريد حذف هذا الطلب؟"
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+        loading={isUpdating}
+      />
+      
+      <ConfirmationModal
+        visible={showStatusConfirmation}
+        onClose={() => setShowStatusConfirmation(false)}
+        onConfirm={handleStatusChange}
+        title="تأكيد التحديث"
+        message="هل أنت متأكد أنك تريد تغيير حالة الطلب؟"
+        confirmText="تأكيد"
+        cancelText="إلغاء"
+        type="default"
+        loading={isUpdating}
+      />
+      
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="تم بنجاح"
+        message={successMessage}
+        buttonText="حسناً"
+      />
     </View>
   );
 };

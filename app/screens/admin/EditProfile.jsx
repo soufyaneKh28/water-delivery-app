@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
+import SuccessModal from '../../components/common/SuccessModal';
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
@@ -26,6 +27,8 @@ export default function EditProfile({ navigation }) {
     phone: "",
     email: "",
   });
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -75,9 +78,8 @@ export default function EditProfile({ navigation }) {
       if (error) {
         throw error;
       }
-      Alert.alert("تم التحديث", "تم تحديث المعلومات بنجاح", [
-        { text: "حسناً", onPress: () => navigation.goBack() },
-      ]);
+      setSuccessMessage("تم تحديث المعلومات بنجاح");
+      setShowSuccessModal(true);
     } catch (error) {
       Alert.alert("خطأ", "تعذر تحديث المعلومات");
       console.error("Error updating profile:", error);
@@ -157,6 +159,16 @@ export default function EditProfile({ navigation }) {
           )}
         </TouchableOpacity>
       </ScrollView>
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }}
+        title="تم التحديث"
+        message={successMessage}
+        buttonText="حسناً"
+      />
     </KeyboardAvoidingView>
   );
 }

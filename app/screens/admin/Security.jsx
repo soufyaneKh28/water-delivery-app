@@ -1,17 +1,18 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import React, { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
+import ErrorModal from '../../components/common/ErrorModal';
+import SuccessModal from '../../components/common/SuccessModal';
 import { useAuth } from "../../context/AuthContext";
 import { colors } from "../../styling/colors";
 import { globalStyles } from "../../styling/globalStyles";
@@ -25,44 +26,50 @@ export default function Security({ navigation }) {
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      Alert.alert("خطأ", "جميع الحقول مطلوبة");
+      setErrorMessage({
+        title: 'بيانات مطلوبة',
+        message: 'جميع الحقول مطلوبة'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      Alert.alert("خطأ", "كلمة المرور الجديدة غير متطابقة");
+      setErrorMessage({
+        title: 'كلمات مرور غير متطابقة',
+        message: 'كلمة المرور الجديدة غير متطابقة'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     if (newPassword.length < 6) {
-      Alert.alert("خطأ", "كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+      setErrorMessage({
+        title: 'كلمة مرور ضعيفة',
+        message: 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+      });
+      setShowErrorModal(true);
       return;
     }
 
     setLoading(true);
     try {
       await resetPassword(newPassword, currentPassword);
-      Alert.alert(
-        "تم التحديث",
-        "تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.",
-        [
-          {
-            text: "حسناً",
-            onPress: () => {
-              setCurrentPassword("");
-              setNewPassword("");
-              setConfirmPassword("");
-              // The user will be automatically logged out by the resetPassword function
-              // and redirected to the login screen
-            },
-          },
-        ]
-      );
+      setSuccessMessage("تم تغيير كلمة المرور بنجاح. يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.");
+      setShowSuccessModal(true);
     } catch (error) {
-      Alert.alert("خطأ", error.message || "تعذر تغيير كلمة المرور");
+      setErrorMessage({
+        title: 'خطأ في تغيير كلمة المرور',
+        message: error.message || 'تعذر تغيير كلمة المرور'
+      });
+      setShowErrorModal(true);
       console.error("Error changing password:", error);
     } finally {
       setLoading(false);
@@ -160,6 +167,27 @@ export default function Security({ navigation }) {
           </CustomText>
         </TouchableOpacity>
       </ScrollView>
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+      />
+
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          setCurrentPassword("");
+          setNewPassword("");
+          setConfirmPassword("");
+        }}
+        title="تم التحديث"
+        message={successMessage}
+        buttonText="حسناً"
+      />
     </KeyboardAvoidingView>
   );
 }

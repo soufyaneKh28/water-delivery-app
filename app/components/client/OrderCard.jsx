@@ -33,7 +33,7 @@ export default function OrderCard({ order, onPress }) {
     >
       <View style={styles.cardContent}>
         <View style={styles.orderInfo}>
-          <CustomText type="bold" style={styles.orderTitle}>{order.title}</CustomText>
+          <CustomText numberOfLines={1} type="bold" style={styles.orderTitle}>{order.title}</CustomText>
           <CustomText style={styles.orderDate}>تم الطلب بتاريخ: {order.date} - {order.time}</CustomText>
         </View>
     
@@ -89,6 +89,8 @@ const styles = StyleSheet.create({
   orderTitle: {
     fontSize: 16,
     color: colors.textPrimary,
+    maxWidth: '95%',
+    // numberOfLines: 1,
     marginBottom: 4,
     textAlign: 'right',
   },

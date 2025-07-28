@@ -5,8 +5,10 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackButton from '../../components/common/BackButton';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 import { api } from '../../utils/api';
 const placeholderImg = require('../../../assets/images/category-1.png'); // Use your placeholder image path
@@ -18,6 +20,10 @@ export default function AddCategory({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [fetchingCategories, setFetchingCategories] = useState(false);
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Fetch categories from API on mount
   useEffect(() => {
@@ -53,7 +59,8 @@ export default function AddCategory({ navigation }) {
       setNewCategory('');
       setNewImage(null);
       fetchCategories();
-      Alert.alert('نجح', 'تمت إضافة القسم بنجاح');
+      setSuccessMessage('تمت إضافة القسم بنجاح');
+      setShowSuccessModal(true);
     } catch (err) {
       Alert.alert('خطأ', 'حدث خطأ أثناء إضافة القسم: ' + (err.message || 'حدث خطأ غير متوقع'));
     } finally {
@@ -62,9 +69,14 @@ export default function AddCategory({ navigation }) {
   };
 
   const handleDeleteCategory = async (id) => {
-    setDeletingCategoryId(id);
+    setSelectedCategoryId(id);
+    setShowDeleteConfirmation(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    setDeletingCategoryId(selectedCategoryId);
     try {
-      console.log('Attempting to delete category with ID:', id);
+      console.log('Attempting to delete category with ID:', selectedCategoryId);
       
       // Get Bearer token from Supabase
       const { data: { session } } = await supabase.auth.getSession();
@@ -77,7 +89,7 @@ export default function AddCategory({ navigation }) {
       
       // Use direct axios call like in Products screen
       await axios.delete(
-        `https://water-supplier-2.onrender.com/api/k1/product_categories/deleteProductCategory/${id}`,
+        `https://water-supplier-2.onrender.com/api/k1/product_categories/deleteProductCategory/${selectedCategoryId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -86,8 +98,9 @@ export default function AddCategory({ navigation }) {
       );
       
       // Update local state after successful deletion
-      setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== id));
-      Alert.alert('نجح', 'تم حذف القسم بنجاح');
+      setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== selectedCategoryId));
+      setSuccessMessage('تم حذف القسم بنجاح');
+      setShowSuccessModal(true);
     } catch (err) {
       console.error('Delete category error:', err);
       console.error('Error details:', {
@@ -99,13 +112,16 @@ export default function AddCategory({ navigation }) {
       // Check if it's a 404 error (category not found)
       if (err.response?.status === 404) {
         // Category might already be deleted, remove from local state anyway
-        setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== id));
-        Alert.alert('تم الحذف', 'تم حذف القسم بنجاح (كان محذوفاً مسبقاً)');
+        setCategories(prev => prev.filter(cat => (cat.id || cat._id) !== selectedCategoryId));
+        setSuccessMessage('تم حذف القسم بنجاح (كان محذوفاً مسبقاً)');
+        setShowSuccessModal(true);
       } else {
         Alert.alert('خطأ', 'حدث خطأ أثناء حذف القسم: ' + (err.response?.data?.message || err.message || 'حدث خطأ غير متوقع'));
       }
     } finally {
       setDeletingCategoryId(null);
+      setShowDeleteConfirmation(false);
+      setSelectedCategoryId(null);
     }
   };
 
@@ -195,6 +211,29 @@ export default function AddCategory({ navigation }) {
         style={styles.addButton}
         disabled={!newCategory.trim() || !newImage || loading}
       />
+      <ConfirmationModal
+        visible={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setSelectedCategoryId(null);
+        }}
+        onConfirm={confirmDeleteCategory}
+        title="تأكيد الحذف"
+        message="هل أنت متأكد أنك تريد حذف هذا القسم؟"
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+        loading={deletingCategoryId !== null}
+      />
+      
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="تم بنجاح"
+        message={successMessage}
+        buttonText="حسناً"
+      />
+      
     </ScrollView>
   );
 }

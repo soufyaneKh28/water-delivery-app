@@ -9,7 +9,9 @@ import axios from 'axios';
 import dayjs from 'dayjs';
 import { Alert } from 'react-native';
 import { supabase } from '../../../lib/supabase';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 
 const statusColors = {
@@ -44,6 +46,9 @@ export default function OrderDetails({ route, navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(order.status);
   const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [showStatusConfirmation, setShowStatusConfirmation] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 console.log("order",order);
   const handleStatusChange = async (newStatus) => {
     try {
@@ -69,16 +74,8 @@ console.log("order",order);
         console.log("respppppons",response.data);
         
         if(response.data.status == "success") {
-          Alert.alert(
-            'تم التحديث',
-            'تم تغيير حالة الطلب بنجاح.',
-            [
-              {
-                text: 'حسناً',
-                onPress: () => navigation.goBack(),
-              },
-            ]
-          );
+          setSuccessMessage('تم تغيير حالة الطلب بنجاح.');
+          setShowSuccessModal(true);
         }
         // return response.data;
       
@@ -91,6 +88,7 @@ console.log("order",order);
       );
     } finally {
       setIsUpdating(false);
+      setShowStatusConfirmation(false);
     }
   };
 
@@ -111,6 +109,32 @@ console.log("order",order);
 
   return (
     <View style={styles.container}>
+      <ConfirmationModal
+        visible={showStatusConfirmation}
+        onClose={() => setShowStatusConfirmation(false)}
+        onConfirm={() => {
+          setModalVisible(false);
+          handleStatusChange(selectedStatus);
+        }}
+        title="تأكيد التحديث"
+        message="هل أنت متأكد أنك تريد تغيير حالة الطلب؟"
+        confirmText="تأكيد"
+        cancelText="إلغاء"
+        type="default"
+        loading={isUpdating}
+      />
+      
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false);
+          navigation.goBack();
+        }}
+        title="تم التحديث"
+        message={successMessage}
+        buttonText="حسناً"
+      />
+      
       <View style={styles.header}>
         <BackBtn/>
         <CustomText type="bold" style={styles.headerTitle}>تفاصيل الطلب</CustomText>
@@ -275,20 +299,7 @@ console.log("order",order);
             <TouchableOpacity
               style={styles.updateButton}
               onPress={() => {
-                Alert.alert(
-                  'تأكيد',
-                  'هل أنت متأكد أنك تريد تغيير حالة الطلب؟',
-                  [
-                    { text: 'إلغاء', style: 'cancel' },
-                    {
-                      text: 'تأكيد',
-                      onPress: () => {
-                        setModalVisible(false);
-                        handleStatusChange(selectedStatus);
-                      },
-                    },
-                  ]
-                );
+                setShowStatusConfirmation(true);
               }}
               disabled={isUpdating}
             >

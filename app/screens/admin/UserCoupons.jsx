@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, FlatList, Modal, Platform, StyleSheet, TextIn
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 
 export default function UserCoupons() {
@@ -17,6 +18,8 @@ export default function UserCoupons() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdding, setIsAdding] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -156,7 +159,8 @@ export default function UserCoupons() {
         }
       }
 
-      Alert.alert('نجاح', `تم ${isAdding ? 'إضافة' : 'خصم'} ${couponAmount} كوبون بنجاح`);
+      setSuccessMessage(`تم ${isAdding ? 'إضافة' : 'خصم'} ${couponAmount} كوبون بنجاح`);
+      setShowSuccessModal(true);
       setModalVisible(false);
       setCouponAmount('');
       setSelectedUser(null);
@@ -213,6 +217,14 @@ export default function UserCoupons() {
 
   return (
     <View style={styles.container}>
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="تم بنجاح"
+        message={successMessage}
+        buttonText="حسناً"
+      />
+      
       <View style={styles.headerRow}>
         <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>إدارة كوبونات المستخدمين</CustomText>

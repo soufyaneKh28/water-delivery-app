@@ -2,10 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import ErrorModal from '../../components/common/ErrorModal';
+import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 
 export default function Offers() {
@@ -14,6 +17,13 @@ export default function Offers() {
   const [isUploading, setIsUploading] = useState(false);
   const [deletingOfferId, setDeletingOfferId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [selectedOfferId, setSelectedOfferId] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
+  const [showAddSuccessModal, setShowAddSuccessModal] = useState(false);
 
   useEffect(() => {
     fetchOffers();
@@ -25,7 +35,11 @@ export default function Offers() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) {
-        Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+        setErrorMessage({
+          title: 'خطأ في المصادقة',
+          message: 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.'
+        });
+        setShowErrorModal(true);
         return;
       }
 
@@ -40,7 +54,11 @@ export default function Offers() {
       // console.log("response-offers", response.data);
       setOffers(response.data.data);
     } catch (error) {
-      Alert.alert('خطأ', 'تعذر جلب العروض: ' + (error.response?.data?.message || error.message));
+      setErrorMessage({
+        title: 'خطأ في التحميل',
+        message: 'تعذر جلب العروض: ' + (error.response?.data?.message || error.message)
+      });
+      setShowErrorModal(true);
     } finally {
       setLoading(false);
     }
@@ -50,7 +68,11 @@ export default function Offers() {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('عذراً', 'نحتاج إلى إذن للوصول إلى معرض الصور!');
+        setErrorMessage({
+          title: 'خطأ في الصلاحيات',
+          message: 'عذراً، نحتاج إلى إذن للوصول إلى معرض الصور!'
+        });
+        setShowErrorModal(true);
         return;
       }
 
@@ -69,7 +91,11 @@ export default function Offers() {
         const token = session?.access_token;
         
         if (!token) {
-          Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
+          setErrorMessage({
+            title: 'خطأ في المصادقة',
+            message: 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.'
+          });
+          setShowErrorModal(true);
           return;
         }
 
@@ -94,62 +120,115 @@ export default function Offers() {
         );
 
         if (response.data) {
-          Alert.alert('نجاح', 'تم إضافة العرض بنجاح');
+          setShowAddSuccessModal(true);
           fetchOffers();
-
         }
       }
     } catch (error) {
-      Alert.alert('خطأ', 'تعذر إضافة العرض: ' + (error.response?.data?.message || error.message));
+      setErrorMessage({
+        title: 'خطأ في الإضافة',
+        message: 'تعذر إضافة العرض: ' + (error.response?.data?.message || error.message)
+      });
+      setShowErrorModal(true);
     } finally {
       setIsUploading(false);
     }
   };
 
   const deleteOffer = async (id) => {
-    Alert.alert('تأكيد', 'هل أنت متأكد من حذف هذا العرض؟', [
-      { text: 'إلغاء', style: 'cancel' },
-      {
-        text: 'حذف', 
-        style: 'destructive', 
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            setDeletingOfferId(id);
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-            
-            if (!token) {
-              Alert.alert('خطأ', 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.');
-              setDeletingOfferId(null);
-              setIsDeleting(false);
-              return;
-            }
+    setSelectedOfferId(id);
+    setShowDeleteConfirmation(true);
+  };
 
-            await axios.delete(
-              `https://water-supplier-2.onrender.com/api/k1/offers/deleteOffer/${id}`,
-              {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
-              }
-            );
-            
-            Alert.alert('نجاح', 'تم حذف العرض بنجاح');
-            fetchOffers();
-          } catch (error) {
-            Alert.alert('خطأ', 'تعذر حذف العرض: ' + (error.response?.data?.message || error.message));
-          } finally {
-            setDeletingOfferId(null);
-            setIsDeleting(false);
-          }
-        }
+  const confirmDeleteOffer = async () => {
+    try {
+      setIsDeleting(true);
+      setDeletingOfferId(selectedOfferId);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        setErrorMessage({
+          title: 'خطأ في المصادقة',
+          message: 'لم يتم العثور على رمز الدخول. يرجى تسجيل الدخول مرة أخرى.'
+        });
+        setShowErrorModal(true);
+        setDeletingOfferId(null);
+        setIsDeleting(false);
+        return;
       }
-    ]);
+
+      await axios.delete(
+        `https://water-supplier-2.onrender.com/api/k1/offers/deleteOffer/${selectedOfferId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+      
+      setSuccessMessage('تم حذف العرض بنجاح');
+      setShowSuccessModal(true);
+      fetchOffers();
+    } catch (error) {
+      setErrorMessage({
+        title: 'خطأ في الحذف',
+        message: 'تعذر حذف العرض: ' + (error.response?.data?.message || error.message)
+      });
+      setShowErrorModal(true);
+    } finally {
+      setDeletingOfferId(null);
+      setIsDeleting(false);
+      setShowDeleteConfirmation(false);
+      setSelectedOfferId(null);
+    }
   };
 
   return (
     <View style={styles.container}>
+      <ConfirmationModal
+        visible={showDeleteConfirmation}
+        onClose={() => {
+          setShowDeleteConfirmation(false);
+          setSelectedOfferId(null);
+        }}
+        onConfirm={confirmDeleteOffer}
+        title="تأكيد الحذف"
+        message="هل أنت متأكد من حذف هذا العرض؟"
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+        loading={isDeleting}
+      />
+      
+      <SuccessModal
+        visible={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="تم الحذف"
+        message={successMessage}
+        buttonText="حسناً"
+      />
+      
+      <SuccessModal
+        visible={showAddSuccessModal}
+        onClose={() => setShowAddSuccessModal(false)}
+        title="تم الإضافة"
+        message="تم إضافة العرض بنجاح"
+        buttonText="حسناً"
+        onButtonPress={() => {
+          setShowAddSuccessModal(false);
+          fetchOffers();
+        }}
+      />
+
+      <ErrorModal
+        visible={showErrorModal}
+        title={errorMessage.title}
+        message={errorMessage.message}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+      />
+      
       <View style={styles.headerRow}>
         <BackBtn />
         <CustomText type="bold" style={styles.headerTitle}>إدارة عروض السلايدر</CustomText>

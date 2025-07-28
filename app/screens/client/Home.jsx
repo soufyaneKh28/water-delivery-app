@@ -107,6 +107,7 @@ async function registerForPushNotificationsAsync() {
 export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
+  const [modalKey, setModalKey] = useState(0);
   const { selectedAddress, setSelectedAddress } = useAddress();
   const [savedAddresses, setSavedAddresses] = useState([]);
   const navigation = useNavigation();
@@ -120,6 +121,8 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeOrders, setActiveOrders] = useState([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
 
   const [expoPushToken, setExpoPushToken] = useState('');
@@ -176,6 +179,7 @@ const { width } = Dimensions.get('window');
 
   const handleLocationButtonPress = () => {
     if ( savedAddresses?.length > 0) {
+      setModalKey(prev => prev + 1); // Force modal re-render
       setAddressModalVisible(true);
     } else {
       navigation.navigate('MapAddLocation');
@@ -239,22 +243,26 @@ const { width } = Dimensions.get('window');
   //   }
   // };
 
-  // const getLocations = async () => {
-  //   setIsLoadingLocations(true);
-  //   try {
-  //     const data = await api.getLocations();
-  //     const addresses = data.data || [];
-  //     setSavedAddresses(addresses);
-  //     if (addresses.length > 0 && !selectedAddress) {
-  //       setSelectedAddress(addresses[0]);
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching locations:', error);
-  //     setSavedAddresses([]);
-  //   } finally {
-  //     setIsLoadingLocations(false);
-  //   }
-  // };
+  const getLocations = async () => {
+    setIsLoadingLocations(true);
+    setErrorMessage('');
+    try {
+      const data = await api.getLocations();
+      const addresses = data.data || [];
+      setSavedAddresses(addresses);
+      if (addresses.length > 0 && !selectedAddress) {
+        setSelectedAddress(addresses[0]);
+      }
+      setIsOffline(false);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      setErrorMessage('فشل في تحميل العناوين. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+      setIsOffline(true);
+      setSavedAddresses([]);
+    } finally {
+      setIsLoadingLocations(false);
+    }
+  };
 
   // const getOffers = async () => {
   //   setIsLoadingOffers(true);
@@ -269,35 +277,83 @@ const { width } = Dimensions.get('window');
   //   }
   // };
 
-  // Optimized single API call for all data
-  const getAll = async () => {
-    if (!user) return;
+  const getOffers = async () => {
     setIsLoadingOffers(true);
-    setIsLoadingLocations(true);
-    setIsLoadingCategories(true);
-    setIsLoadingProducts(true);
     try {
-      const data = await api.getAllData();
-      setOffers(data.data.offers || []);
-      setSavedAddresses(data.data.locations);
-      if (data.data.locations.length > 0 && !selectedAddress) {
-        setSelectedAddress(data.data.locations[0]);
-      }
-      setCategories(data.data.categories);
-      setProducts(data.data.products);
+      const data = await api.getOffers();
+      setOffers(data.data || []);
+      setIsOffline(false);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching offers:', error);
       setOffers([]);
-      setSavedAddresses([]);
-      setCategories([]);
-      setProducts([]);
     } finally {
       setIsLoadingOffers(false);
-      setIsLoadingLocations(false);
+    }
+  };
+
+  const getCategories = async () => {
+    setIsLoadingCategories(true);
+    try {
+      const data = await api.getCategories();
+      setCategories(data.data || []);
+      setIsOffline(false);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setCategories([]);
+    } finally {
       setIsLoadingCategories(false);
+    }
+  };
+
+  const getProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const data = await api.getProducts();
+      // Only show products with price_type 'money'
+      setProducts((data.data || []).filter(product => product.price_type === 'money'));
+      setIsOffline(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setProducts([]);
+    } finally {
       setIsLoadingProducts(false);
     }
   };
+
+  // Optimized single API call for all data
+  // const getAll = async () => {
+  //   if (!user) return;
+  //   setIsLoadingOffers(true);
+  //   setIsLoadingLocations(true);
+  //   setIsLoadingCategories(true);
+  //   setIsLoadingProducts(true);
+  //   setErrorMessage('');
+  //   
+  //   try {
+  //     const data = await api.getAllData();
+  //     setOffers(data.data.offers || []);
+  //     setSavedAddresses(data.data.locations);
+  //     if (data.data.locations.length > 0 && !selectedAddress) {
+  //       setSelectedAddress(data.data.locations[0]);
+  //     }
+  //     setCategories(data.data.categories);
+  //     setProducts(data.data.products);
+  //     setIsOffline(false);
+  //   } catch (error) {
+  //     console.error('Error fetching data:', error);
+  //     setErrorMessage('فشل في تحميل البيانات. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+  //     setIsOffline(true);
+  //     setOffers([]);
+  //     setSavedAddresses([]);
+  //     setCategories([]);
+  //     setProducts([]);
+  //   } finally {
+  //     setIsLoadingOffers(false);
+  //     setIsLoadingLocations(false);
+  //     setIsLoadingCategories(false);
+  //     setIsLoadingProducts(false);
+  //   }
+  // };
 
   // Fallback function using the original getAllData approach
   // Use this if parallel calls cause issues
@@ -353,6 +409,7 @@ const { width } = Dimensions.get('window');
       setActiveOrders(data || []);
     } catch (error) {
       console.error('Error in fetchActiveOrders:', error);
+      setActiveOrders([]);
     } finally {
       setIsLoadingOrders(false);
     }
@@ -363,17 +420,19 @@ const { width } = Dimensions.get('window');
   const onRefresh = React.useCallback(async () => {
     if (!user) return;
     setRefreshing(true);
+    setErrorMessage('');
     try {
-      // Refresh all data in parallel
-     getAll()
-        // getCategories(),
-        // getProducts(),
-        // getLocations(),
+      // Refresh all data in parallel - much better approach!
+      await Promise.allSettled([
+        getOffers(),
+        getLocations(),
+        getCategories(),
+        getProducts(),
         fetchActiveOrders()
-        // getOffers()
-         
+      ]);
     } catch (error) {
       console.error('Error refreshing data:', error);
+      setErrorMessage('فشل في تحديث البيانات. يرجى المحاولة مرة أخرى.');
     } finally {
       setRefreshing(false);
     }
@@ -381,14 +440,24 @@ const { width } = Dimensions.get('window');
 
   useEffect(() => {
     if (!user) return;
-    getAll()
-    // getLocations();
-    // getOffers();
-    // getCategories();
-    // getProducts();
+    // Load each section independently
+    getOffers();
+    getLocations();
+    getCategories();
+    getProducts();
     fetchActiveOrders();
-
   }, [user?.id]);
+
+  // Reset modal state when it closes
+  useEffect(() => {
+    if (!addressModalVisible) {
+      // Small delay to ensure modal is fully closed before resetting
+      const timer = setTimeout(() => {
+        setModalKey(0);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [addressModalVisible]);
 
   // console.log("savedAddresses", savedAddresses);
 
@@ -406,6 +475,21 @@ const { width } = Dimensions.get('window');
   };
 
   const renderLocationButton = () => {
+    if (isOffline) {
+      return (
+        <TouchableOpacity 
+          style={[styles.locationButton, styles.offlineButton]} 
+          onPress={() => onRefresh()}
+        >
+          <View style={styles.offlineContent}>
+            <Ionicons name="wifi-outline" size={24} color="#FF6B6B" />
+            <CustomText type="bold" style={styles.offlineText}>لا يوجد اتصال بالإنترنت</CustomText>
+            <CustomText type="regular" style={styles.offlineSubtext}>اضغط للتحديث</CustomText>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
     if (savedAddresses?.length == 0 || !selectedAddress) {
       return (
         <TouchableOpacity 
@@ -480,6 +564,16 @@ const { width } = Dimensions.get('window');
         }}
       />
     </View> */}
+        {/* Error Message */}
+        {errorMessage && (
+          <View style={styles.errorContainer}>
+            <CustomText style={styles.errorText}>{errorMessage}</CustomText>
+            <TouchableOpacity style={styles.retryButton} onPress={onRefresh}>
+              <CustomText style={styles.retryButtonText}>إعادة المحاولة</CustomText>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Offers Carousel */}
         <View style={styles.offersContainer}>
           {isLoadingOffers ? (
@@ -625,58 +719,73 @@ const { width } = Dimensions.get('window');
 
       </ScrollView>
 
-      <SafeAreaView >
+      <View style={{}}>
 
       <Modal
+        key={modalKey}
         visible={addressModalVisible}
         transparent
+        style={{flex: 1}}
         animationType="slide"
-        // style={{paddingHorizontal: 20}}
         onRequestClose={() => setAddressModalVisible(false)}
-        >
-        <SafeAreaView style={{flex:1,  position:"relative", backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20 }}>
-       <ScrollView  style={{flex:1}} showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 100}}>
-          <View style={{ width: '100%', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, flexDirection: 'row', marginBottom: 16 }}>
-          <TouchableOpacity  style={{   width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={() => setAddressModalVisible(false)}>
-            <Ionicons name="close" size={22} color={colors.black} />
-          </TouchableOpacity>
-            <CustomText type="bold" style={{ fontSize: 18 }}>عنوان التوصيل</CustomText>
-          </View>
-          { savedAddresses && savedAddresses.map((address) => (
-            <TouchableOpacity
-            key={address.id}
-            style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: selectedAddress?.id === address.id ? '#F3F6FA' : '#fff', borderRadius: 16, padding: 16, marginBottom: 10, marginHorizontal: 20 }}
-            onPress={() => handleSelectAddress(address)}
-            >
+        statusBarTranslucent={true}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
               <TouchableOpacity 
-                style={{width: 30, height: 30, alignItems: 'center', alignSelf: "center", justifyContent: 'center'}}
-                onPress={() => handleEditLocation(address)}
+                style={styles.closeButton} 
+                onPress={() => setAddressModalVisible(false)}
               >
-                <Image source={require('../../../assets/icons/edit.png')} style={{ width: 22, height: 22, marginLeft: 5, marginTop: 2  }} />
+                <Ionicons name="close" size={22} color={colors.black} />
               </TouchableOpacity>
-              <View style={{ flex: 1, alignItems: 'flex-end'}}>
-                <CustomText type="bold" style={{ fontSize: 16, textAlign: 'right', marginBottom: 4 }}>{address.label}</CustomText>
-                <CustomText type="regular" style={{ fontSize: 13, color: '#666', textAlign: 'right' }} numberOfLines={2} ellipsizeMode="tail">
-                  {formatAddressString(address)}
-                </CustomText>
-              </View>
-              <View style={{ width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#BFD6F6', alignItems: 'center', justifyContent: 'center', marginLeft: 12, marginTop: 2 }}>
-                {selectedAddress?.id === address.id && <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: '#BFD6F6' }} />}
-              </View>
-            </TouchableOpacity>
-          ))}
-          <View style={{width: '100%', paddingHorizontal: 20, alignItems:"center"}}>
-
-          <View style={{width: '100%' , height: 1 , backgroundColor: '#E0E0E0' , marginTop: 20}}></View>
+              <CustomText type="bold" style={styles.modalTitle}>عنوان التوصيل</CustomText>
+            </View>
+            
+            <ScrollView 
+              style={styles.modalScrollView}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.modalScrollContent}
+            >
+              {savedAddresses && savedAddresses.map((address) => (
+                <TouchableOpacity
+                  key={address.id}
+                  style={[
+                    styles.addressItem,
+                    selectedAddress?.id === address.id && styles.selectedAddressItem
+                  ]}
+                  onPress={() => handleSelectAddress(address)}
+                >
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={() => handleEditLocation(address)}
+                  >
+                    <Image source={require('../../../assets/icons/edit.png')} style={styles.editIcon} />
+                  </TouchableOpacity>
+                  <View style={styles.addressContent}>
+                    <CustomText type="bold" style={styles.addressLabel}>{address.label}</CustomText>
+                    <CustomText type="regular" style={styles.addressText} numberOfLines={2} ellipsizeMode="tail">
+                      {formatAddressString(address)}
+                    </CustomText>
+                  </View>
+                  <View style={styles.radioButton}>
+                    {selectedAddress?.id === address.id && <View style={styles.radioButtonSelected} />}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <View style={styles.modalFooter}>
+              <View style={styles.divider} />
+              <TouchableOpacity onPress={handleAddLocation} style={styles.addLocationButton}>
+                <CustomText type="bold" style={styles.addLocationText}>أضف عنواناً جديداً</CustomText>
+                <CustomText style={styles.addLocationIcon}>+</CustomText>
+              </TouchableOpacity>
+            </View>
           </View>
-          <TouchableOpacity onPress={handleAddLocation} style={{ flexDirection: 'row-reverse', alignItems: 'center', marginTop: 20 , paddingHorizontal: 20}}>
-            <CustomText type="bold" style={{ color: '#222', fontSize: 15, marginLeft: 8 }}>أضف عنواناً جديداً</CustomText>
-            <CustomText style={{ fontSize: 24, color: '#222' }}>+</CustomText>
-          </TouchableOpacity>
-          </ScrollView>
-        </SafeAreaView>
+        </View>
       </Modal>
-          </SafeAreaView>
+          </View>
     </SafeAreaView>
   );
 }
@@ -998,6 +1107,178 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.secondary,
     textAlign: 'center',
+  },
+  offlineButton: {
+    backgroundColor: '#F5F6FA',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  offlineContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  offlineText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+  },
+  offlineSubtext: {
+    fontSize: 13,
+    color: '#999',
+  },
+  errorContainer: {
+    backgroundColor: '#FFE5E5',
+    padding: 15,
+    borderRadius: 10,
+    marginHorizontal: 20,
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    // flex: 1,
+    height: '85%',
+    // position: 'relative',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    flex: 1,
+    textAlign: 'center',
+  },
+  modalScrollView: {
+    flex: 1,
+    maxHeight: '50%',
+  },
+  modalScrollContent: {
+    paddingBottom: 10,
+  },
+  addressItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginHorizontal: 20,
+    marginVertical: 5,
+  },
+  selectedAddressItem: {
+    backgroundColor: '#F3F6FA',
+  },
+  editButton: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editIcon: {
+    width: 22,
+    height: 22,
+  },
+  addressContent: {
+    flex: 1,
+    alignItems: 'flex-end',
+  },
+  addressLabel: {
+    fontSize: 16,
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  addressText: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'right',
+  },
+  radioButton: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: '#BFD6F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  radioButtonSelected: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#BFD6F6',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  addLocationButton: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  addLocationText: {
+    color: '#222',
+    fontSize: 15,
+    marginLeft: 8,
+  },
+  addLocationIcon: {
+    fontSize: 24,
+    color: '#222',
+  },
+  modalFooter: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+    backgroundColor: '#fff',
+    position: 'relative',
+    zIndex: 1,
   },
 
 }); 

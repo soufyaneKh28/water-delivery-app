@@ -11,7 +11,7 @@ export default function ContactScreen({ navigation }) {
   const handleMail = () => Linking.openURL('mailto:aljunaidiwater1@gmail.com');
   const handleInstagram = () => Linking.openURL('https://www.instagram.com/al_junaidi_water?igsh=bzZnNWZpbXU5N2c2');
   const handleFacebook = () => Linking.openURL('https://www.facebook.com/share/16qwAA3Jj6/?mibextid=wwXIfr');
-  const handleWhatsApp = () => Linking.openURL('https://wa.me/00962796129595');
+  const handleWhatsApp = () => Linking.openURL('https://wa.me/+962796129595');
 
   return (
     <SafeAreaView style={styles.container}>

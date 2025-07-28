@@ -6,7 +6,6 @@ import {
   Alert,
   Image,
   Linking,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -15,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
+import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -231,108 +231,28 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <Modal
+      <ConfirmationModal
         visible={showDeleteModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <View style={{
-            backgroundColor: '#fff',
-            borderRadius: 16,
-            padding: 24,
-            width: '85%',
-            alignItems: 'center'
-          }}>
-            <CustomText type="bold" style={{ fontSize: 18, marginBottom: 12, color: '#222' }}>
-              حذف الحساب
-            </CustomText>
-            <CustomText style={{ textAlign: 'center', color: '#222', marginBottom: 24 }}>
-              هل أنت متأكد أنك تريد حذف حسابك؟ سيؤدي هذا الإجراء إلى حذف جميع بياناتك بشكل دائم ولن تتمكن من استعادتها لاحقاً.
-            </CustomText>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#F44336',
-                borderRadius: 12,
-                width: '100%',
-                paddingVertical: 12,
-                marginBottom: 12
-              }}
-              onPress={handleDeleteAccount}
-            >
-              <CustomText style={{ color: '#fff', textAlign: 'center', fontSize: 16 }}>حذف</CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#F2F4F7',
-                borderRadius: 12,
-                width: '100%',
-                paddingVertical: 12
-              }}
-              onPress={() => setShowDeleteModal(false)}
-            >
-              <CustomText style={{ color: '#222', textAlign: 'center', fontSize: 16 }}>إلغاء</CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-      <Modal
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteAccount}
+        title="حذف الحساب"
+        message="هل أنت متأكد أنك تريد حذف حسابك؟ سيؤدي هذا الإجراء إلى حذف جميع بياناتك بشكل دائم ولن تتمكن من استعادتها لاحقاً."
+        confirmText="حذف"
+        cancelText="إلغاء"
+        type="danger"
+      />
+      
+      <ConfirmationModal
         visible={showLogoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLogoutModal(false)}
-      >
-        <View style={{
-          flex: 1,
-          backgroundColor: 'rgba(0,0,0,0.3)',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}>
-          <View style={{
-            backgroundColor: '#fff',
-            borderRadius: 16,
-            padding: 24,
-            width: '85%',
-            alignItems: 'center'
-          }}>
-            <CustomText type="bold" style={{ fontSize: 18, marginBottom: 12, color: '#222' }}>
-              تسجيل الخروج
-            </CustomText>
-            <CustomText style={{ textAlign: 'center', color: '#222', marginBottom: 24 }}>
-              هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟
-            </CustomText>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#F44336',
-                borderRadius: 12,
-                width: '100%',
-                paddingVertical: 12,
-                marginBottom: 12
-              }}
-              onPress={handleLogout}
-            >
-              <CustomText style={{ color: '#fff', textAlign: 'center', fontSize: 16 }}>تسجيل الخروج</CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                backgroundColor: '#F2F4F7',
-                borderRadius: 12,
-                width: '100%',
-                paddingVertical: 12
-              }}
-              onPress={() => setShowLogoutModal(false)}
-            >
-              <CustomText style={{ color: '#222', textAlign: 'center', fontSize: 16 }}>إلغاء</CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+        title="تسجيل الخروج"
+        message="هل أنت متأكد أنك تريد تسجيل الخروج من حسابك؟"
+        confirmText="تسجيل الخروج"
+        cancelText="إلغاء"
+        type="default"
+      />
+      
       <ScrollView style={globalStyles.container} contentContainerStyle={{ flexGrow: 1 }}>
         <TouchableOpacity style={''} onPress={() => navigation.navigate('EditProfile')}>
           <View style={styles.headerRow}>
