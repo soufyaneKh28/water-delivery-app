@@ -45,7 +45,7 @@ export default function SignUpScreen({ navigation }) {
     // Trim inputs for validation
     const trimmedEmail = email.trim();
     const trimmedUsername = username.trim();
-    const sanitizedUsername = trimmedUsername.replace(/\s+/g, "_");
+    const sanitizedUsername = trimmedUsername.replace(/\s+/g, "_").toLowerCase();
 
     // Validate required fields
     if (!trimmedEmail || !password || !confirmPassword || !trimmedUsername || !phoneNumber) {
@@ -110,6 +110,7 @@ export default function SignUpScreen({ navigation }) {
         email: trimmedEmail,
         password: password,
         username: sanitizedUsername,
+        confirmPassword: confirmPassword,
         phone: fullPhoneNumber,
       };
       
@@ -134,7 +135,7 @@ export default function SignUpScreen({ navigation }) {
       clearTimeout(timeoutId);
 
       const data = await response.json();
-      console.log('Signup response:', { status: response.status, data });
+      console.log('Signup responseeeeee:', { status: response.status, data });
 
       if (!response.ok) {
         console.error('Signup error:', {
@@ -144,24 +145,44 @@ export default function SignUpScreen({ navigation }) {
         });
 
         // Handle specific error cases
+        
         if (response.status === 400) {
-          if (data.message?.includes('email')) {
+          const message = data.message || data.error || '';
+          const lowerMessage = message.toLowerCase();
+          
+          if (lowerMessage.includes('email') || lowerMessage.includes('البريد')) {
             throw new Error("البريد الإلكتروني مستخدم بالفعل");
-          } else if (data.message?.includes('username')) {
+          } else if (lowerMessage.includes('username') || lowerMessage.includes('اسم المستخدم') || lowerMessage.includes('user name')) {
             throw new Error("اسم المستخدم مستخدم بالفعل");
-          } else if (data.message?.includes('phone')) {
+          } else if (lowerMessage.includes('phone') || lowerMessage.includes('الهاتف')) {
             throw new Error("رقم الهاتف مستخدم بالفعل");
           } else {
-            throw new Error(data.message || "بيانات غير صحيحة");
+            throw new Error("بيانات غير صحيحة");
           }
         } else if (response.status === 409) {
-          throw new Error("المستخدم موجود بالفعل");
+          // Check if it's a username conflict specifically
+          const message = data.message || data.error || '';
+          const lowerMessage = message.toLowerCase();
+          
+          if (lowerMessage.includes('username') || lowerMessage.includes('اسم المستخدم') || lowerMessage.includes('user name')) {
+            throw new Error("اسم المستخدم مستخدم بالفعل");
+          } else {
+            throw new Error("المستخدم موجود بالفعل");
+          }
         } else if (response.status === 422) {
           throw new Error("بيانات غير صحيحة أو غير مكتملة");
         } else if (response.status >= 500) {
           throw new Error("خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً");
         } else {
-          throw new Error(data.message || data.error || "حدث خطأ أثناء إنشاء الحساب");
+          // For any other error status, check if it's a username conflict
+          const message = data.message || data.error || '';
+          const lowerMessage = message.toLowerCase();
+          
+          if (lowerMessage.includes('username') || lowerMessage.includes('اسم المستخدم') || lowerMessage.includes('user name')) {
+            throw new Error("اسم المستخدم مستخدم بالفعل");
+          } else {
+            throw new Error("حدث خطأ أثناء إنشاء الحساب");
+          }
         }
       }
 
@@ -201,9 +222,11 @@ export default function SignUpScreen({ navigation }) {
         });
         setShowErrorModal(true);
       } else {
+        // Use the Arabic error message we set in the try block
+        const arabicMessage = error.message;
         setErrorMessage({
           title: 'خطأ في التسجيل',
-          message: error.message || 'حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.'
+          message: arabicMessage || 'حدث خطأ أثناء إنشاء الحساب. يرجى المحاولة مرة أخرى.'
         });
         setShowErrorModal(true);
       }
