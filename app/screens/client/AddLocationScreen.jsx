@@ -4,11 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
+import ErrorModal from '../../components/common/ErrorModal';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
-
 export default function AddLocationScreen({ route, navigation }) {
   const locationData = route.params?.location;
   const editAddress = route.params?.editAddress;
@@ -24,6 +24,8 @@ export default function AddLocationScreen({ route, navigation }) {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (editAddress) {
@@ -116,13 +118,26 @@ export default function AddLocationScreen({ route, navigation }) {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || (editAddress ? 'فشل تحديث العنوان' : 'فشل إضافة العنوان'));
+        
+        // Check if it's a duplicate label error
+        if (errorData.message && (
+          errorData.message.includes('duplicate key value') ||
+          errorData.message.includes('unique constraint') ||
+          errorData.message.includes('unique_label_per_user')
+        )) {
+          setErrorMessage('اسم العنوان مستخدم بالفعل. يرجى اختيار اسم آخر.');
+          setShowErrorModal(true);
+        } else {
+          throw new Error(errorData.message || (editAddress ? 'فشل تحديث العنوان' : 'فشل إضافة العنوان'));
+        }
+        return;
       }
 
       // Show success modal instead of alert
       setShowSuccessModal(true);
     } catch (error) {
-      alert('حدث خطأ: ' + error.message);
+      setErrorMessage('حدث خطأ: ' + error.message);
+      setShowErrorModal(true);
     } finally {
       setIsLoading(false);
     }
@@ -267,6 +282,15 @@ export default function AddLocationScreen({ route, navigation }) {
           setShowSuccessModal(false);
           navigation.navigate('ClientTabs');
         }}
+      />
+
+      <ErrorModal
+        visible={showErrorModal}
+        title="خطأ في حفظ العنوان"
+        message={errorMessage}
+        onClose={() => setShowErrorModal(false)}
+        buttonText="حسناً"
+        onButtonPress={() => setShowErrorModal(false)}
       />
     </SafeAreaView>
   );

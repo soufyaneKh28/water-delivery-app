@@ -108,7 +108,8 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     padding: 24,
     width: '100%',
     position: 'absolute',
@@ -206,7 +207,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 32,
     marginLeft: 10,
-    width:210
+    // width:210
+    flex:1
   },
   addToCartText: {
     color: '#fff',
