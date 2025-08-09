@@ -3,6 +3,7 @@ import '../gesture-handler';
 
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
@@ -116,6 +117,7 @@ export default function App() {
     <AuthProvider>
       <CartProvider>
         <AddressProvider>
+          <StatusBar style="dark" backgroundColor="#fff" />
           <AppNavigator />
           <Toast config={toastConfig} />
         </AddressProvider>

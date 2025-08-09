@@ -51,6 +51,8 @@ export default function AddLocationScreen({ route, navigation }) {
     
     if (!label.trim()) {
       newErrors.label = 'اسم العنوان مطلوب';
+    } else if (label.trim().length < 2) {
+      newErrors.label = 'اسم العنوان يجب أن يكون على الأقل حرفين';
     }
     if (!address.trim()) {
       newErrors.address = 'العنوان مطلوب';

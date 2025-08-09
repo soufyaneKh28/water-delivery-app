@@ -2,7 +2,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
-import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Image, Modal, Platform, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
@@ -108,6 +107,8 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [addressModalVisible, setAddressModalVisible] = useState(false);
   const [modalKey, setModalKey] = useState(0);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
   const { selectedAddress, setSelectedAddress } = useAddress();
   const [savedAddresses, setSavedAddresses] = useState([]);
   const navigation = useNavigation();
@@ -123,6 +124,7 @@ export default function HomeScreen() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
 
   const [expoPushToken, setExpoPushToken] = useState('');
@@ -245,7 +247,6 @@ const { width } = Dimensions.get('window');
 
   const getLocations = async () => {
     setIsLoadingLocations(true);
-    setErrorMessage('');
     try {
       const data = await api.getLocations();
       const addresses = data.data || [];
@@ -254,28 +255,19 @@ const { width } = Dimensions.get('window');
         setSelectedAddress(addresses[0]);
       }
       setIsOffline(false);
+      setErrorMessage(''); // Clear any previous error messages
     } catch (error) {
       console.error('Error fetching locations:', error);
-      setErrorMessage('فشل في تحميل العناوين. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+      // Only show error message for locations if it's the first load and no addresses exist
+      if (savedAddresses.length === 0) {
+        setErrorMessage('فشل في تحميل العناوين. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+      }
       setIsOffline(true);
       setSavedAddresses([]);
     } finally {
       setIsLoadingLocations(false);
     }
   };
-
-  // const getOffers = async () => {
-  //   setIsLoadingOffers(true);
-  //   try {
-  //     const data = await api.getOffers();
-  //     setOffers(data.data || []);
-  //   } catch (error) {
-  //     console.error('Error fetching offers:', error);
-  //     setOffers([]);
-  //   } finally {
-  //     setIsLoadingOffers(false);
-  //   }
-  // };
 
   const getOffers = async () => {
     setIsLoadingOffers(true);
@@ -286,6 +278,7 @@ const { width } = Dimensions.get('window');
     } catch (error) {
       console.error('Error fetching offers:', error);
       setOffers([]);
+      // Don't set error message for offers as it's not critical
     } finally {
       setIsLoadingOffers(false);
     }
@@ -300,6 +293,7 @@ const { width } = Dimensions.get('window');
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategories([]);
+      // Don't set error message for categories as it's not critical
     } finally {
       setIsLoadingCategories(false);
     }
@@ -315,6 +309,7 @@ const { width } = Dimensions.get('window');
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
+      // Don't set error message for products as it's not critical
     } finally {
       setIsLoadingProducts(false);
     }
@@ -421,26 +416,26 @@ const { width } = Dimensions.get('window');
     if (!user) return;
     setRefreshing(true);
     setErrorMessage('');
-    try {
-      // Refresh all data in parallel - much better approach!
-      await Promise.allSettled([
-        getOffers(),
-        getLocations(),
-        getCategories(),
-        getProducts(),
-        fetchActiveOrders()
-      ]);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      setErrorMessage('فشل في تحديث البيانات. يرجى المحاولة مرة أخرى.');
-    } finally {
+    
+    // Load all data independently - each section will show data as soon as it's available
+    getOffers();
+    getLocations();
+    getCategories();
+    getProducts();
+    fetchActiveOrders();
+    
+    // Stop refreshing after a reasonable time to allow data to load
+    // This ensures the refresh indicator doesn't stay too long while still allowing
+    // individual sections to show their loading states
+    setTimeout(() => {
       setRefreshing(false);
-    }
+    }, 2000); // 2 seconds should be enough for most data to load
   }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
-    // Load each section independently
+    
+    // Load each section independently - data will appear as soon as it's available
     getOffers();
     getLocations();
     getCategories();
@@ -472,6 +467,69 @@ const { width } = Dimensions.get('window');
     ].filter(Boolean); // Remove any undefined/null values
     
     return parts.join('، ');
+  };
+
+  const handleLongPressAddress = (address) => {
+    setAddressToDelete(address);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!addressToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await api.deleteLocation(addressToDelete.id);
+      
+      if (response.success) {
+        // Remove from saved addresses
+        const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressToDelete.id);
+        setSavedAddresses(updatedAddresses);
+        
+        // If the deleted address was selected, select the first available address or clear selection
+        if (selectedAddress?.id === addressToDelete.id) {
+          if (updatedAddresses.length > 0) {
+            setSelectedAddress(updatedAddresses[0]);
+          } else {
+            setSelectedAddress(null);
+          }
+        }
+        
+        Toast.show({
+          type: 'success',
+          text1: 'تم الحذف',
+          text2: 'تم حذف العنوان بنجاح',
+          position: 'bottom',
+          visibilityTime: 2500,
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'خطأ',
+          text2: 'فشل في حذف العنوان',
+          position: 'bottom',
+          visibilityTime: 2500,
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'فشل في حذف العنوان',
+        position: 'bottom',
+        visibilityTime: 2500,
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalVisible(false);
+      setAddressToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalVisible(false);
+    setAddressToDelete(null);
   };
 
   const renderLocationButton = () => {
@@ -522,7 +580,7 @@ const { width } = Dimensions.get('window');
   // console.log("products", products);
   return (
     <SafeAreaView style={styles.container}>
-     <StatusBar style="dark" backgroundColor="#1B7CC8" />
+     {/* <StatusBar style="dark" backgroundColor="#1B7CC8" /> */}
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false} 
@@ -719,13 +777,13 @@ const { width } = Dimensions.get('window');
 
       </ScrollView>
 
-      <View style={{}}>
+      <View style={''}>
 
       <Modal
         key={modalKey}
         visible={addressModalVisible}
         transparent
-        style={{flex: 1}}
+        
         animationType="slide"
         onRequestClose={() => setAddressModalVisible(false)}
         statusBarTranslucent={true}
@@ -755,6 +813,7 @@ const { width } = Dimensions.get('window');
                     selectedAddress?.id === address.id && styles.selectedAddressItem
                   ]}
                   onPress={() => handleSelectAddress(address)}
+                  onLongPress={() => handleLongPressAddress(address)}
                 >
                   <TouchableOpacity 
                     style={styles.editButton}
@@ -773,6 +832,7 @@ const { width } = Dimensions.get('window');
                   </View>
                 </TouchableOpacity>
               ))}
+     
             </ScrollView>
             
             <View style={styles.modalFooter}>
@@ -780,6 +840,65 @@ const { width } = Dimensions.get('window');
               <TouchableOpacity onPress={handleAddLocation} style={styles.addLocationButton}>
                 <CustomText type="bold" style={styles.addLocationText}>أضف عنواناً جديداً</CustomText>
                 <CustomText style={styles.addLocationIcon}>+</CustomText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        visible={deleteModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelDelete}
+        statusBarTranslucent={true}
+      >
+        <View style={styles.deleteModalOverlay}>
+          <View style={styles.deleteModalContainer}>
+            <View style={styles.deleteModalHeader}>
+              <Ionicons name="warning" size={32} color="#FF6B6B" />
+              <CustomText type="bold" style={styles.deleteModalTitle}>حذف العنوان</CustomText>
+            </View>
+            
+            <View style={styles.deleteModalContent}>
+              <CustomText style={styles.deleteModalText}>
+                هل أنت متأكد من حذف العنوان التالي؟
+              </CustomText>
+              {addressToDelete && (
+                <View style={styles.addressToDeleteContainer}>
+                  <CustomText type="bold" style={styles.addressToDeleteLabel}>
+                    {addressToDelete.label}
+                  </CustomText>
+                  <CustomText style={styles.addressToDeleteText}>
+                    {formatAddressString(addressToDelete)}
+                  </CustomText>
+                </View>
+              )}
+              <CustomText style={styles.deleteModalWarning}>
+                لا يمكن التراجع عن هذا الإجراء
+              </CustomText>
+            </View>
+            
+            <View style={styles.deleteModalFooter}>
+              <TouchableOpacity 
+                style={[styles.deleteModalButton, styles.cancelButton]} 
+                onPress={handleCancelDelete}
+                disabled={isDeleting}
+              >
+                <CustomText style={styles.cancelButtonText}>إلغاء</CustomText>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.deleteModalButton, styles.deleteButton]} 
+                onPress={handleDeleteAddress}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <CustomText style={styles.deleteButtonText}>حذف</CustomText>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -1166,8 +1285,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    // flex: 1,
-    height: '85%',
+    flex: 1,
+    maxHeight: '95%',
+    paddingBottom: 200,
     // position: 'relative',
   },
   modalHeader: {
@@ -1191,11 +1311,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modalScrollView: {
-    flex: 1,
-    maxHeight: '50%',
+    // flex: 1,
+    // maxHeight: '50%',
+    // height: '50%',
+    height: 450,
+    // maxHeight: '50%',
   },
   modalScrollContent: {
-    paddingBottom: 10,
+    // flex: 1,
+    // height: '100%',
+    // paddingBottom: 200,
   },
   addressItem: {
     flexDirection: 'row',
@@ -1279,6 +1404,94 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     position: 'relative',
     zIndex: 1,
+  },
+  // Delete Modal styles
+  deleteModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  deleteModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    alignItems: 'center',
+  },
+  deleteModalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    color: '#333',
+    marginTop: 12,
+    textAlign: 'center',
+  },
+  deleteModalContent: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  addressToDeleteContainer: {
+    backgroundColor: '#F5F6FA',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  addressToDeleteLabel: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'right',
+    marginBottom: 4,
+  },
+  addressToDeleteText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'right',
+  },
+  deleteModalWarning: {
+    fontSize: 14,
+    color: '#FF6B6B',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  deleteModalFooter: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  deleteModalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#F5F6FA',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  deleteButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    color: '#fff',
   },
 
 }); 

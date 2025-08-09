@@ -207,20 +207,6 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderCountryItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.countryItem}
-      onPress={() => {
-        // setSelectedCountry(item);
-        // setShowCountryModal(false);
-      }}
-    >
-      <CustomText style={styles.countryFlag}>{item.flag}</CustomText>
-      <CustomText style={styles.countryName}>{item.country}</CustomText>
-      <CustomText style={styles.countryCodeText}>{item.code}</CustomText>
-    </TouchableOpacity>
-  );
-
   // if (loading) {
   //   return (
   //     <View style={[globalStyles.container, styles.loadingContainer]}>

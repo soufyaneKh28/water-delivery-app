@@ -82,6 +82,7 @@ export const CartProvider = ({ children }) => {
       getCartTotal,
       getCartCount,
       showSuccessModal,
+      setShowSuccessModal,
       addedProduct
     }}>
       {children}
