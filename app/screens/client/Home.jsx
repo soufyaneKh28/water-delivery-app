@@ -14,7 +14,7 @@ import CustomText from '../../components/common/CustomText';
 import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
-import { api } from '../../utils/api';
+import { api, API_BASE_URL, getAccessToken } from '../../utils/api';
 // import { useFocusEffect } from '@react-navigation/native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -410,6 +410,10 @@ const { width } = Dimensions.get('window');
     }
   };
   // console.log(activeOrders);
+  useEffect(() => {
+    getLocations();
+    
+  }, [addressModalVisible]);
   
 
   const onRefresh = React.useCallback(async () => {
@@ -474,17 +478,26 @@ const { width } = Dimensions.get('window');
     setDeleteModalVisible(true);
   };
 
+
   const handleDeleteAddress = async () => {
     if (!addressToDelete) return;
-    
+    console.log("addressToDelete", addressToDelete);
     setIsDeleting(true);
+    const token = await getAccessToken();
     try {
-      const response = await api.deleteLocation(addressToDelete.id);
+        const response = await fetch(`${API_BASE_URL}/locations/deleteLocation/${addressToDelete.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })  ;
       
       if (response.success) {
         // Remove from saved addresses
         const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressToDelete.id);
         setSavedAddresses(updatedAddresses);
+
         
         // If the deleted address was selected, select the first available address or clear selection
         if (selectedAddress?.id === addressToDelete.id) {
@@ -500,7 +513,7 @@ const { width } = Dimensions.get('window');
           text1: 'تم الحذف',
           text2: 'تم حذف العنوان بنجاح',
           position: 'bottom',
-          visibilityTime: 2500,
+          visibilityTime: 4500,
         });
       } else {
         Toast.show({
@@ -524,6 +537,7 @@ const { width } = Dimensions.get('window');
       setIsDeleting(false);
       setDeleteModalVisible(false);
       setAddressToDelete(null);
+      setAddressModalVisible(false);
     }
   };
 

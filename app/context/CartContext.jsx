@@ -37,7 +37,7 @@ export const CartProvider = ({ children }) => {
 
     // Show success modal
     setAddedProduct(product);
-    setShowSuccessModal(true);
+    // setShowSuccessModal(true);
     
     // Hide modal after 2 seconds
     setTimeout(() => {

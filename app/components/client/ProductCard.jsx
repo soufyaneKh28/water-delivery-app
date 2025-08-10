@@ -47,9 +47,13 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
     <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.85}>
       <Image source={image} style={styles.image} resizeMode="cover" />
       <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
-      <CustomText type="regular" style={styles.size}>{size}</CustomText>
+      <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
       <View style={styles.row}>
-        <CustomText type="bold" style={styles.price}>{price}</CustomText>
+        <View style={styles.priceContainer}>
+          {oldPrice && <CustomText type="regular" style={styles.oldPrice}>{oldPrice}</CustomText>}
+          <CustomText type="bold" style={styles.price}>{price}</CustomText>
+          {/* <CustomText type="regular" style={styles.price}>{oldPrice}</CustomText>x */}
+        </View>
         <TouchableOpacity style={styles.button} onPress={handleAddToCart}>
           <AntDesign name="plus" size={20} color="white" />
         </TouchableOpacity>
@@ -101,10 +105,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // marginTop: 10,
   },
+  priceContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    // gap: 4,
+  },
   price: {
     color: '#2196F3',
     // fontWeight: 'bold',
     fontSize: 18,
+  },
+  oldPrice: {
+    color: '#888',
+    fontSize: 13,
+    textDecorationLine: 'line-through',
   },
   size: {
     color: '#888',

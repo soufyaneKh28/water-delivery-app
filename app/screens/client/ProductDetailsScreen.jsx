@@ -49,7 +49,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
-            <CustomText type="regular" style={styles.size}>{size}</CustomText>
+            <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
           </View>
         </View>
         {/* Description */}

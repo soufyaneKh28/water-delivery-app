@@ -3,15 +3,15 @@ import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Linking,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  View,
+    Alert,
+    Image,
+    Linking,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
