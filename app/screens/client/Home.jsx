@@ -208,171 +208,48 @@ const { width } = Dimensions.get('window');
     navigation.navigate('Category', { category });
   };
 
-  // const getCategories = async () => {
-  //   setIsLoadingCategories(true);
-  //   try {
-  //     const { data, error } = await supabase
-  //       .from('product_categories')
-  //       .select('*')
-  //       .order('created_at', { ascending: false });
 
-  //     if (error) {
-  //       console.error('Error fetching categories:', error);
-  //       return;
-  //     }
-  //     setCategories(data);
-  //   } finally {
-  //     setIsLoadingCategories(false);
-  //   }
-  // };
 
-  // const getProducts = async () => {
-  //   setIsLoadingProducts(true);
-  //   try {
-  //     const { data, error } = await supabase
-  //       .from('products')
-  //       .select('*')
-  //       .neq('price_type', 'coupon')
-  //       .order('created_at', { ascending: false });
-  //     if (error) {
-  //       console.error('Error fetching products:', error);
-  //       return;
-  //     }
-  //     // Only show products with price_type 'money'
-  //     setProducts((data || []).filter(product => product.price_type === 'money'));
-  //   } finally {
-  //     setIsLoadingProducts(false);
-  //   }
-  // };
 
-  const getLocations = async () => {
-    setIsLoadingLocations(true);
-    try {
-      const data = await api.getLocations();
-      const addresses = data.data || [];
-      setSavedAddresses(addresses);
-      if (addresses.length > 0 && !selectedAddress) {
-        setSelectedAddress(addresses[0]);
-      }
-      setIsOffline(false);
-      setErrorMessage(''); // Clear any previous error messages
-    } catch (error) {
-      console.error('Error fetching locations:', error);
-      // Only show error message for locations if it's the first load and no addresses exist
-      if (savedAddresses.length === 0) {
-        setErrorMessage('فشل في تحميل العناوين. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
-      }
-      setIsOffline(true);
-      setSavedAddresses([]);
-    } finally {
-      setIsLoadingLocations(false);
-    }
-  };
 
-  const getOffers = async () => {
+  // Optimized single API call for all data
+  const getAll = async () => {
+    if (!user) return;
     setIsLoadingOffers(true);
+    setIsLoadingLocations(true);
+    setIsLoadingCategories(true);
+    setIsLoadingProducts(true);
+    setErrorMessage('');
+    
     try {
-      const data = await api.getOffers();
-      setOffers(data.data || []);
+      const data = await api.getAllData();
+      setOffers(data.data.offers || []);
+      setSavedAddresses(data.data.locations || []);
+      if (data.data.locations && data.data.locations.length > 0 && !selectedAddress) {
+        setSelectedAddress(data.data.locations[0]);
+      }
+      setCategories(data.data.categories || []);
+      setProducts((data.data.products || []).filter(product => product.price_type === 'money'));
       setIsOffline(false);
     } catch (error) {
-      console.error('Error fetching offers:', error);
+      console.error('Error fetching data:', error);
+      setErrorMessage('فشل في تحميل البيانات. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
+      setIsOffline(true);
       setOffers([]);
-      // Don't set error message for offers as it's not critical
+      setSavedAddresses([]);
+      setCategories([]);
+      setProducts([]);
     } finally {
       setIsLoadingOffers(false);
-    }
-  };
-
-  const getCategories = async () => {
-    setIsLoadingCategories(true);
-    try {
-      const data = await api.getCategories();
-      setCategories(data.data || []);
-      setIsOffline(false);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setCategories([]);
-      // Don't set error message for categories as it's not critical
-    } finally {
+      setIsLoadingLocations(false);
       setIsLoadingCategories(false);
-    }
-  };
-
-  const getProducts = async () => {
-    setIsLoadingProducts(true);
-    try {
-      const data = await api.getProducts();
-      // Only show products with price_type 'money'
-      setProducts((data.data || []).filter(product => product.price_type === 'money'));
-      setIsOffline(false);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]);
-      // Don't set error message for products as it's not critical
-    } finally {
       setIsLoadingProducts(false);
     }
   };
 
-  // Optimized single API call for all data
-  // const getAll = async () => {
-  //   if (!user) return;
-  //   setIsLoadingOffers(true);
-  //   setIsLoadingLocations(true);
-  //   setIsLoadingCategories(true);
-  //   setIsLoadingProducts(true);
-  //   setErrorMessage('');
-  //   
-  //   try {
-  //     const data = await api.getAllData();
-  //     setOffers(data.data.offers || []);
-  //     setSavedAddresses(data.data.locations);
-  //     if (data.data.locations.length > 0 && !selectedAddress) {
-  //       setSelectedAddress(data.data.locations[0]);
-  //     }
-  //     setCategories(data.data.categories);
-  //     setProducts(data.data.products);
-  //     setIsOffline(false);
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //     setErrorMessage('فشل في تحميل البيانات. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.');
-  //     setIsOffline(true);
-  //     setOffers([]);
-  //     setSavedAddresses([]);
-  //     setCategories([]);
-  //     setProducts([]);
-  //   } finally {
-  //     setIsLoadingOffers(false);
-  //     setIsLoadingLocations(false);
-  //     setIsLoadingCategories(false);
-  //     setIsLoadingProducts(false);
-  //   }
-  // };
 
-  // Fallback function using the original getAllData approach
-  // Use this if parallel calls cause issues
-  // const getAllSequential = async () => {
-  //   setIsLoadingOffers(true);
-  //   try {
-  //     const data = await api.getAllData();
-  //     setOffers(data.data.offers || []);
-  //     setSavedAddresses(data.data.locations);
-  //     if (data.data.locations.length > 0 && !selectedAddress) {
-  //       setSelectedAddress(data.data.locations[0]);
-  //     }
-  //     setCategories(data.data.categories);
-  //     setProducts(data.data.products);
-  //   } catch (error) {
-  //     console.error('Error fetching data:', error);
-  //     setOffers([]);
-  //   } finally {
-  //     setIsLoadingOffers(false);
-  //     setIsLoadingLocations(false);
-  //     setIsLoadingCategories(false);
-  //     setIsLoadingProducts(false);
-  //   }
-  // };
+
+
 
   const fetchActiveOrders = async () => {
     if (!user?.id) return;
@@ -411,7 +288,7 @@ const { width } = Dimensions.get('window');
   };
   // console.log(activeOrders);
   useEffect(() => {
-    getLocations();
+    getAll();
     
   }, [addressModalVisible]);
   
@@ -421,29 +298,18 @@ const { width } = Dimensions.get('window');
     setRefreshing(true);
     setErrorMessage('');
     
-    // Load all data independently - each section will show data as soon as it's available
-    getOffers();
-    getLocations();
-    getCategories();
-    getProducts();
+    // Use the single getAll function instead of separate calls
+    await getAll();
     fetchActiveOrders();
     
-    // Stop refreshing after a reasonable time to allow data to load
-    // This ensures the refresh indicator doesn't stay too long while still allowing
-    // individual sections to show their loading states
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000); // 2 seconds should be enough for most data to load
+    setRefreshing(false);
   }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
     
-    // Load each section independently - data will appear as soon as it's available
-    getOffers();
-    getLocations();
-    getCategories();
-    getProducts();
+    // Use the single getAll function instead of separate calls
+    getAll();
     fetchActiveOrders();
   }, [user?.id]);
 

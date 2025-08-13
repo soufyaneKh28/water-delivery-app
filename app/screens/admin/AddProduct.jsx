@@ -36,6 +36,13 @@ export default function AddProduct({ navigation }) {
   const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
   const [errorMessage, setErrorMessage] = useState({ title: '', message: '' });
 
+  // Helper function to format price for display (converts period to comma for Jordan locale)
+  const formatPriceForDisplay = (price) => {
+    if (!price) return '';
+    // Convert period to comma for display in Jordan locale
+    return price.toString().replace('.', ',');
+  };
+
   // Prefill fields if editing
   useEffect(() => {
     if (editingProduct) {
@@ -44,8 +51,9 @@ export default function AddProduct({ navigation }) {
       setProductCategory(editingProduct.category || '');
       setProductSize(editingProduct.size || '');
       setProductDescription(editingProduct.description || '');
-      setProductPrice(editingProduct.price ? String(editingProduct.price) : '');
-      setProductOldPrice(editingProduct.old_price ? String(editingProduct.old_price) : '');
+      // Format prices for display (convert period to comma for Jordan locale)
+      setProductPrice(editingProduct.price ? formatPriceForDisplay(editingProduct.price) : '');
+      setProductOldPrice(editingProduct.old_price ? formatPriceForDisplay(editingProduct.old_price) : '');
       setProductType(editingProduct.price_type || 'money');
     }
   }, [editingProduct]);
@@ -144,11 +152,12 @@ export default function AddProduct({ navigation }) {
       formData.append('title', productName);
       formData.append('size', productSize);
       formData.append('description', productDescription);
-      formData.append('price', productPrice);
+      // Convert comma to period for API compatibility
+      formData.append('price', productPrice.replace(',', '.'));
       formData.append('price_type', productType);
       formData.append('category', productCategory);
       if (productOldPrice) {
-        formData.append('old_price', productOldPrice);
+        formData.append('old_price', productOldPrice.replace(',', '.'));
       }
 
       let response;
@@ -204,6 +213,9 @@ export default function AddProduct({ navigation }) {
   };
 
   // Add these validation functions after the state declarations
+  // Price validation functions that handle both comma (,) and period (.) as decimal separators
+  // This is important for Jordan and other regions where comma is the standard decimal separator
+  
   const handleSizeChange = (text) => {
     // Only allow numbers
     const numericValue = text.replace(/[^0-9]/g, '');
@@ -211,25 +223,39 @@ export default function AddProduct({ navigation }) {
   };
 
   const handlePriceChange = (text) => {
-    // Allow numbers and one decimal point
-    const numericValue = text.replace(/[^0-9.]/g, '');
+    // Allow numbers, comma, and period
+    const numericValue = text.replace(/[^0-9,.]/g, '');
+    
+    // Replace comma with period for internal processing
+    const normalizedValue = numericValue.replace(',', '.');
+    
     // Ensure only one decimal point
-    const parts = numericValue.split('.');
+    const parts = normalizedValue.split('.');
     if (parts.length > 2) {
-      setProductPrice(parts[0] + '.' + parts.slice(1).join(''));
+      // If multiple decimal separators, keep only the first one
+      const result = parts[0] + '.' + parts.slice(1).join('');
+      setProductPrice(result);
     } else {
+      // For display, show comma if that's what user typed
       setProductPrice(numericValue);
     }
   };
 
   const handleOldPriceChange = (text) => {
-    // Allow numbers and one decimal point
-    const numericValue = text.replace(/[^0-9.]/g, '');
-    // Ensure only one decimal point
-    const parts = numericValue.split('.');
+    // Allow numbers, comma, and period
+    const numericValue = text.replace(/[^0-9,.]/g, '');
+    
+    // Replace comma with period for internal processing
+    const normalizedValue = numericValue.replace(',', '.');
+    
+    // Ensure only one decimal separator
+    const parts = normalizedValue.split('.');
     if (parts.length > 2) {
-      setProductOldPrice(parts[0] + '.' + parts.slice(1).join(''));
+      // If multiple decimal separators, keep only the first one
+      const result = parts[0] + '.' + parts.slice(1).join('');
+      setProductOldPrice(result);
     } else {
+      // For display, show comma if that's what user typed
       setProductOldPrice(numericValue);
     }
   };
@@ -414,7 +440,7 @@ export default function AddProduct({ navigation }) {
           <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>سعر المنتج</CustomText>
           <TextInput 
             style={globalStyles.input} 
-            placeholder="أدخل السعر بالأرقام فقط" 
+            placeholder="أدخل السعر (مثال: 1,30 أو 1.30)" 
             placeholderTextColor={colors.textDisabled}
             keyboardType="decimal-pad"
             value={productPrice}
@@ -425,7 +451,7 @@ export default function AddProduct({ navigation }) {
           <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>السعر القديم (اختياري)</CustomText>
           <TextInput 
             style={globalStyles.input} 
-            placeholder="أدخل السعر القديم للأرصاد" 
+            placeholder="أدخل السعر القديم (مثال: 1,30 أو 1.30)" 
             placeholderTextColor={colors.textDisabled}
             keyboardType="decimal-pad"
             value={productOldPrice}
