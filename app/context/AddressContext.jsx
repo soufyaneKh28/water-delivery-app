@@ -1,12 +1,25 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useAuth } from './AuthContext';
 
 const AddressContext = createContext();
 
 export function AddressProvider({ children }) {
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const { user } = useAuth();
+
+  // Clear selected address when user changes
+  useEffect(() => {
+    if (!user) {
+      setSelectedAddress(null);
+    }
+  }, [user?.id]);
+
+  const clearSelectedAddress = () => {
+    setSelectedAddress(null);
+  };
 
   return (
-    <AddressContext.Provider value={{ selectedAddress, setSelectedAddress }}>
+    <AddressContext.Provider value={{ selectedAddress, setSelectedAddress, clearSelectedAddress }}>
       {children}
     </AddressContext.Provider>
   );

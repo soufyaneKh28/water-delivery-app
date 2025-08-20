@@ -3,23 +3,25 @@ import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    Linking,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  Linking,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
+import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 import { globalStyles } from '../../styling/globalStyles';
+import { API_BASE_URL } from '../../utils/api';
 
 const MENU_ITEMS = [
   {
@@ -71,6 +73,7 @@ export default function ProfileScreen() {
     removeDeviceToken,
     clearStoredNotificationData
   } = useNotification();
+  const { clearSelectedAddress } = useAddress();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -178,6 +181,60 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = async () => {
     setShowDeleteModal(false);
+    try {
+      // Show loading state
+      setLoading(true);
+      
+      // Get fresh access token
+      const accessToken = await getAccessToken();
+      
+      // Remove device token from backend
+      if (expoPushToken) {
+        try {
+          await removeDeviceToken(user?.id, accessToken, expoPushToken);
+        } catch (error) {
+          console.log('Error removing device token:', error);
+        }
+      }
+      
+      // Clear notification data
+      await clearStoredNotificationData();
+      
+      // Delete user account using custom API endpoint
+      const response = await fetch(`${API_BASE_URL}/users/deleteUser`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Clear local auth state and logout
+      await logout();
+      
+      Alert.alert(
+        'تم الحذف',
+        'تم حذف حسابك بنجاح',
+        [{ text: 'حسناً' }]
+      );
+      
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      Alert.alert(
+        'خطأ',
+        'حدث خطأ أثناء حذف الحساب. يرجى المحاولة مرة أخرى.',
+        [{ text: 'حسناً' }]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -331,6 +388,19 @@ export default function ProfileScreen() {
             <CustomText type="medium" style={styles.logoutLabel}>تسجيل الخروج</CustomText>
             <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
           </TouchableOpacity>
+
+          {/* Delete Account */}
+          <TouchableOpacity
+            style={[styles.menuItem, styles.deleteItem]}
+            activeOpacity={0.7}
+            onPress={() => setShowDeleteModal(true)}
+          >
+            <View style={[styles.menuIcon, { backgroundColor: '#FDEAEA' }]}> 
+              <Image source={require('../../../assets/icons/trash.png')} style={{ width: 18, height: 18 }} />
+            </View>
+            <CustomText type="medium" style={styles.deleteLabel}>حذف الحساب</CustomText>
+            <Ionicons name="chevron-back" size={20} color="#F44336" style={styles.menuArrow} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </>
@@ -467,5 +537,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  deleteItem: {
+    backgroundColor: '#FDEAEA',
+    borderBottomWidth: 0,
+    marginTop: 0,
+    marginBottom: 20,
+  },
+  deleteLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#F44336',
+    textAlign: 'right',
   },
 }); 

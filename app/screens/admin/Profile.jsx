@@ -22,7 +22,6 @@ import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 
 
-
 export default function Profile() {
 
   const { user, logout, getAccessToken } = useAuth();

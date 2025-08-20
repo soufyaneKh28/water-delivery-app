@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -280,6 +280,7 @@ export default function UserCoupons() {
         animationType="slide"
         onRequestClose={handleCloseModal}
       >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <TouchableOpacity 
@@ -335,6 +336,7 @@ export default function UserCoupons() {
             <View style={styles.closeBar} />
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

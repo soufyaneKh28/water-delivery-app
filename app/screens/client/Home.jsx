@@ -225,9 +225,16 @@ const { width } = Dimensions.get('window');
       const data = await api.getAllData();
       setOffers(data.data.offers || []);
       setSavedAddresses(data.data.locations || []);
-      if (data.data.locations && data.data.locations.length > 0 && !selectedAddress) {
-        setSelectedAddress(data.data.locations[0]);
+      
+      // Only set selected address if none is selected or if current selection is invalid
+      if (data.data.locations && data.data.locations.length > 0) {
+        if (!selectedAddress || !data.data.locations.find(loc => loc.id === selectedAddress.id)) {
+          setSelectedAddress(data.data.locations[0]);
+        }
+      } else {
+        setSelectedAddress(null);
       }
+      
       setCategories(data.data.categories || []);
       setProducts((data.data.products || []).filter(product => product.price_type === 'money'));
       setIsOffline(false);
@@ -290,7 +297,7 @@ const { width } = Dimensions.get('window');
   useEffect(() => {
     getAll();
     
-  }, [addressModalVisible]);
+  }, []);
   
 
   const onRefresh = React.useCallback(async () => {
