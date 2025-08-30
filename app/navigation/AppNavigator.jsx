@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import AdminNavigator from './AdminNavigator';
 import AuthNavigator from './AuthNavigator';
 import ClientNavigator from './ClientNavigator';
+import GuestNavigator from './GuestNavigator';
 
 const Stack = createStackNavigator();
 
@@ -40,7 +41,10 @@ export default function AppNavigator() {
       gestureDirection: "horizontal-inverted"
     }}>
       {!isAuthenticated ? (
+        <>
         <Stack.Screen name="Auth" component={AuthNavigator} />
+        <Stack.Screen name="Guest" component={GuestNavigator} />
+        </>
       ) : userRole === 'admin' ? (
         <Stack.Screen name="Admin" component={AdminNavigator} />
       ) : (

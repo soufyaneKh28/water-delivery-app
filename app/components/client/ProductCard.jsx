@@ -7,7 +7,7 @@ import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 import CustomText from '../common/CustomText';
 
-const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, description, id }) => {
+const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, description, id , onPress, onActionPress }) => {
   const navigation = useNavigation();
   const { addToCart } = useCart();
 
@@ -44,7 +44,7 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={handlePress} activeOpacity={0.85}>
+    <TouchableOpacity style={styles.card} onPress={ onPress ? onPress : handlePress} activeOpacity={0.85}>
       <Image source={image} style={styles.image} resizeMode="cover" />
       <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
       <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
@@ -54,7 +54,7 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
           <CustomText type="bold" style={styles.price}>{price}</CustomText>
           {/* <CustomText type="regular" style={styles.price}>{oldPrice}</CustomText>x */}
         </View>
-        <TouchableOpacity style={styles.button} onPress={handleAddToCart}>
+        <TouchableOpacity style={styles.button} onPress={ onActionPress ? onActionPress : handleAddToCart}>
           <AntDesign name="plus" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
   priceContainer: {
     flexDirection: 'column',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     // gap: 4,
   },
   price: {
@@ -118,6 +118,7 @@ const styles = StyleSheet.create({
   oldPrice: {
     color: '#888',
     fontSize: 13,
+    textAlign: 'right',
     textDecorationLine: 'line-through',
   },
   size: {
