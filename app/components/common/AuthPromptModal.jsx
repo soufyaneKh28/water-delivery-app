@@ -10,12 +10,12 @@ export default function AuthPromptModal({ visible, onClose, title = 'تسجيل 
 
   const goToLogin = () => {
     onClose && onClose();
-    navigation.navigate('Auth', { screen: 'Login' });
+    navigation.replace('Auth', { screen: 'Login' });
   };
 
   const goToSignup = () => {
     onClose && onClose();
-    navigation.navigate('Auth', { screen: 'SignUp' });
+    navigation.replace('Auth', { screen: 'SignUp' });
   };
 
   return (

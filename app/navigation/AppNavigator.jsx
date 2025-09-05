@@ -1,10 +1,9 @@
 // import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // import { CardStyleInterpolators } from '@react-navigation/stack';
-import React from 'react';
-
+import React, { useEffect, useState } from 'react';
 // Import navigators
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Image, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import AdminNavigator from './AdminNavigator';
 import AuthNavigator from './AuthNavigator';
@@ -15,18 +14,53 @@ const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const { isAuthenticated, userRole, loading } = useAuth();
-  const PENDING_ROLE = '__PENDING__';
+  const [roleTimeout, setRoleTimeout] = useState(false);
+
+  // Reset timeout when authentication state changes
+  useEffect(() => {
+    if (!isAuthenticated || userRole) {
+      setRoleTimeout(false);
+    }
+  }, [isAuthenticated, userRole]);
+
+  // Set up timeout for role fetching
+  useEffect(() => {
+    let timeoutId;
+    
+    if (isAuthenticated && !userRole && !loading) {
+      console.log('⏰ Starting role fetch timeout timer (15 seconds)');
+      timeoutId = setTimeout(() => {
+        console.log('⚠️ Role fetch timeout reached, defaulting to client navigator');
+        setRoleTimeout(true);
+      }, 15000); // 15 seconds timeout
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [isAuthenticated, userRole, loading]);
 
   // Show loading screen while checking authentication
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size='large' color="#007AFF" />
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center' , gap:10}}>
+        <Image source={require('../../assets/icon.png')} style={{width: 200, height: 200}} resizeMode="contain" />
+        <ActivityIndicator size="small" color="#007AFF" />
       </View>
     );
   }
 
-  // Do not block on userRole; default to client flow while role loads
+  // Show loading screen while fetching user role (with timeout)
+  if (isAuthenticated && !userRole && !roleTimeout) {
+    return (
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center' , gap:10}}>
+        <Image source={require('../../assets/icon.png')} style={{width: 200, height: 200}} />
+        <ActivityIndicator size='small' color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{
@@ -36,21 +70,15 @@ export default function AppNavigator() {
     }}>
       {!isAuthenticated ? (
         <>
-        <Stack.Screen name="Auth" component={AuthNavigator} />
-        <Stack.Screen name="Guest" component={GuestNavigator} />
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+          <Stack.Screen name="Guest" component={GuestNavigator} />
         </>
       ) : userRole === 'admin' ? (
         <Stack.Screen name="Admin" component={AdminNavigator} />
-      ) : userRole === PENDING_ROLE ? (
-        // While role is pending, show a minimal loader instead of flashing client UI
-        <Stack.Screen name="LoadingPendingRole" component={() => (
-          <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
-            <ActivityIndicator size='large' color="#007AFF" />
-          </View>
-        )} />
       ) : (
-        <Stack.Screen name="Client" component={ClientNavigator} options={{ animationEnabled: true }} />
+        // Default to Client navigator if role is 'client' or if timeout occurred
+        <Stack.Screen name="Client" component={ClientNavigator} />
       )}
     </Stack.Navigator>
   );
-} 
+}
