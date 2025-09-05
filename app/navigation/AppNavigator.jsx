@@ -15,6 +15,7 @@ const Stack = createStackNavigator();
 
 export default function AppNavigator() {
   const { isAuthenticated, userRole, loading } = useAuth();
+  const PENDING_ROLE = '__PENDING__';
 
   // Show loading screen while checking authentication
   if (loading) {
@@ -25,14 +26,7 @@ export default function AppNavigator() {
     );
   }
 
-  // Show loading screen while fetching user role
-  if (isAuthenticated && !userRole) {
-    return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-        <ActivityIndicator size='large' color="#007AFF" />
-      </View>
-    );
-  }
+  // Do not block on userRole; default to client flow while role loads
 
   return (
     <Stack.Navigator screenOptions={{
@@ -47,8 +41,15 @@ export default function AppNavigator() {
         </>
       ) : userRole === 'admin' ? (
         <Stack.Screen name="Admin" component={AdminNavigator} />
+      ) : userRole === PENDING_ROLE ? (
+        // While role is pending, show a minimal loader instead of flashing client UI
+        <Stack.Screen name="LoadingPendingRole" component={() => (
+          <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
+            <ActivityIndicator size='large' color="#007AFF" />
+          </View>
+        )} />
       ) : (
-        <Stack.Screen name="Client" component={ClientNavigator} />
+        <Stack.Screen name="Client" component={ClientNavigator} options={{ animationEnabled: true }} />
       )}
     </Stack.Navigator>
   );

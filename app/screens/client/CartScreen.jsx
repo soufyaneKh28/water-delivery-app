@@ -1,16 +1,19 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import SuccessModal from '../../components/common/SuccessModal';
 import { useAddress } from '../../context/AddressContext';
+import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
 
 export default function CartScreen() {
   const navigation = useNavigation();
   const { selectedAddress } = useAddress();
+  const { isAuthenticated } = useAuth();
   const { 
     cart, 
     removeFromCart, 
@@ -20,6 +23,7 @@ export default function CartScreen() {
     addedProduct,
     addToCart
   } = useCart();
+  const [authModalVisible, setAuthModalVisible] = React.useState(false);
 
   const shipping = 0;
   const subtotal = getCartTotal();
@@ -110,20 +114,31 @@ export default function CartScreen() {
             <PrimaryButton 
               title="تأكيد السلة" 
               style={styles.confirmBtn} 
-              onPress={() => navigation.navigate('Checkout', { 
-                cart, 
-                subtotal, 
-                shipping, 
-                total,
-                selectedAddress
-              })} 
+              onPress={() => {
+                if (!isAuthenticated) {
+                  setAuthModalVisible(true);
+                  return;
+                }
+                navigation.navigate('Checkout', { 
+                  cart, 
+                  subtotal, 
+                  shipping, 
+                  total,
+                  selectedAddress
+                })
+              }} 
             />
           </View>
         </>
       )}
+      <AuthPromptModal visible={authModalVisible} onClose={() => setAuthModalVisible(false)} />
     </View>
   );
 }
+
+// Auth prompt for guests attempting checkout
+// Keep outside return wrapper to avoid layout shifts
+// Rendered conditionally below
 
 const styles = StyleSheet.create({
   container: {

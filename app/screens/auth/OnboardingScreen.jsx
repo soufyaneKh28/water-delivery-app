@@ -183,7 +183,7 @@ export default function OnboardingScreen({ navigation }) {
     if (currentIndex < onboardingData.length - 1) {
       animateTransition(currentIndex + 1, "right")
     } else {
-      navigation.replace("Login")
+      navigation.replace("Guest")
     }
   }
 
@@ -194,7 +194,7 @@ export default function OnboardingScreen({ navigation }) {
   }
 
   const handleSkip = () => {
-    navigation.replace("Login")
+    navigation.replace("Guest")
   }
 
   // Combined transform for swipe effect

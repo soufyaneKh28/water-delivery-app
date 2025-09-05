@@ -2,15 +2,15 @@ import { Ionicons } from "@expo/vector-icons"
 import { StatusBar } from "expo-status-bar"
 import { useState } from "react"
 import {
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native"
 import CustomText from "../../components/common/CustomText"
 import ErrorModal from "../../components/common/ErrorModal"
@@ -185,19 +185,7 @@ export default function LoginScreen({ navigation }) {
               </TouchableOpacity> */}
             </View>
 
-            {/* View as Guest Button */}
-            <View style={styles.guestContainer}>
-              <CustomText style={styles.guestText}>أو</CustomText>
-              <TouchableOpacity 
-                style={styles.guestButton}
-                onPress={() => navigation.push('Guest')}
-                disabled={isLoading}
-              >
-                <CustomText type="bold" style={styles.guestButtonText}>
-                  تصفح كزائر
-                </CustomText>
-              </TouchableOpacity>
-            </View>
+            
           </View>
         </View>
       </ScrollView>
@@ -287,26 +275,5 @@ const styles = StyleSheet.create({
     color: colors.primary,
     // fontWeight: "bold",
   },
-  guestContainer: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  guestText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginBottom: 15,
-  },
-  guestButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: colors.primary,
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 25,
-  },
-  guestButtonText: {
-    fontSize: 16,
-    color: colors.primary,
-    fontWeight: "bold",
-  },
+  
 })

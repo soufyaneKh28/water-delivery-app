@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Image, Platform, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
-import Toast from 'react-native-toast-message';
 import ProductCard from '../../components/client/ProductCard';
+import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
 import { API_BASE_URL } from '../../utils/api';
@@ -21,6 +21,7 @@ export default function GuestHome() {
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingOffers, setIsLoadingOffers] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [authModalVisible, setAuthModalVisible] = useState(false);
 
   const progress = useSharedValue(0);
 
@@ -79,20 +80,11 @@ export default function GuestHome() {
     navigation.navigate('GuestProductDetails', { product });
   };
 
-  const handleLoginPress = () => {
-    navigation.goBack();
+  const handleAddLocationPress = () => {
+    setAuthModalVisible(true);
   };
 
-  const handleAddToCart = (product) => {
-    Toast.show({
-      type: 'info',
-      text1: 'تسجيل الدخول مطلوب',
-      text2: 'يرجى تسجيل الدخول لإضافة المنتج إلى السلة',
-      position: 'top',
-      topOffset: 100,
-      visibilityTime: 3000,
-    });
-  };
+  // Adding to cart is allowed for guests via ProductCard default handler
 
   return (
     <SafeAreaView style={styles.container}>
@@ -113,20 +105,16 @@ export default function GuestHome() {
       >
         <Image source={require('../../../assets/images/home-bg.png')} style={styles.backgroundImage} />
         
-        {/* Header with Login Button */}
+        {/* Add Location Button (above offers) */}
         <View style={styles.header}>
-          {/* <View style={styles.locationPlaceholder}>
-            <Ionicons name="location-outline" size={20} color={colors.gray[500]} />
-            <CustomText style={styles.locationPlaceholderText}>اختر موقعك</CustomText>
-          </View> */}
-          
           <TouchableOpacity 
-            style={styles.loginButton}
-            onPress={handleLoginPress}
+            style={[styles.addLocationButton]}
+            onPress={handleAddLocationPress}
           >
-            <CustomText type="bold" style={styles.loginButtonText}>
-              تسجيل الدخول
-            </CustomText>
+            <View style={styles.addLocationContent}>
+              <Image source={require('../../../assets/icons/location.png')} style={{width: 24, height: 24, objectFit: 'cover'}} />
+              <CustomText type="bold" style={styles.addLocationText}>أضف عنوان التوصيل</CustomText>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -210,7 +198,7 @@ export default function GuestHome() {
             </View>
           ) : (
             <View style={styles.productsGrid}>
-              {products.map((product) => (
+              {products.filter((p) => p.price_type === 'money').map((product) => (
                 <ProductCard
                   key={product.id}
                   title={product.title}
@@ -221,7 +209,7 @@ export default function GuestHome() {
                   id={product.id}
                   image={product.image_url ? { uri: product.image_url } : require('../../../assets/images/bottle.png')}
                   onPress={() => handleProductPress(product)}
-                  onActionPress={() => handleAddToCart(product)}
+                  
                 //   isGuest={true}
                 />
               ))}
@@ -239,7 +227,7 @@ export default function GuestHome() {
           </CustomText>
           <TouchableOpacity 
             style={styles.ctaButton}
-            onPress={handleLoginPress}
+            onPress={() => setAuthModalVisible(true)}
           >
             <CustomText type="bold" style={styles.ctaButtonText}>
               إنشاء حساب الآن
@@ -247,6 +235,7 @@ export default function GuestHome() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <AuthPromptModal visible={authModalVisible} onClose={() => setAuthModalVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -272,7 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   locationPlaceholder: {
@@ -288,18 +277,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.gray[500],
   },
-  loginButton: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 20,
+  addLocationButton: {
+    backgroundColor: colors.primaryLight,
+    width: '100%',
+    paddingHorizontal: 13,
     paddingVertical: 10,
     borderRadius: 10,
-    width: '100%',
   },
-  loginButtonText: {
-    color: colors.white,
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: 'bold',
+  addLocationContent: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  addLocationText: {
+    color: colors.primary,
+    fontSize: 16,
   },
   offersContainer: {
     marginTop: 20,
@@ -386,7 +379,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   productsGrid: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
+    justifyContent: 'space-between',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
