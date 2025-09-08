@@ -57,6 +57,17 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
 
+    // Disallow Arabic letters in username
+    const containsArabicLetters = /[\u0600-\u06FF]/.test(trimmedUsername);
+    if (containsArabicLetters) {
+      setErrorMessage({
+        title: 'تنبيه اسم المستخدم',
+        message: 'يجب أن يكون اسم المستخدم بأحرف إنجليزية فقط'
+      });
+      setShowErrorModal(true);
+      return;
+    }
+
     // Username should not be the same as email
     if (trimmedUsername.toLowerCase() === trimmedEmail.toLowerCase()) {
       setErrorMessage({

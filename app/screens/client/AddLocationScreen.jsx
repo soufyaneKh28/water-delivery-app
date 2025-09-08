@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
@@ -65,6 +65,19 @@ export default function AddLocationScreen({ route, navigation }) {
     }
     if (!floor.trim()) {
       newErrors.floor = 'الطابق مطلوب';
+    }
+
+    // Disallow Arabic letters or Arabic numerals in numeric fields
+    const containsArabicLettersOrDigits = (value) => /[\u0600-\u06FF\u0660-\u0669\u06F0-\u06F9]/.test(value);
+    if (buildingNumber && containsArabicLettersOrDigits(buildingNumber)) {
+      setErrorMessage('يجب إدخال الأرقام الإنجليزية فقط في رقم المبنى');
+      setShowErrorModal(true);
+      return false;
+    }
+    if (floor && containsArabicLettersOrDigits(floor)) {
+      setErrorMessage('يجب إدخال الأرقام الإنجليزية فقط في رقم الطابق');
+      setShowErrorModal(true);
+      return false;
     }
 
     setErrors(newErrors);
@@ -146,6 +159,8 @@ export default function AddLocationScreen({ route, navigation }) {
   };
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1, backgroundColor: '#fff' }}>
+
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
@@ -169,7 +184,7 @@ export default function AddLocationScreen({ route, navigation }) {
                 }
               }}
               textAlign="right"
-            />
+              />
             {errors.label && <CustomText style={styles.errorText}>{errors.label}</CustomText>}
           </View>
 
@@ -186,7 +201,7 @@ export default function AddLocationScreen({ route, navigation }) {
                 }
               }}
               textAlign="right"
-            />
+              />
             {errors.address && <CustomText style={styles.errorText}>{errors.address}</CustomText>}
           </View>
 
@@ -203,7 +218,7 @@ export default function AddLocationScreen({ route, navigation }) {
                 }
               }}
               textAlign="right"
-            />
+              />
             {errors.city && <CustomText style={styles.errorText}>{errors.city}</CustomText>}
           </View>
 
@@ -222,7 +237,7 @@ export default function AddLocationScreen({ route, navigation }) {
                 }}
                 keyboardType="number-pad"
                 textAlign="right"
-              />
+                />
               {errors.buildingNumber && <CustomText style={styles.errorText}>{errors.buildingNumber}</CustomText>}
             </View>
             <View style={[styles.inputContainer, { flex: 1 }]}>
@@ -239,7 +254,7 @@ export default function AddLocationScreen({ route, navigation }) {
                 }}
                 keyboardType="number-pad"
                 textAlign="right"
-              />
+                />
               {errors.floor && <CustomText style={styles.errorText}>{errors.floor}</CustomText>}
             </View>
           </View>
@@ -254,7 +269,7 @@ export default function AddLocationScreen({ route, navigation }) {
               textAlign="right"
               multiline
               numberOfLines={3}
-            />
+              />
           </View>
 
           <PrimaryButton 
@@ -262,7 +277,7 @@ export default function AddLocationScreen({ route, navigation }) {
             style={styles.saveButton} 
             onPress={handleSave}
             disabled={isLoading}
-          />
+            />
           {isLoading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -284,7 +299,7 @@ export default function AddLocationScreen({ route, navigation }) {
           setShowSuccessModal(false);
           navigation.navigate('ClientTabs');
         }}
-      />
+        />
 
       <ErrorModal
         visible={showErrorModal}
@@ -293,8 +308,9 @@ export default function AddLocationScreen({ route, navigation }) {
         onClose={() => setShowErrorModal(false)}
         buttonText="حسناً"
         onButtonPress={() => setShowErrorModal(false)}
-      />
+        />
     </SafeAreaView>
+        </KeyboardAvoidingView>
   );
 }
 
