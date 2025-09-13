@@ -3,7 +3,7 @@
     "name": "مياه الجنيدي",
     "slug": "water-delivery-app",
     "scheme": "water-delivery-app",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.aljunaidiwater.app",
-            "buildNumber": "21",
+            "buildNumber": "22",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
       },
@@ -41,7 +41,7 @@
       }
     },
     "owner": "soufyanekh28",
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/339e3c5a-4df8-473d-b686-755557cd5877"
     },
