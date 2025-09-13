@@ -12,10 +12,11 @@ import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
+import { api } from '../../utils/api';
 
 export default function CouponsScreen({navigation}) {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null); // 25 or 50
+  const [selectedBook, setSelectedBook] = useState(null); // book object
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card' or 'delivery'
   const [cardName, setCardName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -29,6 +30,8 @@ export default function CouponsScreen({navigation}) {
   const { clearCart } = useCart();
   const [couponProducts, setCouponProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [couponBooks, setCouponBooks] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [productCount, setProductCount] = useState(1);
@@ -67,14 +70,14 @@ export default function CouponsScreen({navigation}) {
   const fetchCouponProducts = async () => {
     setIsLoadingProducts(true);
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('price_type', 'coupon')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCouponProducts(data || []);
+      const response = await api.getProducts();
+      console.log('API Response for products:', response);
+      // Handle different response structures
+      const data = Array.isArray(response) ? response : (response?.data || response?.products || []);
+      console.log('Processed data for products:', data);
+      // Filter coupon products (non-book items with coupon type)
+      const products = data.filter(item => item.price_type === 'coupon' && item.type !== 'book');
+      setCouponProducts(products);
     } catch (error) {
       console.error('Error fetching coupon products:', error);
       Toast.show({
@@ -89,11 +92,37 @@ export default function CouponsScreen({navigation}) {
     }
   };
 
+  const fetchCouponBooks = async () => {
+    setIsLoadingBooks(true);
+    try {
+      const response = await api.getCouponProducts();
+      console.log('API Response for products:', response);
+      // Handle different response structures
+      const data = Array.isArray(response) ? response : (response?.data || response?.products || []);
+      console.log('Processed data for books:', data);
+      // Filter coupon books (items with coupon type and book type)
+      // const books = data.filter(item => item.price_type === 'coupon' && item.type === 'book');
+      setCouponBooks(data);
+    } catch (error) {
+      console.error('Error fetching coupon books:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'خطأ',
+        text2: 'حدث خطأ أثناء جلب دفاتر الكوبونات',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    } finally {
+      setIsLoadingBooks(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([
       fetchCouponBalance(),
-      fetchCouponProducts()
+      fetchCouponProducts(),
+      fetchCouponBooks()
     ]);
     setRefreshing(false);
   }, []);
@@ -102,6 +131,7 @@ export default function CouponsScreen({navigation}) {
     if (user?.id) {
       fetchCouponBalance();
       fetchCouponProducts();
+      fetchCouponBooks();
     }
   }, [user?.id]);
 
@@ -142,9 +172,9 @@ export default function CouponsScreen({navigation}) {
     setIsOrderingCoupon(true);
     try {
       const payload = {
-        priceOfCoupon: String(selectedBook),
+        priceOfCoupon: String(selectedBook?.price || selectedBook),
         location_id: selectedAddress.id,
-        numberOfCoupon: String(selectedBook),
+        numberOfCoupon: String(selectedBook?.coupon_count || selectedBook?.price || selectedBook),
       };
       if (selectedBottleCount && selectedBottleCount !== '0') {
         payload.numberOfWater = String(selectedBottleCount);
@@ -177,8 +207,13 @@ export default function CouponsScreen({navigation}) {
       try {
         console.log('Attempting to navigate to OrderSuccess for coupon purchase with params:', {
           order: payload,
-          cart: [{ product_id: selectedBook, quantity: 1 }],
-          total: selectedBook,
+          cart: [{ 
+            product_id: selectedBook?.id || selectedBook, 
+            quantity: 1,
+            title: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`,
+            name: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`
+          }],
+          total: selectedBook?.price || selectedBook,
           selectedAddress,
         });
         
@@ -186,8 +221,13 @@ export default function CouponsScreen({navigation}) {
         setTimeout(() => {
           navigation.replace('OrderSuccess', {
             order: payload,
-            cart: [{ product_id: selectedBook, quantity: 1 }],
-            total: selectedBook,
+            cart: [{ 
+              product_id: selectedBook?.id || selectedBook, 
+              quantity: 1,
+              title: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`,
+              name: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`
+            }],
+            total: selectedBook?.price || selectedBook,
             selectedAddress,
           });
         }, 100);
@@ -198,8 +238,13 @@ export default function CouponsScreen({navigation}) {
         try {
           navigation.navigate('OrderSuccess', {
             order: payload,
-            cart: [{ product_id: selectedBook, quantity: 1 }],
-            total: selectedBook,
+            cart: [{ 
+              product_id: selectedBook?.id || selectedBook, 
+              quantity: 1,
+              title: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`,
+              name: selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`
+            }],
+            total: selectedBook?.price || selectedBook,
             selectedAddress,
           });
         } catch (fallbackError) {
@@ -399,18 +444,34 @@ export default function CouponsScreen({navigation}) {
 
         {/* Buy Coupon Book Section */}
         <CustomText type="bold" style={styles.sectionTitle}>شراء دفتر كوبونات</CustomText>
-        <View style={styles.couponBookList}>
-          <View style={styles.couponBookCard}>
-            <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => openModal(25)} />
-            <CustomText type="medium" style={styles.couponBookText}>دفتر 25 كوبون</CustomText>
-            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+        {isLoadingBooks ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
-          <View style={styles.couponBookCard}>
-            <PrimaryButton title="شراء الدفتر" style={styles.buyButton} onPress={() => openModal(50)} />
-            <CustomText type="medium" style={styles.couponBookText}>دفتر 50 كوبون</CustomText>
-            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+        ) : couponBooks.length === 0 ? (
+          <View style={styles.emptyProductsContainer}>
+            <CustomText type="regular" style={styles.emptyProductsText}>لا توجد دفاتر كوبونات متاحة حالياً</CustomText>
           </View>
-        </View>
+        ) : (
+          <View style={styles.couponBookList}>
+            {couponBooks.map((book) => (
+              <View key={book.id} style={styles.couponBookCard}>
+                <PrimaryButton 
+                  title="شراء الدفتر" 
+                  style={styles.buyButton} 
+                  onPress={() => openModal(book)} 
+                />
+                <CustomText type="medium" style={styles.couponBookText}>
+                  {book.title || `دفتر ${book?.coupon_count || book?.price || book} كوبون`}
+                </CustomText>
+                <Image 
+                  source={book.image_url ? { uri: book.image_url } : require('../../../assets/icons/coupons_active.png')} 
+                  style={styles.couponIcon} 
+                />
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Coupon Products Section */}
         <CustomText type="bold" style={styles.sectionTitle}>المنتجات المتاحة للكوبونات</CustomText>
@@ -542,7 +603,7 @@ export default function CouponsScreen({navigation}) {
             <Ionicons name="close" size={22} color={colors.black} />
           </TouchableOpacity>
             <CustomText type="bold" style={modalStyles.title}>
-              شراء دفتر كوبونات {selectedBook}
+              {selectedBook?.title || `شراء دفتر كوبونات ${selectedBook?.coupon_count || selectedBook?.price || selectedBook}`}
             </CustomText>
             {/* Delivery Address */}
             <CustomText type="bold" style={modalStyles.label}>عنوان التسليم</CustomText>
@@ -669,8 +730,8 @@ export default function CouponsScreen({navigation}) {
             {/* Payment Summary */}
             <CustomText type="bold" style={modalStyles.summaryTitle}>ملخص الدفع</CustomText>
             <View style={modalStyles.summaryRow}>
-              <CustomText>دفتر {selectedBook} كوبون</CustomText>
-              <CustomText>23 دينار</CustomText>
+              <CustomText>{selectedBook?.title || `دفتر ${selectedBook?.coupon_count || selectedBook?.price || selectedBook} كوبون`}</CustomText>
+              <CustomText>{selectedBook?.price || 23} دينار</CustomText>
             </View>
             <View style={modalStyles.summaryRow}>
               <CustomText>رسوم الشحن</CustomText>
@@ -678,7 +739,7 @@ export default function CouponsScreen({navigation}) {
             </View>
             <View style={modalStyles.summaryRow}>
               <CustomText type="bold">الإجمالي</CustomText>
-              <CustomText type="bold" style={{ color: colors.primary }}>23 دينار</CustomText>
+              <CustomText type="bold" style={{ color: colors.primary }}>{selectedBook?.price || 23} دينار</CustomText>
             </View>
             <PrimaryButton
               title={isOrderingCoupon ? "جاري إرسال الطلب..." : "تأكيد الطلب"}

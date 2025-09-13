@@ -4,31 +4,41 @@ import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
-import { API_BASE_URL } from '../../utils/api';
+import { api } from '../../utils/api';
 
 export default function GuestCouponsScreen() {
   const [authModalVisible, setAuthModalVisible] = useState(false);
   const [couponProducts, setCouponProducts] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [couponBooks, setCouponBooks] = useState([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
   const openAuth = () => setAuthModalVisible(true);
 
   useEffect(() => {
-    const fetchGuestProducts = async () => {
+    const fetchGuestData = async () => {
       setIsLoadingProducts(true);
+      setIsLoadingBooks(true);
       try {
-        const response = await fetch(`${API_BASE_URL}/users/guest`);
-        const json = await response.json();
-        const allProducts = json?.data?.products || [];
-        const couponOnly = allProducts.filter((p) => p.price_type === 'coupon');
-        setCouponProducts(couponOnly);
+        const response = await api.getProducts();
+        // Handle different response structures
+        const data = Array.isArray(response) ? response : (response?.data || response?.products || []);
+        // Filter coupon products (non-book items with coupon type)
+        const products = data.filter(item => item.price_type === 'coupon' && item.type !== 'book');
+        setCouponProducts(products);
+        // Filter coupon books (items with coupon type and book type)
+        const books = data.filter(item => item.price_type === 'coupon' && item.type === 'book');
+        setCouponBooks(books);
       } catch (error) {
+        console.error('Error fetching coupon data:', error);
         setCouponProducts([]);
+        setCouponBooks([]);
       } finally {
         setIsLoadingProducts(false);
+        setIsLoadingBooks(false);
       }
     };
-    fetchGuestProducts();
+    fetchGuestData();
   }, []);
 
   return (
@@ -41,18 +51,28 @@ export default function GuestCouponsScreen() {
         </View>
 
         <CustomText type="bold" style={styles.sectionTitle}>شراء دفتر كوبونات</CustomText>
-        <View style={styles.couponBookList}>
-          <View style={styles.couponBookCard}>
-            <PrimaryButton title="سجّل لتشتري" style={styles.buyButton} onPress={openAuth} />
-            <CustomText type="medium" style={styles.couponBookText}>دفتر 25 كوبون</CustomText>
-            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+        {isLoadingBooks ? (
+          <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.primary} /></View>
+        ) : couponBooks.length === 0 ? (
+          <View style={styles.emptyProductsContainer}>
+            <CustomText type="regular" style={styles.emptyProductsText}>لا توجد دفاتر كوبونات متاحة حالياً</CustomText>
           </View>
-          <View style={styles.couponBookCard}>
-            <PrimaryButton title="سجّل لتشتري" style={styles.buyButton} onPress={openAuth} />
-            <CustomText type="medium" style={styles.couponBookText}>دفتر 50 كوبون</CustomText>
-            <Image source={require('../../../assets/icons/coupons_active.png')} style={styles.couponIcon} />
+        ) : (
+          <View style={styles.couponBookList}>
+            {couponBooks.map((book) => (
+              <View key={book.id} style={styles.couponBookCard}>
+                <PrimaryButton title="سجّل لتشتري" style={styles.buyButton} onPress={openAuth} />
+                <CustomText type="medium" style={styles.couponBookText}>
+                  دفتر {book.coupon_count || book.price} كوبون
+                </CustomText>
+                <Image 
+                  source={book.image_url ? { uri: book.image_url } : require('../../../assets/icons/coupons_active.png')} 
+                  style={styles.couponIcon} 
+                />
+              </View>
+            ))}
           </View>
-        </View>
+        )}
 
         <CustomText type="bold" style={styles.sectionTitle}>المنتجات المتاحة للكوبونات</CustomText>
         {isLoadingProducts ? (

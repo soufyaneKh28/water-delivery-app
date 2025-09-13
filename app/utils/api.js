@@ -212,4 +212,18 @@ export const api = {
   deleteCoupon: (couponId) => apiCall(`/coupons/deleteCoupon/${couponId}`, {
     method: 'DELETE',
   }),
+  
+  // Coupon Products
+  getCouponProducts: () => apiCall('/couponsProducts/getAllCouponsProducts'),
+  createCouponProduct: (productData) => apiCall('/couponsProducts/createCouponProduct', {
+    method: 'POST',
+    body: JSON.stringify(productData),
+  }),
+  updateCouponProduct: (productId, productData) => apiCall(`/couponsProducts/updateCouponProduct/${productId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(productData),
+  }),
+  deleteCouponProduct: (productId) => apiCall(`/couponsProducts/deleteCouponProduct/${productId}`, {
+    method: 'DELETE',
+  }),
 }; 

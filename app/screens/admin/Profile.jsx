@@ -3,16 +3,16 @@ import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  Image,
-  Linking,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Linking,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    TouchableOpacity,
+    View
 } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
@@ -205,6 +205,12 @@ export default function Profile() {
       title: 'إدارة كوبونات المستخدمين',
       icon: require('../../../assets/icons/faq.png'),
       onPress: () => navigation.navigate('UserCoupons'),
+    },
+    {
+      id: 'couponBooks',
+      title: 'إدارة دفاتر الكوبونات',
+      icon: require('../../../assets/icons/coupons_active.png'),
+      onPress: () => navigation.navigate('CouponBooks'),
     },
     {
       id: 'logout',

@@ -8,6 +8,7 @@ import { NotificationProvider } from '../context/NotificationContext';
 // Import admin screens
 import AddCategory from '../screens/admin/AddCategory';
 import AddProduct from '../screens/admin/AddProduct';
+import CouponBooks from '../screens/admin/CouponBooks';
 import AdminDashboard from '../screens/admin/Dashboard';
 import EditProfile from '../screens/admin/EditProfile';
 import NotificationPermissionScreen from '../screens/auth/NotificationPermissionScreen';
@@ -172,6 +173,11 @@ export default function AdminNavigator() {
         <Stack.Screen 
           name="UserCoupons" 
           component={UserCoupons} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="CouponBooks" 
+          component={CouponBooks} 
           options={{ headerShown: false }}
         />
         <Stack.Screen 
