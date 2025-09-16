@@ -146,6 +146,21 @@ export default function CouponsScreen({navigation}) {
     setCardErrors({});
   };
 
+  const extractCouponCountFromTitle = (book) => {
+    try {
+      const title = book?.title || '';
+      const match = title.match(/\d+/);
+      if (match && match[0]) {
+        return parseInt(match[0], 10);
+      }
+      if (book?.coupon_count != null) return parseInt(book.coupon_count, 10);
+      if (book?.price != null) return parseInt(book.price, 10);
+      return 0;
+    } catch (e) {
+      return 0;
+    }
+  };
+
   const closeModal = () => {
     setModalVisible(false);
     setSelectedBook(null);
@@ -174,7 +189,7 @@ export default function CouponsScreen({navigation}) {
       const payload = {
         priceOfCoupon: String(selectedBook?.price || selectedBook),
         location_id: selectedAddress.id,
-        numberOfCoupon: String(selectedBook?.coupon_count || selectedBook?.price || selectedBook),
+        numberOfCoupon: String(extractCouponCountFromTitle(selectedBook)),
       };
       if (selectedBottleCount && selectedBottleCount !== '0') {
         payload.numberOfWater = String(selectedBottleCount);

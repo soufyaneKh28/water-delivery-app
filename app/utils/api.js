@@ -69,8 +69,9 @@ export const apiCall = async (endpoint, options = {}, retryCount = 0) => {
             if (!retryResponse.ok) {
               throw new Error(`API call failed: ${retryResponse.status}`);
             }
-            
-            return await retryResponse.json();
+            // Safely handle empty bodies on retry
+            const retryText = await retryResponse.text();
+            return retryText ? JSON.parse(retryText) : {};
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
@@ -88,7 +89,9 @@ export const apiCall = async (endpoint, options = {}, retryCount = 0) => {
       throw new Error(`API call failed: ${response.status}`);
     }
 
-    return await response.json();
+    // Safely handle empty bodies (e.g., DELETE 204 No Content)
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
   } catch (error) {
     if (error.name === 'AbortError') {
       throw new Error('Request timeout. Please check your internet connection.');
@@ -215,6 +218,7 @@ export const api = {
   
   // Coupon Products
   getCouponProducts: () => apiCall('/couponsProducts/getAllCouponsProducts'),
+  getGuestData: () => apiCall('/users/guest'),
   createCouponProduct: (productData) => apiCall('/couponsProducts/createCouponProduct', {
     method: 'POST',
     body: JSON.stringify(productData),

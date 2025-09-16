@@ -4,7 +4,7 @@ import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
 import { colors } from '../../styling/colors';
-import { api } from '../../utils/api';
+import { API_BASE_URL } from '../../utils/api';
 
 export default function GuestCouponsScreen() {
   const [authModalVisible, setAuthModalVisible] = useState(false);
@@ -15,30 +15,39 @@ export default function GuestCouponsScreen() {
 
   const openAuth = () => setAuthModalVisible(true);
 
+
+  const getAll = async () => {
+    // setIsLoadingOffers(true);
+   
+    setIsLoadingBooks(true);
+    setIsLoadingProducts(true);
+    try {   
+    const data = await fetch(`${API_BASE_URL}/users/guest`);
+    const dataJson = await data.json();
+    console.log(dataJson.data);
+    // setOffers(dataJson.data.offers);
+    // setCategories(dataJson.data.categories);
+    // setProducts(dataJson.data.products);
+    setCouponBooks(dataJson.data.couponProducts)
+
+    const products = dataJson.data.products.filter((item)=> item.price_type === 'coupon')
+    setCouponProducts(products)
+    
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  }
+  finally {
+    // setIsLoadingOffers(false);
+    setIsLoadingBooks(false);
+    setIsLoadingProducts(false);
+  }
+
+  
+  };
+  
+
   useEffect(() => {
-    const fetchGuestData = async () => {
-      setIsLoadingProducts(true);
-      setIsLoadingBooks(true);
-      try {
-        const response = await api.getProducts();
-        // Handle different response structures
-        const data = Array.isArray(response) ? response : (response?.data || response?.products || []);
-        // Filter coupon products (non-book items with coupon type)
-        const products = data.filter(item => item.price_type === 'coupon' && item.type !== 'book');
-        setCouponProducts(products);
-        // Filter coupon books (items with coupon type and book type)
-        const books = data.filter(item => item.price_type === 'coupon' && item.type === 'book');
-        setCouponBooks(books);
-      } catch (error) {
-        console.error('Error fetching coupon data:', error);
-        setCouponProducts([]);
-        setCouponBooks([]);
-      } finally {
-        setIsLoadingProducts(false);
-        setIsLoadingBooks(false);
-      }
-    };
-    fetchGuestData();
+    getAll();
   }, []);
 
   return (
@@ -53,13 +62,13 @@ export default function GuestCouponsScreen() {
         <CustomText type="bold" style={styles.sectionTitle}>شراء دفتر كوبونات</CustomText>
         {isLoadingBooks ? (
           <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.primary} /></View>
-        ) : couponBooks.length === 0 ? (
+        ) : couponBooks?.length === 0 ? (
           <View style={styles.emptyProductsContainer}>
             <CustomText type="regular" style={styles.emptyProductsText}>لا توجد دفاتر كوبونات متاحة حالياً</CustomText>
           </View>
         ) : (
           <View style={styles.couponBookList}>
-            {couponBooks.map((book) => (
+            {couponBooks?.map((book) => (
               <View key={book.id} style={styles.couponBookCard}>
                 <PrimaryButton title="سجّل لتشتري" style={styles.buyButton} onPress={openAuth} />
                 <CustomText type="medium" style={styles.couponBookText}>

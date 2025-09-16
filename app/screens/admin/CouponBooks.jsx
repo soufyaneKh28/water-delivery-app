@@ -1,16 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Image,
-    Modal,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Image,
+  Modal,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import BackButton from '../../components/common/BackButton';
@@ -33,7 +33,7 @@ export default function CouponBooks({ navigation }) {
 
   // Form data
   const [formData, setFormData] = useState({
-    title: '',
+    couponCount: '',
     price: ''
   });
 
@@ -74,7 +74,7 @@ export default function CouponBooks({ navigation }) {
 
   const resetForm = () => {
     setFormData({
-      title: '',
+      couponCount: '',
       price: ''
     });
   };
@@ -86,8 +86,12 @@ export default function CouponBooks({ navigation }) {
 
   const openEditModal = (book) => {
     setSelectedBook(book);
+    // Try to get coupon count from field if exists, otherwise parse from title
+    const parsedCount = book.coupon_count != null
+      ? String(book.coupon_count)
+      : (book.title ? (book.title.match(/\d+/)?.[0] || '') : '');
     setFormData({
-      title: book.title || '',
+      couponCount: parsedCount,
       price: book.price?.toString() || ''
     });
     setShowEditModal(true);
@@ -107,7 +111,7 @@ export default function CouponBooks({ navigation }) {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title.trim() || !formData.price.trim()) {
+    if (!formData.couponCount.trim() || !formData.price.trim()) {
       Toast.show({
         type: 'error',
         text1: 'خطأ',
@@ -121,8 +125,9 @@ export default function CouponBooks({ navigation }) {
     setIsSubmitting(true);
     try {
       const bookData = {
-        title: formData.title.trim(),
+        title: `دفتر ${parseInt(formData.couponCount, 10)} كوبون`,
         price: parseFloat(formData.price),
+        coupon_count: parseInt(formData.couponCount, 10),
         price_type: 'coupon',
         type: 'book'
       };
@@ -183,8 +188,6 @@ export default function CouponBooks({ navigation }) {
       closeModals();
       await fetchCouponBooks();
     } catch (error) {
-      console.error('Error deleting coupon book:', error);
-      
       // Handle JSON parse errors specifically
       let errorMessage = 'حدث خطأ أثناء حذف البيانات';
       if (error.message && error.message.includes('JSON Parse error')) {
@@ -203,7 +206,9 @@ export default function CouponBooks({ navigation }) {
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+      // Log only non-JSON-parse errors
+      console.error('Error deleting coupon book:', error);
+
       Toast.show({
         type: 'error',
         text1: 'خطأ',
@@ -265,13 +270,14 @@ export default function CouponBooks({ navigation }) {
 
           <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.inputGroup}>
-              <CustomText type="medium" style={styles.inputLabel}>عنوان الدفتر *</CustomText>
+              <CustomText type="medium" style={styles.inputLabel}>عدد الكوبونات في الدفتر *</CustomText>
               <TextInput
                 style={styles.textInput}
-                value={formData.title}
-                onChangeText={(text) => setFormData(prev => ({ ...prev, title: text }))}
-                placeholder="مثال: دفتر 25 كوبون"
+                value={formData.couponCount}
+                onChangeText={(text) => setFormData(prev => ({ ...prev, couponCount: text.replace(/[^0-9]/g, '') }))}
+                placeholder="مثال: 25"
                 placeholderTextColor={colors.textSecondary}
+                keyboardType="numeric"
               />
             </View>
 
