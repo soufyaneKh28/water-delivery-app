@@ -956,14 +956,14 @@ const styles = StyleSheet.create({
     // marginHorizontal: -20, 
 
 
-    direction: 'rtl',
+    direction: '',
     //  flexDirection: 'row-reverse',
 // paddingHorizontal: 20,
     width: '100%',
   },
   categoriesScrollContent: {
     // paddingHorizontal: 20,
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    // flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     // justifyContent: 'flex-start',
     // alignItems: 'flex-end',
     direction: 'rtl',

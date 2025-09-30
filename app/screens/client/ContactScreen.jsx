@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   header: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     paddingTop: 20,
     justifyContent: 'space-between',
@@ -100,17 +100,17 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.black,
     marginBottom: 8,
-    textAlign: Platform.OS === 'ios' ? "left" : "right",
+    // textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
     marginBottom: 24,
     lineHeight: 22,
-    textAlign: Platform.OS === 'ios' ? "left" : "right",
+    // textAlign: Platform.OS === 'ios' ? "left" : "right",
     },
   cardsRow: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     justifyContent: 'space-between',
     marginBottom: 24,
     gap: 10,
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     marginBottom: 12,
-    textAlign: Platform.OS === 'ios' ? "left" : "right",
+    // textAlign: Platform.OS === 'ios' ? "left" : "right", 
     // textAlign: 'center',
   },
   socialBtn: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -194,6 +194,6 @@ const styles = StyleSheet.create({
   socialText: {
     fontSize: 15,
     color: colors.textPrimary,
-    textAlign: Platform.OS === 'ios' ? "left" : "right",
+    // textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
 }); 

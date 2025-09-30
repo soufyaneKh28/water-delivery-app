@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 400,
+    height: 500,
     marginTop: 10,
     marginBottom: 10,
     alignSelf: 'center',

@@ -175,7 +175,7 @@ console.log('orderDetails', orderDetails);
                   <CustomText style={styles.itemName}>{item.product?.title || 'منتج غير معروف'}</CustomText>
                   <CustomText style={styles.itemQuantity}>الكمية: {item.quantity}</CustomText>
                 </View>
-                <CustomText style={styles.itemPrice}>{item.unit_price} دينار</CustomText>
+                <CustomText style={styles.itemPrice}>{Number(item.unit_price).toFixed(2)} دينار</CustomText>
               </View>
             ))): (
               <View  style={styles.itemRow}>
@@ -199,12 +199,12 @@ console.log('orderDetails', orderDetails);
             </View> */}
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم التوصيل:</CustomText>
-              <CustomText style={styles.summaryValue}>0 دينار</CustomText>
+              <CustomText style={styles.summaryValue}>{Number(0).toFixed(2)} دينار</CustomText>
             </View>
             <View style={[styles.summaryRow, styles.totalRow]}>
               <CustomText type="bold" style={styles.totalLabel}>المجموع الكلي:</CustomText>
               <CustomText type="bold" style={styles.totalValue}>
-                {orderDetails.total || 0} {orderDetails.order_type === 'coupon' ? 'كوبون' : 'دينار'}
+                {orderDetails.order_type === 'coupon' ? String(orderDetails.total || 0) : Number(orderDetails.total || 0).toFixed(2)} {orderDetails.order_type === 'coupon' ? 'كوبون' : 'دينار'}
               </CustomText>
             </View>
             <View style={styles.summaryRow}>

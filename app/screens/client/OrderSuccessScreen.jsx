@@ -37,7 +37,7 @@ export default function OrderSuccessScreen({ route, navigation }) {
         )) : <CustomText>لا توجد منتجات</CustomText>}
         <CustomText type="bold" style={styles.sectionTitle}>الإجمالي</CustomText>
         <CustomText style={styles.totalText}>
-          {total} {order?.order_type === 'coupon' ? 'كوبون' : 'دينار'}
+          {order?.order_type === 'coupon' ? String(total) : Number(total).toFixed(2)} {order?.order_type === 'coupon' ? 'كوبون' : 'دينار'}
         </CustomText>
       </ScrollView>
       <PrimaryButton title="العودة للرئيسية" style={styles.button} onPress={() => navigation.navigate('ClientTabs')} />

@@ -101,15 +101,15 @@ export default function CartScreen() {
             <CustomText style={styles.summaryTitle}>ملخص الدفع</CustomText>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>المجموع الفرعي</CustomText>
-              <CustomText style={styles.summaryValue}>{subtotal.toFixed(0)} د.أ</CustomText>
+              <CustomText style={styles.summaryValue}>{subtotal.toFixed(2)} د.أ</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={styles.summaryLabel}>رسوم الشحن</CustomText>
-              <CustomText style={styles.summaryValue}>{shipping} د.أ</CustomText>
+              <CustomText style={styles.summaryValue}>{shipping.toFixed(2)} د.أ</CustomText>
             </View>
             <View style={styles.summaryRow}>
               <CustomText style={[styles.summaryLabel, { color: colors.primary }]}>الإجمالي</CustomText>
-              <CustomText style={[styles.summaryValue, { color: colors.primary }]}>{total.toFixed(0)} د.أ</CustomText>
+              <CustomText style={[styles.summaryValue, { color: colors.primary }]}>{total.toFixed(2)} د.أ</CustomText>
             </View>
             <PrimaryButton 
               title="تأكيد السلة" 

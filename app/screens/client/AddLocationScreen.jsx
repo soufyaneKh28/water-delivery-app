@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingBottom: 12,
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
     marginBottom: 6,
-    textAlign: Platform.OS === 'ios' ? 'left' : 'right',
+    // textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   inputError: {
     borderColor: colors.error,

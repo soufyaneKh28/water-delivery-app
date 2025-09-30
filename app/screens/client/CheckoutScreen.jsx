@@ -219,15 +219,15 @@ export default function CheckoutScreen({ route, navigation }) {
         <CustomText type="bold" style={styles.summaryTitle}>ملخص الدفع</CustomText>
         <View style={styles.summaryRow}>
           <CustomText>المجموع الفرعي</CustomText>
-          <CustomText>{subtotal} دينار</CustomText>
+          <CustomText>{Number(subtotal).toFixed(2)} دينار</CustomText>
         </View>
         <View style={styles.summaryRow}>
           <CustomText>رسوم الشحن</CustomText>
-          <CustomText>{shipping} دينار</CustomText>
+          <CustomText>{Number(shipping).toFixed(2)} دينار</CustomText>
         </View>
         <View style={styles.summaryRow}>
           <CustomText type="bold">الإجمالي</CustomText>
-          <CustomText type="bold" style={{ color: colors.primary }}>{total} دينار</CustomText>
+          <CustomText type="bold" style={{ color: colors.primary }}>{Number(total).toFixed(2)} دينار</CustomText>
         </View>
         <PrimaryButton
           title={isLoading ? "جاري إرسال الطلب..." : "تأكيد الطلب"}
