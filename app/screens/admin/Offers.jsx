@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
@@ -77,7 +78,7 @@ export default function Offers() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [2, 1],
         quality: 0.8,
@@ -185,7 +186,7 @@ export default function Offers() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ConfirmationModal
         visible={showDeleteConfirmation}
         onClose={() => {
@@ -281,7 +282,7 @@ export default function Offers() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -293,7 +294,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   headerRow: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 24,
@@ -311,6 +312,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     marginBottom: 18,
+    marginTop: 12,
   },
   addButtonText: {
     color: colors.white,

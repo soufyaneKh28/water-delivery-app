@@ -42,7 +42,7 @@ export default function UploadReceiptScreen() {
       }
       
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false, // Disable editing to allow full image selection
         quality: 0.8,
       });
@@ -79,7 +79,7 @@ export default function UploadReceiptScreen() {
       }
       
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: false, // Disable editing to allow full image capture
         quality: 0.8,
       });

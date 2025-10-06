@@ -7,14 +7,13 @@ import {
     Image,
     Linking,
     Platform,
-    SafeAreaView,
     ScrollView,
     StyleSheet,
     Switch,
     TouchableOpacity,
     View
 } from 'react-native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import { useAuth } from '../../context/AuthContext';

@@ -11,6 +11,7 @@ import { useNotification } from '../../context/NotificationContext';
 import { colors } from '../../styling/colors';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 
@@ -246,7 +247,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={{ flexGrow: 1 , paddingBottom: 120 }}
@@ -375,7 +376,7 @@ export default function AdminDashboard() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -383,7 +384,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    direction: 'rtl',
+    // direction: 'rtl',
     // flexDirection: 'row-revers',
   },
   scrollView: {

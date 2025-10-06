@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
 import ErrorModal from '../../components/common/ErrorModal';
@@ -81,6 +82,7 @@ export default function Security({ navigation }) {
       style={globalStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <SafeAreaView style={globalStyles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
@@ -188,7 +190,8 @@ export default function Security({ navigation }) {
         message={successMessage}
         buttonText="حسناً"
       />
-    </KeyboardAvoidingView>
+      </SafeAreaView>
+      </KeyboardAvoidingView>
   );
 }
 

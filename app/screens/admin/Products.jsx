@@ -3,13 +3,13 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Dimensions, FlatList, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/admin/ProductCard';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
-
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CARD_GAP = 15;
 const CARD_PADDING = 24; // 12px padding on each side
@@ -205,7 +205,7 @@ export default function Products() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ConfirmationModal
         visible={showDeleteConfirmation}
         onClose={() => setShowDeleteConfirmation(false)}
@@ -423,7 +423,7 @@ export default function Products() {
           </View>
         </Animated.View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -14,7 +15,7 @@ export default function GuestProfileScreen() {
   const openAuth = () => setAuthModalVisible(true);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.white }}    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}    >
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 , backgroundColor: colors.white }}>
         <View style={styles.headerRow}>
           <View style={{ flexDirection: 'row-reverse', alignItems: 'center', flex: 1 }}>
@@ -67,7 +68,7 @@ export default function GuestProfileScreen() {
       </ScrollView>
 
       <AuthPromptModal visible={authModalVisible} onClose={() => setAuthModalVisible(false)} />
-    </View>
+    </SafeAreaView>
   );
 }
 

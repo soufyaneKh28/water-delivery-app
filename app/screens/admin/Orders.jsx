@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Animated, Dimensions, Image, Modal, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
@@ -104,6 +105,7 @@ const Orders = () => {
   const [selectedOrderType, setSelectedOrderType] = useState('coupon');
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const datePickerRef = useRef(null);
   const [orders, setOrders] = useState([]);
   const [totalOrders, setTotalOrders] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
@@ -305,8 +307,9 @@ const Orders = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView View style={styles.container}>
       <ScrollView 
+        style={styles.scrollView}
         contentContainerStyle={{ paddingBottom: 100 }} 
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -386,13 +389,13 @@ const Orders = () => {
           <TouchableOpacity 
             style={styles.dropdownContainer}
             onPress={() => {
-              if (this.datePickerRef) {
-                this.datePickerRef.togglePicker(true);
+              if (datePickerRef.current) {
+                datePickerRef.current.togglePicker(true);
               }
             }}
           >
             <RNPickerSelect
-              ref={ref => { this.datePickerRef = ref; }}
+              ref={datePickerRef}
               onValueChange={(value) => setSelectedDateFilter(value)}
               value={selectedDateFilter}
               items={dateFilters.map(filter => ({
@@ -532,7 +535,7 @@ const Orders = () => {
                       </View>
                     )}
                     <CustomText type='bold' style={styles.orderPrice}>
-                      {item.total} {item.order_type === 'coupon' ? 'كوبون' : 'دينار'}
+                      {item.order_type === 'coupon' ? String(item.total || 0) : Number(item.total || 0).toFixed(2)} {item.order_type === 'coupon' ? 'كوبون' : 'دينار'}
                     </CustomText>
                   </View>
                 </TouchableOpacity>
@@ -663,7 +666,7 @@ const Orders = () => {
         message={successMessage}
         buttonText="حسناً"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

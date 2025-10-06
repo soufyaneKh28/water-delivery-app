@@ -1,6 +1,7 @@
 import { AntDesign } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -29,7 +30,7 @@ export default function GuestProductDetails({ route, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Top bar with back button */}
       <View style={styles.topBar}>
         <BackBtn/>
@@ -97,7 +98,7 @@ export default function GuestProductDetails({ route, navigation }) {
           </TouchableOpacity>
         </View> */}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 

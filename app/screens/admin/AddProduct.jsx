@@ -1,12 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import axios from 'axios';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
-// import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -31,6 +31,8 @@ export default function AddProduct({ navigation }) {
   const [productType, setProductType] = useState('money');
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const pickerRef = useRef(null);
+  const typePickerRef = useRef(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ title: '', message: '' });
@@ -93,7 +95,7 @@ export default function AddProduct({ navigation }) {
 
     // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
@@ -141,6 +143,7 @@ export default function AddProduct({ navigation }) {
       // Prepare FormData
       const formData = new FormData();
       // Only add image if it's a new file or not a URL
+      console.log('formData',formData);
       if (!editingProduct || (image && !image.startsWith('http'))) {
         const fileInfo = await FileSystem.getInfoAsync(image);
         formData.append('image', {
@@ -304,15 +307,13 @@ export default function AddProduct({ navigation }) {
             style={styles.dropdownContainer}
             onPress={() => {
               // This will trigger the picker to open
-              if (this.pickerRef) {
-                this.pickerRef.togglePicker(true);
+              if (pickerRef.current) {
+                pickerRef.current.togglePicker(true);
               }
             }}
           >
             <RNPickerSelect
-              ref={(ref) => {
-                this.pickerRef = ref;
-              }}
+              ref={pickerRef}
               onValueChange={(value) => setProductCategory(value)}
               value={productCategory}
               items={[
@@ -389,13 +390,13 @@ export default function AddProduct({ navigation }) {
           <TouchableOpacity 
             style={styles.dropdownContainer}
             onPress={() => {
-              if (this.typePickerRef) {
-                this.typePickerRef.togglePicker(true);
+              if (typePickerRef.current) {
+                typePickerRef.current.togglePicker(true);
               }
             }}
           >
             <RNPickerSelect
-              ref={ref => { this.typePickerRef = ref; }}
+              ref={typePickerRef}
               onValueChange={setProductType}
               value={productType}
               items={[

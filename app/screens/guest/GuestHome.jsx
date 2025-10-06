@@ -1,8 +1,9 @@
 import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Platform, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProductCard from '../../components/client/ProductCard';
 import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
@@ -66,7 +67,7 @@ export default function GuestHome() {
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    loadDemoData();
+    getAll();
     setRefreshing(false);
   }, []);
 
@@ -341,14 +342,14 @@ const styles = StyleSheet.create({
     // marginHorizontal: -20, 
 
 
-    direction: 'rtl',
+    direction: '',
     //  flexDirection: 'row-reverse',
 // paddingHorizontal: 20,
     width: '100%',
   },
   categoriesScrollContent: {
     // paddingHorizontal: 20,
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    // flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
     // justifyContent: 'flex-start',
     // alignItems: 'flex-end',
     direction: 'rtl',
@@ -378,6 +379,7 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     textAlign: 'center',
   },
+
   productsGrid: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',

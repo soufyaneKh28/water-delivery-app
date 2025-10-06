@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -51,8 +52,8 @@ export default function GuestCouponsScreen() {
   }, []);
 
   return (
-    <>
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <CustomText type="bold" style={styles.sectionTitle}>رصيدي</CustomText>
         <View style={styles.balanceCard}>
           <CustomText type="regular" style={styles.balanceUnit}>كوبون</CustomText>
@@ -115,7 +116,7 @@ export default function GuestCouponsScreen() {
       </ScrollView>
 
       <AuthPromptModal visible={authModalVisible} onClose={() => setAuthModalVisible(false)} />
-    </>
+    </SafeAreaView>
   );
 }
 

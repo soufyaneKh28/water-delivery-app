@@ -8,6 +8,7 @@ import BackBtn from '../../components/common/BackButton';
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
@@ -108,7 +109,9 @@ console.log("order",order);
 
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView    style={styles.container}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
       <ConfirmationModal
         visible={showStatusConfirmation}
         onClose={() => setShowStatusConfirmation(false)}
@@ -122,7 +125,7 @@ console.log("order",order);
         cancelText="إلغاء"
         type="default"
         loading={isUpdating}
-      />
+        />
       
       <SuccessModal
         visible={showSuccessModal}
@@ -133,7 +136,7 @@ console.log("order",order);
         title="تم التحديث"
         message={successMessage}
         buttonText="حسناً"
-      />
+        />
       
       <View style={styles.header}>
         <BackBtn/>
@@ -185,7 +188,9 @@ console.log("order",order);
         <View style={styles.divider} />
         <View style={styles.detailRow}>
            <CustomText style={styles.detailLabel}>المبلغ الإجمالي</CustomText>
-          <CustomText style={styles.detailValue}>{order.total || 'غير معروف'} {order.order_type === 'coupon' ? 'كوبونات' : "دينار"}</CustomText> 
+          <CustomText style={styles.detailValue}>
+            {order.order_type === 'coupon' ? String(order.total || 0) : Number(order.total || 0).toFixed(2)} {order.order_type === 'coupon' ? 'كوبونات' : "دينار"}
+          </CustomText> 
         </View>
         <View style={styles.divider} />
         <View style={styles.statusRow}>
@@ -193,7 +198,7 @@ console.log("order",order);
           <TouchableOpacity 
             style={[styles.statusBadge, { backgroundColor: statusColors[order.status] || '#E0E0E0' }]} 
             onPress={() => setModalVisible(true)}
-          >
+            >
             <Ionicons name="chevron-down" size={20} color="#262626" style={{ marginLeft: 8 }} />
             <CustomText 
               type='regular' 
@@ -201,7 +206,7 @@ console.log("order",order);
                 styles.statusBadgeText, 
                 order.status === 'delivered' && { color: '#262626' }
               ]}
-            >
+              >
               {statusLabels[order.status] || 'غير معروف'}
             </CustomText>
           </TouchableOpacity>
@@ -217,12 +222,12 @@ console.log("order",order);
                 style={styles.receiptContainer}
                 onPress={() => setReceiptModalVisible(true)}
                 activeOpacity={0.7}
-              >
+                >
                 <Image 
                   source={{ uri: order.image_url }} 
                   style={styles.receiptImage}
                   resizeMode="contain"
-                />
+                  />
                 <Ionicons name="expand-outline" size={20} color="#2196F3" style={styles.expandIcon} />
               </TouchableOpacity>
             </View>
@@ -236,7 +241,7 @@ console.log("order",order);
         transparent
         animationType="fade"
         onRequestClose={() => setReceiptModalVisible(false)}
-      >
+        >
         <View style={styles.receiptModalOverlay}>
           <View style={styles.receiptModalContent}>
             <View style={styles.receiptModalHeader}>
@@ -244,7 +249,7 @@ console.log("order",order);
               <TouchableOpacity 
                 onPress={() => setReceiptModalVisible(false)} 
                 style={styles.receiptCloseButton}
-              >
+                >
                 <Ionicons name="close" size={24} color="#fff" />
               </TouchableOpacity>
             </View>
@@ -252,7 +257,7 @@ console.log("order",order);
               source={{ uri: order.image_url }} 
               style={styles.receiptFullImage}
               resizeMode="contain"
-            />
+              />
           </View>
         </View>
       </Modal>
@@ -263,7 +268,7 @@ console.log("order",order);
         transparent
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
-      >
+        >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHandle} />
@@ -276,13 +281,13 @@ console.log("order",order);
             <View style={styles.statusGrid}>
               {Object.entries(statusLabels).map(([key, label], idx) => (
                 <Pressable
-                  key={key}
-                  style={[
-                    styles.statusOption,
-                    { backgroundColor: statusColors[key] },
-                    key === selectedStatus && styles.selectedStatusOption,
-                  ]}
-                  onPress={() => setSelectedStatus(key)}
+                key={key}
+                style={[
+                  styles.statusOption,
+                  { backgroundColor: statusColors[key] },
+                  key === selectedStatus && styles.selectedStatusOption,
+                ]}
+                onPress={() => setSelectedStatus(key)}
                 >
                   <CustomText 
                     type='regular' 
@@ -290,7 +295,7 @@ console.log("order",order);
                       styles.statusOptionText,
                       key === 'delivered' && { color: '#262626' }
                     ]}
-                  >
+                    >
                     {label}
                   </CustomText>
                 </Pressable>
@@ -302,7 +307,7 @@ console.log("order",order);
                 setShowStatusConfirmation(true);
               }}
               disabled={isUpdating}
-            >
+              >
               {isUpdating ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -312,7 +317,8 @@ console.log("order",order);
           </View>
         </View>
       </Modal>
-    </View>
+</ScrollView>
+    </SafeAreaView>
   );
 }
 

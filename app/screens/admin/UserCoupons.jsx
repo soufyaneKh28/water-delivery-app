@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, KeyboardAvoidingView, Modal, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -216,7 +217,7 @@ export default function UserCoupons() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <SuccessModal
         visible={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
@@ -338,7 +339,7 @@ export default function UserCoupons() {
         </View>
         </KeyboardAvoidingView>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
     direction: 'rtl',
   },
   headerRow: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 24,
@@ -361,7 +362,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   tableHeader: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   userRow: {
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -388,13 +389,13 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flex: 1,
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   userNameContainer: {
     flex: 1,
-    flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse',
+    flexDirection: Platform.OS === 'ios' ? 'row' : 'row',
     alignItems: 'center',
     // justifyContent: 'flex-start',
   },

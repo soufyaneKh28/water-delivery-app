@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
@@ -93,6 +94,7 @@ export default function EditProfile({ navigation }) {
       style={globalStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <SafeAreaView style={globalStyles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Header */}
         <View style={styles.header}>
@@ -169,6 +171,7 @@ export default function EditProfile({ navigation }) {
         message={successMessage}
         buttonText="حسناً"
       />
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

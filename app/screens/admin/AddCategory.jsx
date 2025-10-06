@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Image, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackButton from '../../components/common/BackButton';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
@@ -133,7 +134,7 @@ export default function AddCategory({ navigation }) {
       return;
     }
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -144,6 +145,7 @@ export default function AddCategory({ navigation }) {
   };
 
   return (
+    <SafeAreaView style={{ flex: 1 , backgroundColor: 'white' }}> 
     <ScrollView style={{ flex: 1 , backgroundColor: 'white' }} contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: Platform.OS === 'ios' ? 'row' : 'row-reverse', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 }}>
         <BackButton/>
@@ -168,7 +170,7 @@ export default function AddCategory({ navigation }) {
                 onPress={() => handleDeleteCategory(item.id || item._id)}
                 style={styles.deleteButton}
                 disabled={deletingCategoryId === (item.id || item._id)}
-              >
+                >
                 {deletingCategoryId === (item.id || item._id) ? (
                   <ActivityIndicator size="small" color={colors.error} />
                 ) : (
@@ -193,7 +195,7 @@ export default function AddCategory({ navigation }) {
         placeholderTextColor={colors.textDisabled}
         value={newCategory}
         onChangeText={setNewCategory}
-      />
+        />
       <CustomText style={styles.inputLabel}>صورة القسم</CustomText>
       <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
         {newImage ? (
@@ -210,7 +212,7 @@ export default function AddCategory({ navigation }) {
         onPress={handleAddCategory}
         style={styles.addButton}
         disabled={!newCategory.trim() || !newImage || loading}
-      />
+        />
       <ConfirmationModal
         visible={showDeleteConfirmation}
         onClose={() => {
@@ -224,7 +226,7 @@ export default function AddCategory({ navigation }) {
         cancelText="إلغاء"
         type="danger"
         loading={deletingCategoryId !== null}
-      />
+        />
       
       <SuccessModal
         visible={showSuccessModal}
@@ -232,16 +234,17 @@ export default function AddCategory({ navigation }) {
         title="تم بنجاح"
         message={successMessage}
         buttonText="حسناً"
-      />
+        />
       
     </ScrollView>
+</SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
-    // backgroundColor: colors.white,
+    flex: 1,
+    backgroundColor: colors.white,
     paddingHorizontal: 20,
     direction: Platform.OS === 'ios' ? 'rtl' : 'ltr',
   },
