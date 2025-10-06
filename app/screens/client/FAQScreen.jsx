@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
   Platform,
-  SafeAreaView,
+
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -13,10 +13,10 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
-
 const FAQS = [
   {
     question: 'كيف يمكنني تقديم طلب مياه؟',
@@ -171,12 +171,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: colors.black,
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
     color: '#888',
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? "left" : "right",
     marginBottom: 24,
     lineHeight: 22,
@@ -204,6 +206,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: colors.black,
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   accordionBody: {
@@ -217,7 +220,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#222',
     lineHeight: 22,
-    textAlign: Platform.OS === 'ios' ? "left" : "right",
+    textAlign: 'start',
+    // textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   box: {
     width: 100,

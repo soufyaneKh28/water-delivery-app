@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -13,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
@@ -273,7 +275,8 @@ export default function ProfileScreen() {
   // }
 
   return (
-    <>
+    <SafeAreaView style={globalStyles.container}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
       <ConfirmationModal
         visible={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -403,7 +406,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </>
+    </SafeAreaView>
   );
 }
 

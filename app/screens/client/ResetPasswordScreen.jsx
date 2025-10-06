@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import ErrorModal from '../../components/common/ErrorModal';
@@ -68,6 +69,8 @@ export default function ResetPasswordScreen({ navigation }) {
       style={{ flex: 1, backgroundColor: colors.white }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <SafeAreaView style={globalStyles.container}>
+
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         {/* Header */}
          {/* Header */}
@@ -90,7 +93,7 @@ export default function ResetPasswordScreen({ navigation }) {
               <TouchableOpacity
                 style={globalStyles.passwordVisibilityButton}
                 onPress={() => setShowOld((v) => !v)}
-              >
+                >
                 <Ionicons name={showOld ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
               </TouchableOpacity>
               <TextInput
@@ -100,7 +103,7 @@ export default function ResetPasswordScreen({ navigation }) {
                 onChangeText={setOldPassword}
                 secureTextEntry={!showOld}
                 textAlign="right"
-              />
+                />
             </View>
           </View>
           {/* New Password */}
@@ -110,7 +113,7 @@ export default function ResetPasswordScreen({ navigation }) {
               <TouchableOpacity
                 style={globalStyles.passwordVisibilityButton}
                 onPress={() => setShowNew((v) => !v)}
-              >
+                >
                 <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
               </TouchableOpacity>
               <TextInput
@@ -120,7 +123,7 @@ export default function ResetPasswordScreen({ navigation }) {
                 onChangeText={setNewPassword}
                 secureTextEntry={!showNew}
                 textAlign="right"
-              />
+                />
             </View>
           </View>
           {/* Confirm Password */}
@@ -130,7 +133,7 @@ export default function ResetPasswordScreen({ navigation }) {
               <TouchableOpacity
                 style={globalStyles.passwordVisibilityButton}
                 onPress={() => setShowConfirm((v) => !v)}
-              >
+                >
                 <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.gray[500]} />
               </TouchableOpacity>
               <TextInput
@@ -140,7 +143,7 @@ export default function ResetPasswordScreen({ navigation }) {
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showConfirm}
                 textAlign="right"
-              />
+                />
             </View>
           </View>
         </View>
@@ -150,7 +153,7 @@ export default function ResetPasswordScreen({ navigation }) {
           onPress={handleUpdatePassword}
           style={styles.button}
           disabled={loading}
-        />
+          />
       </ScrollView>
 
       <ErrorModal
@@ -159,7 +162,7 @@ export default function ResetPasswordScreen({ navigation }) {
         message={errorMessage.message}
         onClose={() => setShowErrorModal(false)}
         buttonText="حسناً"
-      />
+        />
 
       <SuccessModal
         visible={showSuccessModal}
@@ -174,7 +177,8 @@ export default function ResetPasswordScreen({ navigation }) {
             routes: [{ name: 'Login' }],
           });
         }}
-      />
+        />
+        </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

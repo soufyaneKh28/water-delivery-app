@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Modal, Platform, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, Platform, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import Toast from 'react-native-toast-message';
@@ -22,6 +22,8 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 // import * as React from "react";
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -466,8 +468,8 @@ const { width } = Dimensions.get('window');
 
   // console.log("products", products);
   return (
-    <SafeAreaView style={styles.container}>
-     {/* <StatusBar style="dark" backgroundColor="#1B7CC8" /> */}
+    <SafeAreaView  style={styles.container}>
+     <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false} 

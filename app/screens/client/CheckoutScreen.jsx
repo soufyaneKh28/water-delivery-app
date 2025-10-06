@@ -3,6 +3,7 @@ import axios from 'axios';
 import * as Clipboard from 'expo-clipboard';
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
@@ -130,7 +131,7 @@ export default function CheckoutScreen({ route, navigation }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1, backgroundColor: '#fff' }}
     >
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 70 }} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.headerRow}>
@@ -243,7 +244,7 @@ export default function CheckoutScreen({ route, navigation }) {
           )}
         </PrimaryButton>
       </ScrollView>
-    </View>
+    </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

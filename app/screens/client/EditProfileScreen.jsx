@@ -1,19 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from "../../../lib/supabase";
 import BackBtn from '../../components/common/BackButton';
 import CustomText from "../../components/common/CustomText";
@@ -101,7 +103,7 @@ export default function EditProfileScreen() {
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) return;  
 
     setSaving(true);
     try {
@@ -160,6 +162,9 @@ export default function EditProfileScreen() {
       style={globalStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+    <SafeAreaView style={globalStyles.container}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
+
       {loading ? (
         <View style={[styles.loadingContainer, { flex: 1 }]}> 
           <ActivityIndicator size="large" color={colors.primary} />
@@ -252,6 +257,7 @@ export default function EditProfileScreen() {
           </View>
         </View>
       </Modal>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

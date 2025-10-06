@@ -1,6 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { FlatList, Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AuthPromptModal from '../../components/common/AuthPromptModal';
 import CustomText from '../../components/common/CustomText';
 import PrimaryButton from '../../components/common/PrimaryButton';
@@ -9,6 +11,7 @@ import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { colors } from '../../styling/colors';
+  
 
 export default function CartScreen() {
   const navigation = useNavigation();
@@ -83,7 +86,8 @@ export default function CartScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
       <SuccessModal visible={showSuccessModal} product={addedProduct} />
       {cart.length === 0 ? (
         <EmptyCart />
@@ -132,7 +136,7 @@ export default function CartScreen() {
         </>
       )}
       <AuthPromptModal visible={authModalVisible} onClose={() => setAuthModalVisible(false)} />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -256,11 +260,11 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 8,
+    // shadowColor: '#000',
+    // shadowOffset: { width: 0, height: -2 },
+    // shadowOpacity: 0.06,
+    // shadowRadius: 8,
+    // elevation: 8,
     marginHorizontal: -12,
     marginBottom: 0,
   },

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import OrderCard from '../../components/client/OrderCard';
 import BackBtn from '../../components/common/BackButton';
@@ -98,7 +99,7 @@ export default function MyOrdersScreen({ navigation }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <ScrollView 
         style={styles.container} 
         contentContainerStyle={{ paddingBottom: 30 }} 
@@ -136,7 +137,7 @@ export default function MyOrdersScreen({ navigation }) {
           ))
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

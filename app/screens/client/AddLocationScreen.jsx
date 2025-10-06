@@ -345,6 +345,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.textPrimary,
     marginBottom: 6,
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? 'left' : 'right',
   },
   inputError: {

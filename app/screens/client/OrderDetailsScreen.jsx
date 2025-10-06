@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
+import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
@@ -15,7 +17,7 @@ const statusColors = {
 };
 
 const statusLabels = {
-  new: 'قيد الانتظار',
+  new:'قيد الانتظار',
   processing: 'قيد المعالجة',
   'on-the-way': 'في الطريق',
   delivered: 'تم التوصيل',
@@ -85,7 +87,7 @@ console.log('orderDetails', orderDetails);
       location.city,
       location.region,
     ];
-    return parts.filter(Boolean).join(', ');
+    return parts.filter(Boolean).join('، ');
   };
 
   if (loading) {
@@ -105,7 +107,8 @@ console.log('orderDetails', orderDetails);
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
       <ScrollView 
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
@@ -160,7 +163,7 @@ console.log('orderDetails', orderDetails);
             </View>
             <View style={styles.infoRow}>
               <CustomText style={styles.infoLabel}>العنوان:</CustomText>
-              <CustomText style={styles.infoValue}>{formatLocation(orderDetails.location_id) || 'غير معروف'}</CustomText>
+              <CustomText style={[styles.infoValue, styles.addressText]}>{formatLocation(orderDetails.location_id) || 'غير معروف'}</CustomText>
             </View>
           </View>
         </View>
@@ -220,7 +223,7 @@ console.log('orderDetails', orderDetails);
           </View>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -291,8 +294,9 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row-reverse',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 12,
+    minHeight: 20,
   },
   infoLabel: {
     fontSize: 14,
@@ -304,6 +308,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'left',
     maxWidth: '80%',
+    flexWrap: 'nowrap',
   },
   itemsCard: {
     backgroundColor: '#fff',
@@ -374,5 +379,10 @@ const styles = StyleSheet.create({
   totalValue: {
     fontSize: 16,
     color: colors.textPrimary,
+  },
+  addressText: {
+    flexShrink: 1,
+    numberOfLines: 1,
+    ellipsizeMode: 'tail',
   },
 }); 

@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
 import BackBtn from '../../components/common/BackButton';
@@ -83,7 +84,7 @@ const CategoryScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <CustomText type="bold" style={styles.title}>{category.title}</CustomText>
         <BackBtn />
@@ -96,7 +97,7 @@ const CategoryScreen = () => {
       >
         {renderContent()}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

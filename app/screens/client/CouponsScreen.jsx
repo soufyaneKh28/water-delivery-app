@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import * as Clipboard from 'expo-clipboard';
+import { StatusBar } from 'expo-status-bar';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { supabase } from '../../../lib/supabase';
 import CustomText from '../../components/common/CustomText';
@@ -434,11 +436,12 @@ export default function CouponsScreen({navigation}) {
   };
 
   return (
-    <>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" backgroundColor="transparent" translucent={true}/>
       <ScrollView 
         style={styles.container} 
         contentContainerStyle={{ paddingBottom:100 }} 
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -613,7 +616,7 @@ export default function CouponsScreen({navigation}) {
         onRequestClose={closeModal}
       >
         <SafeAreaView style={{flex: 1}} >
-          <ScrollView style={modalStyles.modalContainer} contentContainerStyle={{ paddingBottom: 70 ,  }}>
+          <ScrollView style={modalStyles.modalContainer} contentContainerStyle={{ paddingBottom: 70 ,  }} showsVerticalScrollIndicator={false}>
           <TouchableOpacity  style={{position: 'absolute', top: 10, left: 10 , width:30, height:30 ,zIndex: 1000, alignItems: 'center', justifyContent: 'center'}} onPress={closeModal}>
             <Ionicons name="close" size={22} color={colors.black} />
           </TouchableOpacity>
@@ -781,7 +784,7 @@ export default function CouponsScreen({navigation}) {
           </ScrollView>
         </SafeAreaView>
       </Modal>
-    </>
+    </SafeAreaView>
   );
 }
 

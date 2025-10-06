@@ -25,5 +25,8 @@ export default function CustomText({
 const styles = StyleSheet.create({
   text: {
     fontSize: 14,
+    textAlign: 'center',
+    writingDirection: 'rtl',
+    textBreakStrategy: 'simple',
   },
 }); 

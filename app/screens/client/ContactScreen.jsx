@@ -1,6 +1,7 @@
 import React from 'react';
-import { Image, Linking, Platform, SafeAreaView, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 // import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import BackBtn from '../../components/common/BackButton';
 import CustomText from '../../components/common/CustomText';
 import { colors } from '../../styling/colors';
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.black,
     marginBottom: 8,
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? "left" : "right",
   },
   subtitle: {
@@ -107,6 +109,7 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 24,
     lineHeight: 22,
+    textAlign: 'start',
     // textAlign: Platform.OS === 'ios' ? "left" : "right",
     },
   cardsRow: {
@@ -161,6 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 12,
     // textAlign: Platform.OS === 'ios' ? "left" : "right", 
+    textAlign: 'start',
     // textAlign: 'center',
   },
   socialBtn: {
