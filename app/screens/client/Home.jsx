@@ -485,7 +485,7 @@ const { width } = Dimensions.get('window');
           />
         }
       >
-        <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -150, left: 0  , objectFit: 'cover'}} />
+        <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -170, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
           {isLoadingLocations ? (
             <View style={[styles.locationButton, styles.loadingContainer]}>

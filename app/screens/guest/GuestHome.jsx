@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 500,
     position: 'absolute',
-    top: -150,
+    top: -170,
     left: 0,
     objectFit: 'cover',
   },

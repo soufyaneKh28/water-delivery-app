@@ -45,7 +45,7 @@ export default function AppNavigator() {
   // Show loading screen while checking authentication
   if (loading) {
     return (
-      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center' , gap:10}}>
+      <View style={{flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' , gap:10}}>
         <Image source={require('../../assets/icon.png')} style={{width: 200, height: 200}} resizeMode="contain" />
         <ActivityIndicator size="small" color="#007AFF" />
       </View>

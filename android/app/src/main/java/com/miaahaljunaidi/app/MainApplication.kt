@@ -1,4 +1,4 @@
-package com.aljunaidiwater.app
+package com.miaahaljunaidi.app
 
 import android.app.Application
 import android.content.res.Configuration
