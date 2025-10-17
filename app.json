@@ -1,17 +1,19 @@
 {
   "expo": {
     "name": "مياه الجنيدي",
-    "slug": "water-delivery-app",
+    "slug": "miaah-aljunaidi",
     "scheme": "water-delivery-app",
     "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.aljunaidiwater.app",
-            "buildNumber": "22",
+      "buildNumber": "22",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show nearby water delivery options."
       },
@@ -37,7 +39,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "339e3c5a-4df8-473d-b686-755557cd5877"
+        "projectId": "8ea0444e-8231-44f5-b0ce-55a5ac6646f2"
       }
     },
     "owner": "soufyanekh28",
@@ -54,7 +56,8 @@
             "googleServicesFile": "./google-services.json"
           }
         }
-      ]
+      ],
+      "expo-router"
     ]
   }
 }

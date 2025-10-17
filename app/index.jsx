@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import { FONTS } from './constants/fonts';
 import { AddressProvider } from './context/AddressContext';
@@ -118,7 +119,9 @@ export default function App() {
       <CartProvider>
         <AddressProvider>
           <StatusBar style="dark" backgroundColor="#fff" />
+          <SafeAreaProvider>
           <AppNavigator />
+          </SafeAreaProvider>
           <Toast config={toastConfig} />
         </AddressProvider>
       </CartProvider>
