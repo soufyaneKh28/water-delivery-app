@@ -41,6 +41,8 @@ export default function OrderCard({ order, onPress }) {
           <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
             <CustomText 
               type="regular" 
+              numberOfLines={1}
+              ellipsizeMode="tail"
               style={[
                 styles.statusBadgeText,
                 order.status === 'delivered' && { color: '#262626' }
@@ -105,14 +107,18 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     alignSelf: 'flex-end',
+    minWidth: 80,
+    height: 28,
+    justifyContent: 'center',
   },
   statusBadgeText: {
     fontSize: 13,
     color: '#222',
-    paddingHorizontal: 10,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   arrow: {
     fontSize: 22,

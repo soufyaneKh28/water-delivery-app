@@ -281,9 +281,9 @@ export default function Products() {
                 onPress={() => handleFilterChange(filter.value)}
                 activeOpacity={0.7}
               >
-                <CustomText type='bold' style={[
+                <CustomText type='bold' numberOfLines={1} ellipsizeMode="tail" style={[
                   styles.filterText,
-                  { fontSize: 14 },
+                  { fontSize: 14 , width: 'auto' },
                   selectedFilter === filter.value && styles.filterTextActive,
                 ]}>
                   {filter.label}

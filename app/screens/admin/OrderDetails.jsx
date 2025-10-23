@@ -202,6 +202,8 @@ console.log("order",order);
             <Ionicons name="chevron-down" size={20} color="#262626" style={{ marginLeft: 8 }} />
             <CustomText 
               type='regular' 
+              numberOfLines={1}
+              ellipsizeMode="tail"
               style={[
                 styles.statusBadgeText, 
                 order.status === 'delivered' && { color: '#262626' }
@@ -291,6 +293,8 @@ console.log("order",order);
                 >
                   <CustomText 
                     type='regular' 
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                     style={[
                       styles.statusOptionText,
                       key === 'delivered' && { color: '#262626' }

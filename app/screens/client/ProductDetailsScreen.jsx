@@ -48,10 +48,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
             <Text style={styles.oldPrice}>{oldPrice}</Text>
             <Text style={styles.price}>{price}</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
-            <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
-          </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
+              {size && size.trim() !== '' && (
+                <CustomText type="regular" style={styles.size}>{size}</CustomText>
+              )}
+            </View>
         </View>
         {/* Description */}
         <TouchableOpacity>

@@ -23,9 +23,11 @@ const ProductCard = ({ image, title, size, price, price_type, onMenuPress }) => 
         <View >
           <CustomText style={styles.price}>{getPriceDisplay()}</CustomText>
         </View>
-        <View >
-          <CustomText style={styles.size}>{size} لتر</CustomText>
-        </View>
+        {size && size.trim() !== '' && (
+          <View >
+            <CustomText style={styles.size}>{size}</CustomText>
+          </View>
+        )}
       </View>
     </View>
   );

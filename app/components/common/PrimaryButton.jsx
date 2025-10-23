@@ -23,7 +23,7 @@ export default function PrimaryButton({
       {isLoading ? (
         <ActivityIndicator color="white" size="small" />
       ) : (
-        <CustomText type="semiBold" style={styles.buttonText}>{title}</CustomText>
+        <CustomText type="semiBold" numberOfLines={1} ellipsizeMode="tail" style={styles.buttonText}>{title}</CustomText>
       )}
     </TouchableOpacity>
   );

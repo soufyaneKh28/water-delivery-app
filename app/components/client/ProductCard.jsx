@@ -47,7 +47,9 @@ const ProductCard = ({ image, title, size, price, oldPrice, onMenuPress, descrip
     <TouchableOpacity style={styles.card} onPress={ onPress ? onPress : handlePress} activeOpacity={0.85}>
       <Image source={image} style={styles.image} resizeMode="cover" />
       <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
-      <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
+      {size && size.trim() !== '' && (
+        <CustomText type="regular" style={styles.size}>{size}</CustomText>
+      )}
       <View style={styles.row}>
         <View style={styles.priceContainer}>
           {oldPrice && <CustomText type="regular" style={styles.oldPrice}>{oldPrice}</CustomText>}
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 12,
-    // marginBottom: 16,
+    marginBottom: 16,
     // height: 225,
     // marginHorizontal: 4,
     alignItems: 'flex-end',

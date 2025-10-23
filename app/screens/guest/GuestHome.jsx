@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     width: '100%',
-    height: 500,
+    height: 450,
     position: 'absolute',
     top: -170,
     left: 0,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   offerImage: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover',
+    objectFit: 'fill',
     borderRadius: 10,
   },
   emptyOffersContainer: {

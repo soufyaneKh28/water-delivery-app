@@ -31,73 +31,59 @@ export default function GuestProductDetails({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top bar with back button */}
-      <View style={styles.topBar}>
-        <BackBtn/>
-      </View>
-      
-      {/* Product Image */}
-      <Image source={image_url ? { uri: image_url } : require('../../../assets/images/bottle.png')} style={styles.productImage} resizeMode="contain" />
-      
-      {/* Card Section */}
-      <View style={styles.card}>
-        <View style={styles.rowBetween}>
-          <View>
-            <Text style={styles.oldPrice}>{oldPrice}</Text>
-            <Text style={styles.price}>{price} د.أ</Text>
-          </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
-            <CustomText type="regular" style={styles.size}>{size} لتر</CustomText>
-          </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Top bar with back button */}
+        <View style={styles.topBar}>
+          <BackBtn/>
         </View>
         
-        {/* Description */}
-        <TouchableOpacity>
-          <CustomText type="medium" style={styles.link}>الوصف</CustomText>
-        </TouchableOpacity>
-        <ScrollView style={styles.descriptionScroll} contentContainerStyle={{paddingBottom: 10}} showsVerticalScrollIndicator={false}>
-          <CustomText type="regular" style={styles.description}>
-            {description || 'لا يوجد وصف متاح للمنتج'}
-          </CustomText>
-        </ScrollView>
+        {/* Product Image */}
+        <Image source={image_url ? { uri: image_url } : require('../../../assets/images/bottle.png')} style={styles.productImage} resizeMode="cover" />
         
-        {/* Quantity and Add to Cart */}
-        <View style={styles.addRow}>
-          <View style={styles.qtyControl}>
-            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => Math.max(1, q - 1))}>
-              <AntDesign name="minus" size={20} color="#fff" />
-            </TouchableOpacity>
-            <CustomText type="semiBold" style={styles.qtyText}>{quantity}</CustomText>
-            <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => q + 1)}>
-              <AntDesign name="plus" size={20} color="#fff" />
-            </TouchableOpacity>
+        {/* Card Section */}
+        <View style={styles.card}>
+          <View style={styles.rowBetween}>
+            <View>
+              <Text style={styles.oldPrice}>{oldPrice}</Text>
+              <Text style={styles.price}>{price} د.أ</Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <CustomText type="semiBold" style={styles.title}>{title}</CustomText>
+              {size && size.trim() !== '' && (
+                <CustomText type="regular" style={styles.size}>{size}</CustomText>
+              )}
+            </View>
           </View>
-          <PrimaryButton 
-            style={styles.addToCartBtn} 
-            title="أضف إلى السلة" 
-            onPress={handleAddToCart}
-          />
-        </View>
-        
-        {/* Guest Message */}
-        {/* <View style={styles.guestMessageContainer}>
-          <CustomText type="bold" style={styles.guestMessageTitle}>
-            تسجيل الدخول مطلوب
-          </CustomText>
-          <CustomText style={styles.guestMessageText}>
-            يمكنك تصفح المنتج الآن. سجل دخولك للوصول إلى المزيد من الميزات مثل إضافة المنتج إلى السلة وتتبع الطلبات.
-          </CustomText>
-          <TouchableOpacity 
-            style={styles.ctaButton}
-            onPress={handleLoginPress}
-          >
-            <CustomText type="bold" style={styles.ctaButtonText}>
-              إنشاء حساب الآن
-            </CustomText>
+          
+          {/* Description */}
+          <TouchableOpacity>
+            <CustomText type="medium" style={styles.link}>الوصف</CustomText>
           </TouchableOpacity>
-        </View> */}
-      </View>
+          <View style={styles.descriptionContainer}>
+            <CustomText type="regular" style={styles.description}>
+              {description || 'لا يوجد وصف متاح للمنتج'}
+            </CustomText>
+          </View>
+          
+          {/* Quantity and Add to Cart */}
+          <View style={styles.addRow}>
+            <View style={styles.qtyControl}>
+              <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => Math.max(1, q - 1))}>
+                <AntDesign name="minus" size={20} color="#fff" />
+              </TouchableOpacity>
+              <CustomText type="semiBold" style={styles.qtyText}>{quantity}</CustomText>
+              <TouchableOpacity style={styles.qtyBtn} onPress={() => setQuantity(q => q + 1)}>
+                <AntDesign name="plus" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <PrimaryButton 
+              style={styles.addToCartBtn} 
+              title="أضف إلى السلة" 
+              onPress={handleAddToCart}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -106,22 +92,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
-    alignItems: 'center',
+  },
+  scrollContent: {
+    flex: 1,
+    paddingBottom: 50,
+    justifyContent: 'space-between',
   },
   topBar: {
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 40,
+    paddingTop: 20,
     paddingHorizontal: 20,
+    paddingBottom: 10,
     zIndex: 2,
   },
   productImage: {
     width: '100%',
-    height: 350,
-    marginTop: 10,
-    // marginBottom: 10,
+    height: 400,
+    // objectFit: 'cover',
     alignSelf: 'center',
   },
   card: {
@@ -130,8 +120,9 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     padding: 24,
     width: '100%',
-    position: 'absolute',
-    bottom: 0,
+    height: '100%',
+    marginTop: 20,
+    // marginBottom: 20,
     elevation: 8,
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -180,8 +171,7 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     lineHeight: 27,
   },
-  descriptionScroll: {
-    maxHeight: 100,
+  descriptionContainer: {
     marginBottom: 20,
   },
   addRow: {

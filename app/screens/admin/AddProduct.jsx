@@ -117,7 +117,7 @@ export default function AddProduct({ navigation }) {
       setShowErrorModal(true);
       return;
     }
-    if (!productName || !productSize || !productDescription || !productPrice) {
+    if (!productName || !productDescription || !productPrice) {
       setErrorMessage({
         title: 'بيانات مطلوبة',
         message: 'الرجاء ملء جميع الحقول المطلوبة'
@@ -153,7 +153,7 @@ export default function AddProduct({ navigation }) {
         });
       }
       formData.append('title', productName);
-      formData.append('size', productSize);
+      formData.append('size', productSize || '');
       formData.append('description', productDescription);
       // Convert comma to period for API compatibility
       formData.append('price', productPrice.replace(',', '.'));
@@ -220,9 +220,8 @@ export default function AddProduct({ navigation }) {
   // This is important for Jordan and other regions where comma is the standard decimal separator
   
   const handleSizeChange = (text) => {
-    // Only allow numbers
-    const numericValue = text.replace(/[^0-9]/g, '');
-    setProductSize(numericValue);
+    // Allow any text input for size
+    setProductSize(text);
   };
 
   const handlePriceChange = (text) => {
@@ -364,14 +363,13 @@ export default function AddProduct({ navigation }) {
           </TouchableOpacity>
         </View>
         <View style={globalStyles.inputContainer}>
-          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>حجم المنتج</CustomText>
+          <CustomText style={[globalStyles.inputLabel, styles.inputLabel]}>حجم المنتج (اختياري)</CustomText>
           <TextInput 
             style={globalStyles.input} 
-            placeholder="أدخل الحجم بالأرقام فقط" 
+            placeholder="أدخل حجم المنتج (مثال: 20 لتر، كبير، صغير)" 
             placeholderTextColor={colors.textDisabled}
             value={productSize}
             onChangeText={handleSizeChange}
-            keyboardType="numeric"
           />
         </View>
         <View style={globalStyles.inputContainer}>

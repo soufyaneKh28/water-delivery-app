@@ -485,7 +485,7 @@ const { width } = Dimensions.get('window');
           />
         }
       >
-        <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:500 , position: 'absolute', top: -170, left: 0  , objectFit: 'cover'}} />
+        <Image source={require('../../../assets/images/home-bg.png')} style={{width: '100%', height:450 , position: 'absolute', top: -170, left: 0  , objectFit: 'cover'}} />
         <View style={styles.header}>
           {isLoadingLocations ? (
             <View style={[styles.locationButton, styles.loadingContainer]}>
@@ -587,7 +587,11 @@ const { width } = Dimensions.get('window');
                   تم الطلب بتاريخ: {dayjs(activeOrders[0].created_at).format('D MMMM YYYY - HH:mm')}
                 </CustomText>
                 <View style={[styles.statusBadgeHome, { backgroundColor: statusColors[activeOrders[0].status] || '#E0E0E0' }]}> 
-                  <CustomText style={styles.statusTextHome}>
+                  <CustomText 
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                    style={styles.statusTextHome}
+                  >
                     {statusLabels[activeOrders[0].status] || 'غير معروف'}
                   </CustomText>
                 </View>
@@ -1077,10 +1081,13 @@ const styles = StyleSheet.create({
   },
   statusBadgeHome: {
     alignSelf: 'flex-end',
-    paddingVertical: 6,
-    paddingHorizontal: 22,
+    paddingVertical: 8,
+    paddingHorizontal: 24,
     borderRadius: 8,
     marginTop: 2,
+    minWidth: 90,
+    height: 32,
+    justifyContent: 'center',
   },
   statusTextHome: {
     fontSize: 15,

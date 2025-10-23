@@ -463,11 +463,15 @@ const Orders = () => {
                 onPress={() => handleFilterChange(status.value)}
                 activeOpacity={0.7}
               >
-                <CustomText type='bold' style={[
-                  styles.filterText,
-                  { fontSize: 14 },
-                  selectedStatus === status.value && styles.filterTextActive,
-                ]}>
+                <CustomText 
+                  type='bold' 
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[
+                    styles.filterText,
+                    { fontSize: 14 },
+                    selectedStatus === status.value && styles.filterTextActive,
+                  ]}>
                   {status.label}
                 </CustomText>
               </TouchableOpacity>
@@ -499,6 +503,8 @@ const Orders = () => {
                     >
                       <CustomText 
                         type='regular' 
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                         style={[styles.statusBadgeText, item.status === 'delivered' && { color: '#262626' }]}
                       >
                         {statusLabels[item.status]}
@@ -608,6 +614,8 @@ const Orders = () => {
                 >
                   <CustomText
                     type='regular'
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                     style={[
                       styles.statusOptionText,
                       key === 'delivered' && { color: '#262626' }
@@ -734,17 +742,21 @@ const styles = StyleSheet.create({
   filterChip: {
     backgroundColor: '#F2F4F7',
     borderRadius: 50,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 10,
     marginLeft: 8,
     alignItems: 'center',
     justifyContent: 'center',
+
+    minWidth: 80,
+    // height: 40,
   },
   filterChipActive: {
     backgroundColor: '#2196F3',
   },
   filterText: {
     color: '#888',
+    // paddingVertical: 10,
     fontSize: 14,
   },
   filterTextActive: {
