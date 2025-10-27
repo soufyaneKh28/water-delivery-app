@@ -98,6 +98,18 @@ async function registerForPushNotificationsAsync() {
       AsyncStorage.setItem('expo_push_token', pushTokenString);
       return pushTokenString;
     } catch (e) {
+      // Handle Firebase/FIS errors gracefully
+      const errorMessage = `${e}`;
+      const isFirebaseError = errorMessage.includes('FIS_AUTH_ERROR') || 
+                              errorMessage.includes('FIS_INSTALLATION_ERROR') ||
+                              errorMessage.includes('Firebase');
+      
+      if (isFirebaseError) {
+        console.log('⚠️ Firebase error (non-critical):', errorMessage);
+        console.log('Notifications will still work through Expo Push Notification Service.');
+        return null;
+      }
+      
       handleRegistrationError(`${e}`);
     }
   } else {

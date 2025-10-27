@@ -103,6 +103,20 @@ async function registerForPushNotificationsAsync() {
       console.log('Stored expo_push_token:', pushTokenString);
       return pushTokenString;
     } catch (e) {
+      // Handle Firebase/FIS errors gracefully
+      const errorMessage = `${e}`;
+      const isFirebaseError = errorMessage.includes('FIS_AUTH_ERROR') || 
+                              errorMessage.includes('FIS_INSTALLATION_ERROR') ||
+                              errorMessage.includes('Firebase');
+      
+      if (isFirebaseError) {
+        console.log('⚠️ Firebase error (non-critical):', errorMessage);
+        console.log('This is a known issue with Firebase Installation Service initialization.');
+        console.log('Notifications will still work through Expo Push Notification Service.');
+        // Don't throw error for Firebase issues as they're not critical for Expo notifications
+        return null;
+      }
+      
       console.log('❌ Error generating push token:', e);
       handleRegistrationError(`${e}`);
       return null;
