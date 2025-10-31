@@ -1,52 +1,92 @@
 # Firebase FIS_AUTH_ERROR Fix
 
 ## Problem
-The app was showing an error alert with `FIS_AUTH_ERROR` when users performed actions and were redirected to the home screen. This error was coming from Firebase Installation Service trying to initialize but failing due to incomplete OAuth client configuration in `google-services.json`.
+The app shows an error alert with `FIS_AUTH_ERROR` after creating a new Firebase project with a new package name.
 
 ## Root Cause
-1. The app has Google Services plugin applied in `android/app/build.gradle`
-2. The `google-services.json` file has an empty `oauth_client` array
-3. This causes Firebase Installation Service to fail during initialization
-4. The app uses **Expo Push Notifications**, not direct Firebase Cloud Messaging
-5. The error is non-critical but was being displayed to users
+1. Package name was changed and a new Firebase project was created
+2. The new `google-services.json` file has an **empty `oauth_client` array**
+3. Firebase Installation Service fails because OAuth client configuration is missing
+4. OAuth client is only generated when **SHA certificate fingerprints** are added to Firebase Console
 
-## Solution Applied
-Added graceful error handling in two key files:
-1. **`app/context/NotificationContext.jsx`** - Lines 106-123
-2. **`app/screens/client/Home.jsx`** - Lines 100-114
+## Solution (Updated January 2025)
 
-### What Changed:
-- Firebase/FIS errors are now caught and handled gracefully
-- These errors are logged as warnings but not shown to users
-- The app continues to work normally as notifications use Expo Push Notification Service
-- Only critical errors unrelated to Firebase are still shown to users
+### The Correct Fix: Add SHA Fingerprints to Firebase
 
-### Error Detection:
-The code now checks for:
-- `FIS_AUTH_ERROR`
-- `FIS_INSTALLATION_ERROR`
-- Any error containing "Firebase"
+Your notifications **were working before** with Firebase, so you need to keep Firebase properly configured.
 
-## Testing
-To test the fix:
-1. Rebuild the Android app
-2. Perform actions that previously triggered the error
-3. The error alert should no longer appear
-4. Check console logs - Firebase errors will appear as warnings, not errors
+#### Your SHA Fingerprints (Debug Keystore)
+```
+SHA1: 5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25
+SHA256: FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C
+```
 
-## Technical Details
-The app doesn't need Firebase initialization for push notifications because:
-- Expo handles push notifications through Expo Push Notification Service
-- The Google Services plugin was likely added for future Firebase features but is not currently required
-- The empty OAuth client configuration is not needed for Expo notifications
+#### Steps to Fix:
 
-## Future Considerations
-If you want to completely remove the Firebase error:
-1. Consider removing the Google Services plugin from `android/app/build.gradle` if Firebase features are not needed
-2. Or properly configure Firebase in the Firebase Console by adding OAuth clients
+1. **Go to Firebase Console**
+   - Visit https://console.firebase.google.com/
+   - Open project: **miaahaljunaidi**
 
-However, the current solution is sufficient and handles the error gracefully without affecting functionality.
+2. **Add SHA Fingerprints**
+   - Click gear icon ⚙️ → Project settings
+   - Find your Android app: `com.miaahaljunaidi.app`
+   - Scroll to "SHA certificate fingerprints"
+   - Click "Add fingerprint" and paste SHA1
+   - Click "Add fingerprint" and paste SHA256
+
+3. **Download New google-services.json**
+   - In Firebase Console, click "Download google-services.json"
+   - Replace your current `google-services.json` file
+   - Also replace `android/app/google-services.json`
+   - Verify the new file has `oauth_client` array populated
+
+4. **Rebuild Your App**
+   ```bash
+   cd android && ./gradlew clean && cd ..
+   npx expo prebuild --clean
+   npx expo run:android
+   ```
+
+### What Changed in Code
+
+I've already updated:
+- ✅ Added `POST_NOTIFICATIONS` permission to `AndroidManifest.xml`
+- ✅ Added `expo-notifications` plugin to `app.json`
+- ✅ Kept Firebase/Google Services configuration (you need this!)
+
+### Why SHA Fingerprints Are Required
+
+Firebase uses SHA fingerprints to:
+- Generate OAuth client configuration
+- Enable secure Firebase ↔ App communication
+- Initialize Firebase Installation Service (FIS)
+- Support Firebase Authentication and other Firebase services
+
+**Without SHA fingerprints:**
+- `oauth_client` array is empty in `google-services.json`
+- Firebase Installation Service can't initialize
+- Result: `FIS_AUTH_ERROR`
+
+**With SHA fingerprints:**
+- Firebase generates OAuth client configuration
+- `oauth_client` array is populated
+- Firebase initializes successfully
+- Notifications work properly
+
+## Previous Temporary Workaround (Not Needed Anymore)
+
+Previously, error handling was added to suppress the error:
+- `app/context/NotificationContext.jsx` - Lines 106-123
+- `app/screens/client/Home.jsx` - Lines 100-114
+
+**This suppression is still in place** but once you add SHA fingerprints and update `google-services.json`, the error won't occur at all.
+
+## Quick Reference
+
+- **Detailed Firebase setup**: See `FIREBASE_OAUTH_FIX.md`
+- **Quick summary**: See `QUICK_FIX_SUMMARY.md`
+- **Get SHA fingerprints**: Run `bash scripts/get-sha-fingerprints.sh`
 
 ## Date
-Fixed on: January 2025
+Updated: January 2025
 
