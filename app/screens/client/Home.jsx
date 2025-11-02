@@ -147,16 +147,60 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    registerForPushNotificationsAsync()
-      .then(token => setExpoPushToken(token ?? ''))
-      .catch((error) => setExpoPushToken(`${error}`));
+    const initNotifications = async () => {
+      try {
+        console.log('🔔 Starting notification registration...');
+        const token = await registerForPushNotificationsAsync();
+        
+        if (token) {
+          console.log('✅ Push token received:', token);
+          setExpoPushToken(token);
+          
+          // Show success toast
+          Toast.show({
+            type: 'success',
+            text1: 'الإشعارات مفعلة',
+            text2: 'تم تفعيل الإشعارات بنجاح',
+            position: 'top',
+            visibilityTime: 3000,
+          });
+        } else {
+          console.log('❌ No push token received');
+          setExpoPushToken('');
+        }
+      } catch (error) {
+        console.error('❌ Notification registration error:', error);
+        setExpoPushToken(`Error: ${error.message}`);
+        
+        // Show error toast
+        Toast.show({
+          type: 'error',
+          text1: 'خطأ في الإشعارات',
+          text2: 'فشل تفعيل الإشعارات',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+      }
+    };
+
+    initNotifications();
 
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
+      console.log('🔔 Notification received:', notification);
       setNotification(notification);
+      
+      // Show toast when notification is received
+      Toast.show({
+        type: 'info',
+        text1: notification.request.content.title || 'إشعار جديد',
+        text2: notification.request.content.body || '',
+        position: 'top',
+        visibilityTime: 4000,
+      });
     });
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log(response);
+      console.log('📱 Notification response:', response);
     });
 
     return () => {

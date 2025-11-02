@@ -14,6 +14,7 @@ import ConfirmationModal from '../../components/common/ConfirmationModal';
 import CustomText from '../../components/common/CustomText';
 import SuccessModal from '../../components/common/SuccessModal';
 import { colors } from '../../styling/colors';
+import { API_BASE_URL } from '../../utils/api';
 
 const statusColors = {
   new: '#FFD700', // Gold for pending
@@ -40,6 +41,26 @@ function generateOrderNumber(uuid) {
   // Make it positive and limit to 8 digits
   return Math.abs(hash).toString().padStart(8, '0').slice(0, 8);
 }
+
+// NOTE: Push notifications should be sent by the BACKEND, not the frontend
+// Device tokens are stored in the backend database, not Supabase
+// This function logs what should happen - the backend needs to implement actual sending
+const sendNotificationToClient = async (userId, orderNumber, newStatus) => {
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log('📢 ORDER STATUS NOTIFICATION SHOULD BE SENT');
+  console.log('═══════════════════════════════════════════════════════════');
+  console.log('User ID:', userId);
+  console.log('Order Number:', orderNumber);
+  console.log('New Status:', newStatus);
+  console.log('');
+  console.log('⚠️  BACKEND NEEDS TO SEND THIS NOTIFICATION');
+  console.log('');
+  console.log('The backend should:');
+  console.log('1. Query device_tokens table for this user');
+  console.log('2. Send push notification via Expo Push Service');
+  console.log('3. See: BACKEND_NOTIFICATION_FIX_REQUIRED.md');
+  console.log('═══════════════════════════════════════════════════════════');
+};
 
 export default function OrderDetails({ route, navigation }) {
   const { order } = route.params;
@@ -77,6 +98,17 @@ console.log("order",order);
         if(response.data.status == "success") {
           setSuccessMessage('تم تغيير حالة الطلب بنجاح.');
           setShowSuccessModal(true);
+          
+          // Send push notification to client
+          const orderNumber = generateOrderNumber(order.id);
+          const clientUserId = order.user_id?.id || order.user_id;
+          
+          if (clientUserId) {
+            console.log('🔔 Sending notification to client:', clientUserId);
+            await sendNotificationToClient(clientUserId, orderNumber, newStatus);
+          } else {
+            console.log('⚠️ No client user ID found for order');
+          }
         }
         // return response.data;
       

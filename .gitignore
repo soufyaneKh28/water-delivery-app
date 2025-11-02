@@ -35,4 +35,8 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# Firebase sensitive credentials
+*firebase-adminsdk*.json
+*service-account*.json
+
 app-example
