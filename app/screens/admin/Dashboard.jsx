@@ -17,7 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function AdminDashboard() {
-  const { user, expoPushToken: authExpoPushToken, sendTokenToBackendManually } = useAuth();
+  const { user, expoPushToken: authExpoPushToken } = useAuth();
   const { 
     expoPushToken, 
     notification, 
@@ -272,53 +272,6 @@ export default function AdminDashboard() {
         </View>
 
         {/* Notification Permission Request */}
-        {/* <NotificationPermissionRequest /> */}
-        
-        {/* Notification Debug Info */}
-        {/* <NotificationDebugInfo /> */}
-
-        {/* Notification Test Section */}
-        {/* <View style={styles.notificationSection}>
-          <CustomText type="bold" style={styles.notificationTitle}>Push Notification Test</CustomText>
-          <Text style={styles.notificationText}>Permission Status: {permissionStatus}</Text>
-          <Text style={styles.notificationText}>Has Requested: {hasRequestedPermission ? 'Yes' : 'No'}</Text>
-          <Text style={styles.notificationText}>Loading: {notificationLoading ? 'Yes' : 'No'}</Text>
-          <Text style={styles.notificationText}>Your Expo push token: {expoPushToken || 'Not available'}</Text>
-          <View style={styles.notificationInfo}>
-            <Text style={styles.notificationText}>Title: {notification && notification.request.content.title} </Text>
-            <Text style={styles.notificationText}>Body: {notification && notification.request.content.body}</Text>
-            <Text style={styles.notificationText}>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
-          </View>
-          <View style={styles.buttonRow}>
-            <Button
-              title="Refresh Permission"
-              onPress={async () => {
-                await refreshPermissionStatus();
-              }}
-            />
-            <Button
-              title="Clear Data"
-              onPress={async () => {
-                await clearStoredNotificationData();
-              }}
-            />
-            <Button
-              title="Send Token to Backend"
-              onPress={async () => {
-                const success = await sendTokenToBackendManually();
-                if (success) {
-                  alert('Token sent to backend successfully!');
-                } else {
-                  alert('Failed to send token to backend. Check console for details.');
-                }
-              }}
-              disabled={!authExpoPushToken}
-            />
-         
-          </View>
-          
-        </View> */}
-  
         {/* Profit Card */}
         <View style={{width:'100%'}} >
           <LinearGradient

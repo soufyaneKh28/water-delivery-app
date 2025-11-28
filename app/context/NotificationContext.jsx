@@ -5,14 +5,43 @@ import * as Notifications from 'expo-notifications';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Alert, Platform } from 'react-native';
 
-// Configure notification handler
+// Configure notification handler with proper Android support
+// Note: Channel is created early in app/index.jsx, but we verify here for safety
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async (notification) => {
+    const result = {
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+    
+    console.log('📬 Notification received in handler:', notification.request.content.title);
+    
+    // Android-specific: Channel should already exist (created in app/index.jsx)
+    // This is just a safety check - creating channel here is idempotent
+    if (Platform.OS === 'android') {
+      try {
+        const channels = await Notifications.getNotificationChannelsAsync();
+        const defaultChannel = channels.find(ch => ch.id === 'default');
+        if (!defaultChannel) {
+          console.log('⚠️ Channel missing in handler, recreating...');
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+            sound: 'default',
+          });
+        }
+      } catch (error) {
+        console.error('Error verifying notification channel in handler:', error);
+        // Don't block notification, continue anyway
+      }
+    }
+    
+    return result;
+  },
 });
 
 const NotificationContext = createContext();
@@ -63,12 +92,22 @@ async function registerForPushNotificationsAsync() {
   
   if (Platform.OS === 'android') {
     console.log('🤖 Setting up Android notification channel...');
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
+    try {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+        showBadge: true,
+        enableVibrate: true,
+        enableLights: true,
+      });
+      console.log('✅ Android notification channel created successfully');
+    } catch (error) {
+      console.error('❌ Error creating Android notification channel:', error);
+      // Don't throw, continue anyway - channel might already exist
+    }
   }
 
   if (Device.isDevice) {
@@ -90,18 +129,23 @@ async function registerForPushNotificationsAsync() {
       return null;
     }
     
-    console.log('🔑 Project ID found, generating push token...');
-    try {
-      const pushTokenString = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
-      console.log('✅ Push token generated successfully:', pushTokenString);
-      // Store the token for all users
-      await AsyncStorage.setItem('expo_push_token', pushTokenString);
-      console.log('Stored expo_push_token:', pushTokenString);
-      return pushTokenString;
+      console.log('🔑 Project ID found, generating push token...');
+      console.log('📦 Project ID:', projectId);
+      try {
+        const pushTokenString = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log('✅ ========== PUSH TOKEN GENERATED ==========');
+        console.log('🔑 FULL EXPO PUSH TOKEN:', pushTokenString);
+        console.log('📏 Token length:', pushTokenString.length);
+        console.log('📱 Platform:', Platform.OS);
+        console.log('✅ ===========================================');
+        // Store the token for all users
+        await AsyncStorage.setItem('expo_push_token', pushTokenString);
+        console.log('💾 Stored expo_push_token to AsyncStorage:', pushTokenString);
+        return pushTokenString;
     } catch (e) {
       // Handle Firebase/FIS errors gracefully
       const errorMessage = `${e}`;
@@ -164,15 +208,6 @@ export const adminNotifications = {
       'ملخص اليوم',
       `تم إنجاز ${ordersCount} طلب بإجمالي ربح ${totalProfit} دينار`
     );
-  },
-
-  // Test notification
-  sendTestNotification: (expoPushToken) => {
-    return sendPushNotification(
-      expoPushToken,
-      'اختبار الإشعارات',
-      'هذا إشعار تجريبي من لوحة الإدارة'
-    );
   }
 };
 
@@ -197,8 +232,14 @@ export const NotificationProvider = ({ children }) => {
       console.log('📋 Stored permission:', storedPermission || 'Not found');
 
       if (storedToken) {
-        console.log('🔑 Loading stored push token:', storedToken);
+        console.log('✅ ========== LOADED STORED PUSH TOKEN ==========');
+        console.log('🔑 FULL STORED EXPO PUSH TOKEN:', storedToken);
+        console.log('📏 Token length:', storedToken.length);
+        console.log('📱 Platform:', Platform.OS);
+        console.log('✅ ================================================');
         setExpoPushToken(storedToken);
+      } else {
+        console.log('⚠️ No stored push token found in AsyncStorage');
       }
       
       if (storedPermission) {
@@ -217,8 +258,14 @@ export const NotificationProvider = ({ children }) => {
       if (expoPushToken) {
         // Store token in a location accessible by auth context
         await AsyncStorage.setItem('expo_push_token', expoPushToken);
-        console.log('🔄 Push token synced with auth context:', expoPushToken.substring(0, 20) + '...');
+        console.log('🔄 ========== SYNCING PUSH TOKEN WITH AUTH ==========');
+        console.log('🔑 FULL EXPO PUSH TOKEN:', expoPushToken);
+        console.log('📏 Token length:', expoPushToken.length);
+        console.log('💾 Stored to AsyncStorage key: expo_push_token');
+        console.log('🔄 ===================================================');
         return true;
+      } else {
+        console.log('⚠️ No push token to sync with auth context');
       }
       return false;
     } catch (error) {
@@ -230,10 +277,14 @@ export const NotificationProvider = ({ children }) => {
   // Store push token
   const storePushToken = async (token) => {
     try {
-      console.log('🔑 Storing push token:', token);
+      console.log('💾 ========== STORING PUSH TOKEN ==========');
+      console.log('🔑 FULL EXPO PUSH TOKEN:', token);
+      console.log('📏 Token length:', token ? token.length : 0);
+      console.log('📝 Storage key:', STORAGE_KEYS.PUSH_TOKEN);
       await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
       setExpoPushToken(token);
-      console.log('✅ Push token stored successfully');
+      console.log('✅ Push token stored successfully to state and AsyncStorage');
+      console.log('💾 ==========================================');
     } catch (error) {
       console.error('❌ Error storing push token:', error);
     }
@@ -280,8 +331,12 @@ export const NotificationProvider = ({ children }) => {
         // Permission already granted, get push token
         const token = await registerForPushNotificationsAsync();
         if (token) {
-          console.log('🔑 Got push token from existing permission:', token);
+          console.log('✅ ========== TOKEN FROM EXISTING PERMISSION ==========');
+          console.log('🔑 FULL EXPO PUSH TOKEN:', token);
+          console.log('✅ ===================================================');
           await storePushToken(token);
+        } else {
+          console.log('⚠️ No token returned despite permission granted');
         }
         setHasRequestedPermission(true);
         await storePermissionStatus(existingStatus);
@@ -301,8 +356,12 @@ export const NotificationProvider = ({ children }) => {
         // Permission granted, get push token
         const token = await registerForPushNotificationsAsync();
         if (token) {
-          console.log('🔑 Got push token from new permission:', token);
+          console.log('✅ ========== TOKEN FROM NEW PERMISSION ==========');
+          console.log('🔑 FULL EXPO PUSH TOKEN:', token);
+          console.log('✅ ================================================');
           await storePushToken(token);
+        } else {
+          console.log('⚠️ No token returned despite permission granted');
         }
         return true;
       } else {
@@ -375,15 +434,44 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [showNotificationPermissionScreen]);
 
+  // Verify Android notification channel exists
+  const verifyAndroidChannel = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const channels = await Notifications.getNotificationChannelsAsync();
+        const defaultChannel = channels.find(ch => ch.id === 'default');
+        if (!defaultChannel) {
+          console.log('⚠️ Default notification channel not found, recreating...');
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+            sound: 'default',
+            showBadge: true,
+            enableVibrate: true,
+            enableLights: true,
+          });
+          console.log('✅ Default notification channel recreated');
+        } else {
+          console.log('✅ Default notification channel verified');
+        }
+      } catch (error) {
+        console.error('❌ Error verifying Android notification channel:', error);
+      }
+    }
+  };
+
   // Setup notification listeners
   const setupNotificationListeners = () => {
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
       setNotification(notification);
-      console.log('Notification received:', notification);
+      console.log('📬 Notification received in listener:', notification.request.content.title);
+      console.log('📬 Notification data:', JSON.stringify(notification.request.content.data));
     });
 
     const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response:', response);
+      console.log('👆 Notification tapped:', response.notification.request.content.title);
       // Handle notification tap here
       // You can navigate to specific screens based on notification data
     });
@@ -408,6 +496,9 @@ export const NotificationProvider = ({ children }) => {
         setIsLoading(true);
         console.log('🚀 Initializing notification system...');
         
+        // Verify Android channel first
+        await verifyAndroidChannel();
+        
         // Load stored data
         await loadStoredNotificationData();
         
@@ -417,9 +508,13 @@ export const NotificationProvider = ({ children }) => {
         
         // If we have a stored token, verify it's still valid
         if (expoPushToken && isMounted) {
-          console.log('🔑 Using stored push token:', expoPushToken);
+          console.log('✅ ========== INITIALIZATION: PUSH TOKEN FOUND ==========');
+          console.log('🔑 FULL EXPO PUSH TOKEN:', expoPushToken);
+          console.log('📏 Token length:', expoPushToken.length);
+          console.log('📱 Platform:', Platform.OS);
+          console.log('✅ ======================================================');
         } else {
-          console.log('🔑 No stored push token found');
+          console.log('⚠️ No stored push token found during initialization');
         }
         
         if (isMounted) {
@@ -450,10 +545,20 @@ export const NotificationProvider = ({ children }) => {
 
   // Auto-request permission when dashboard loads (if not already requested)
   const initializePermissionRequest = useCallback(async () => {
+    console.log('🔐 ========== INITIALIZING PERMISSION REQUEST ==========');
+    
     if (!isInitialized) {
-      console.log('Notification system not yet initialized, skipping permission request...');
+      console.log('⏳ Notification system not yet initialized, waiting...');
+      // Wait a bit and retry
+      setTimeout(async () => {
+        if (isInitialized) {
+          await initializePermissionRequest();
+        }
+      }, 1000);
       return;
     }
+    
+    console.log('✅ System initialized, proceeding with permission check...');
     
     // Always refresh the current permission status from system first
     const currentStatus = await refreshPermissionStatus();
@@ -462,26 +567,55 @@ export const NotificationProvider = ({ children }) => {
     if (currentStatus === 'granted') {
       console.log('✅ Permission already granted, getting push token if needed...');
       if (!expoPushToken) {
+        console.log('⚠️ No push token found, generating new one...');
         const token = await registerForPushNotificationsAsync();
         if (token) {
+          console.log('✅ ========== TOKEN GENERATED ON INITIALIZATION ==========');
+          console.log('🔑 FULL EXPO PUSH TOKEN:', token);
+          console.log('✅ =======================================================');
           await storePushToken(token);
+        } else {
+          console.log('⚠️ Token generation failed during initialization');
         }
+      } else {
+        console.log('✅ ========== TOKEN ALREADY EXISTS ==========');
+        console.log('🔑 FULL EXPO PUSH TOKEN:', expoPushToken);
+        console.log('✅ ===========================================');
       }
+      console.log('🔐 ======================================================');
       return true;
     }
     
-    if (!hasRequestedPermission && !isLoading && currentStatus === 'undetermined') {
-      console.log('Initializing permission request...');
-      await requestNotificationPermission();
+    // Request permission if not granted and not already requested
+    if (currentStatus === 'undetermined' || currentStatus === 'denied') {
+      if (!hasRequestedPermission || currentStatus === 'undetermined') {
+        console.log('📱 Permission status:', currentStatus);
+        console.log('🔐 Requesting notification permission from user...');
+        await requestNotificationPermission();
+      } else {
+        console.log('⚠️ Permission already requested but not granted. Status:', currentStatus);
+      }
     } else {
-      console.log('Permission request skipped - already requested or loading:', {
+      console.log('ℹ️ Permission request skipped - status:', currentStatus, {
         hasRequestedPermission,
-        isLoading,
-        permissionStatus: currentStatus
+        isLoading
       });
     }
+    
+    console.log('🔐 ======================================================');
   }, [isInitialized, hasRequestedPermission, isLoading, expoPushToken, refreshPermissionStatus, requestNotificationPermission]);
 
+  // Auto-request permission after initialization completes
+  useEffect(() => {
+    if (isInitialized && !hasRequestedPermission && !isLoading) {
+      console.log('🚀 Auto-requesting notification permission after initialization...');
+      // Small delay to ensure all state is properly set
+      const timer = setTimeout(() => {
+        initializePermissionRequest();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialized, hasRequestedPermission, isLoading, initializePermissionRequest]);
 
   const BACKEND_PUSH_REGISTRATION_KEY = 'pushTokenSentToBackend';
 
@@ -500,8 +634,13 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
       device_type: deviceType,
     };
 
-    console.log('📤 Sending token to backend (notification context)...');
+    console.log('📤 ========== SENDING TOKEN TO BACKEND ==========');
+    console.log('🔑 FULL EXPO PUSH TOKEN:', expoPushToken);
+    console.log('📏 Token length:', expoPushToken.length);
+    console.log('👤 User ID:', userId);
+    console.log('📱 Device Type:', deviceType);
     console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+    console.log('📤 =============================================');
 
     const response = await fetch('https://water-supplier-2.onrender.com/api/k1/notifications/registerDevice', {
       method: 'POST',
@@ -546,7 +685,11 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
 
     try {
       const pushToken = await AsyncStorage.getItem('expo_push_token');
-      console.log('🗑️ Removing deviiiiiiiiiice token from backend:', pushToken);
+      console.log('🗑️ ========== REMOVING TOKEN FROM BACKEND ==========');
+      console.log('🔑 FULL EXPO PUSH TOKEN:', pushToken);
+      console.log('📏 Token length:', pushToken ? pushToken.length : 0);
+      console.log('👤 User ID:', userId);
+      console.log('🗑️ ===============================================');
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
@@ -584,7 +727,7 @@ const sendTokenToBackendOnce = async (userId, accessToken, expoPushToken) => {
       return false;
     }
   }, []);
-  // Clear stored notification data (for testing)
+  // Clear stored notification data (used for logout and permission reset)
   const clearStoredNotificationData = useCallback(async () => {
     try {
       console.log('🧹 Clearing stored notification data...');

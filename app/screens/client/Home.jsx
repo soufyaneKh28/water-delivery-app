@@ -1,12 +1,13 @@
-// import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, Modal, Platform, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import Carousel from 'react-native-reanimated-carousel';
 import Toast from 'react-native-toast-message';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import EmptyCartImage from '../../../assets/images/empty-cart.png';
 import { supabase } from '../../../lib/supabase';
 import ProductCard from '../../components/client/ProductCard';
@@ -15,107 +16,6 @@ import { useAddress } from '../../context/AddressContext';
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../styling/colors';
 import { api, API_BASE_URL, getAccessToken } from '../../utils/api';
-// import { useFocusEffect } from '@react-navigation/native';
-// import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
-// import * as React from "react";
-import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
-async function sendPushNotification(expoPushToken) {
-  const message = {
-    to: expoPushToken,
-    sound: 'default',
-    title: 'Original Title',
-    body: 'And here is the body!',
-    data: { someData: 'goes here' },
-  };
-
-  await fetch('https://exp.host/--/api/v2/push/send', {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Accept-encoding': 'gzip, deflate',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(message),
-  });
-  console.log('Notification sent successfully');
-  console.log("message", message);
-  console.log("expoPushToken", expoPushToken);
-}
-
-function handleRegistrationError(errorMessage) {
-  alert(errorMessage);
-  throw new Error(errorMessage);
-}
-
-async function registerForPushNotificationsAsync() {
-  if (Platform.OS === 'android') {
-    Notifications.setNotificationChannelAsync('default', {
-      name: 'default',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }
-
-  if (Device.isDevice) {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') {
-      handleRegistrationError('Permission not granted to get push token for push notification!');
-      return;
-    }
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-    if (!projectId) {
-      handleRegistrationError('Project ID not found');
-    }
-    try {
-      const pushTokenString = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
-      console.log("pushTokenStringggggg", pushTokenString);
-      AsyncStorage.setItem('expo_push_token', pushTokenString);
-      return pushTokenString;
-    } catch (e) {
-      // Handle Firebase/FIS errors gracefully
-      const errorMessage = `${e}`;
-      const isFirebaseError = errorMessage.includes('FIS_AUTH_ERROR') || 
-                              errorMessage.includes('FIS_INSTALLATION_ERROR') ||
-                              errorMessage.includes('Firebase');
-      
-      if (isFirebaseError) {
-        console.log('⚠️ Firebase error (non-critical):', errorMessage);
-        console.log('Notifications will still work through Expo Push Notification Service.');
-        return null;
-      }
-      
-      handleRegistrationError(`${e}`);
-    }
-  } else {
-    handleRegistrationError('Must use physical device for push notifications');
-  }
-}
 
 export default function HomeScreen() {
   const { user, logout } = useAuth();
@@ -139,76 +39,6 @@ export default function HomeScreen() {
   const [isOffline, setIsOffline] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-
-
-  const [expoPushToken, setExpoPushToken] = useState('');
-  const [notification, setNotification] = useState(
-    undefined
-  );
-
-  useEffect(() => {
-    const initNotifications = async () => {
-      try {
-        console.log('🔔 Starting notification registration...');
-        const token = await registerForPushNotificationsAsync();
-        
-        if (token) {
-          console.log('✅ Push token received:', token);
-          setExpoPushToken(token);
-          
-          // Show success toast
-          Toast.show({
-            type: 'success',
-            text1: 'الإشعارات مفعلة',
-            text2: 'تم تفعيل الإشعارات بنجاح',
-            position: 'top',
-            visibilityTime: 3000,
-          });
-        } else {
-          console.log('❌ No push token received');
-          setExpoPushToken('');
-        }
-      } catch (error) {
-        console.error('❌ Notification registration error:', error);
-        setExpoPushToken(`Error: ${error.message}`);
-        
-        // Show error toast
-        Toast.show({
-          type: 'error',
-          text1: 'خطأ في الإشعارات',
-          text2: 'فشل تفعيل الإشعارات',
-          position: 'top',
-          visibilityTime: 3000,
-        });
-      }
-    };
-
-    initNotifications();
-
-    const notificationListener = Notifications.addNotificationReceivedListener(notification => {
-      console.log('🔔 Notification received:', notification);
-      setNotification(notification);
-      
-      // Show toast when notification is received
-      Toast.show({
-        type: 'info',
-        text1: notification.request.content.title || 'إشعار جديد',
-        text2: notification.request.content.body || '',
-        position: 'top',
-        visibilityTime: 4000,
-      });
-    });
-
-    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('📱 Notification response:', response);
-    });
-
-    return () => {
-      notificationListener.remove();
-      responseListener.remove();
-    };
-  }, []);
-  
 
   const progress = useSharedValue(0);
 const { width } = Dimensions.get('window');
@@ -416,27 +246,43 @@ const { width } = Dimensions.get('window');
     setIsDeleting(true);
     const token = await getAccessToken();
     try {
-        const response = await fetch(`${API_BASE_URL}/locations/deleteLocation/${addressToDelete.id}`, {
+      const response = await fetch(`${API_BASE_URL}/locations/deleteLocation/${addressToDelete.id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
-      })  ;
+      });
       
-      if (response.success) {
-        // Remove from saved addresses
-        const updatedAddresses = savedAddresses.filter(addr => addr.id !== addressToDelete.id);
-        setSavedAddresses(updatedAddresses);
-
+      // Check if response is ok first
+      if (response.ok) {
+        // Try to parse JSON only if there's content
+        let responseData = {};
+        const text = await response.text();
+        if (text && text.trim().length > 0) {
+          try {
+            responseData = JSON.parse(text);
+          } catch (parseError) {
+            // If parse fails, response might be empty but still successful
+            console.log('Response is empty or not JSON, but request succeeded');
+          }
+        }
+        
+        // Refresh addresses from server
+        await getAll();
         
         // If the deleted address was selected, select the first available address or clear selection
         if (selectedAddress?.id === addressToDelete.id) {
-          if (updatedAddresses.length > 0) {
-            setSelectedAddress(updatedAddresses[0]);
-          } else {
-            setSelectedAddress(null);
-          }
+          // Wait a bit for addresses to refresh, then update selection
+          setTimeout(async () => {
+            const data = await api.getAllData();
+            const updatedAddresses = data.data.locations || [];
+            if (updatedAddresses.length > 0) {
+              setSelectedAddress(updatedAddresses[0]);
+            } else {
+              setSelectedAddress(null);
+            }
+          }, 500);
         }
         
         Toast.show({
@@ -447,10 +293,22 @@ const { width } = Dimensions.get('window');
           visibilityTime: 4500,
         });
       } else {
+        // Try to get error message if response has content
+        let errorMessage = 'فشل في حذف العنوان';
+        try {
+          const text = await response.text();
+          if (text && text.trim().length > 0) {
+            const errorData = JSON.parse(text);
+            errorMessage = errorData.message || errorMessage;
+          }
+        } catch (parseError) {
+          // Ignore parse error, use default message
+        }
+        
         Toast.show({
           type: 'error',
           text1: 'خطأ',
-          text2: 'فشل في حذف العنوان',
+          text2: errorMessage,
           position: 'bottom',
           visibilityTime: 2500,
         });
@@ -553,20 +411,7 @@ const { width } = Dimensions.get('window');
           
 
         </View>
-        {/* <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
-      <Text>Your Expo push token: {expoPushToken}</Text>
-      <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Title: {notification && notification.request.content.title} </Text>
-        <Text>Body: {notification && notification.request.content.body}</Text>
-        <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
-      </View>
-      <Button
-        title="Press to Send Notification"
-        onPress={async () => {
-          await sendPushNotification(expoPushToken);
-        }}
-      />
-    </View> */}
+        
         {/* Error Message */}
         {errorMessage && (
           <View style={styles.errorContainer}>

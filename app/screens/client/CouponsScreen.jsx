@@ -632,7 +632,19 @@ export default function CouponsScreen({navigation}) {
                   <CustomText style={{ fontSize: 12, color: '#888' , textAlign:'right' ,maxWidth:'80%'}} numberOfLines={2} ellipsizeMode="tail">{formatAddressString(selectedAddress)}</CustomText>
                 </>
               ) : (
-                <CustomText style={{textAlign:'right', color:'#888'}}>يرجى اختيار عنوان التوصيل</CustomText>
+                <View style={modalStyles.noAddressContainer}>
+                  <CustomText style={{ textAlign: 'right', color: '#666', marginBottom: 12 }}>
+                    يرجى اختيار عنوان التوصيل قبل إتمام الطلب
+                  </CustomText>
+                  <PrimaryButton 
+                    title="إضافة عنوان جديد" 
+                    onPress={() => {
+                      setModalVisible(false);
+                      navigation.navigate('MapAddLocation');
+                    }}
+                    style={modalStyles.addAddressButton}
+                  />
+                </View>
               )}
             </View>
             {addressError ? (
@@ -975,6 +987,15 @@ const modalStyles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'flex-end',
     marginBottom: 20,
+  },
+  noAddressContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  addAddressButton: {
+    width: '100%',
+    height: 45,
+    borderRadius: 8,
   },
   mapImage: {
     width: '100%',

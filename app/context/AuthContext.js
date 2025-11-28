@@ -236,20 +236,26 @@ export const AuthProvider = ({ children }) => {
   // Function to handle token registration after login
   const handleTokenRegistration = useCallback(async (userId, accessToken) => {
     try {
+      console.log('🔄 ========== AUTH: HANDLING TOKEN REGISTRATION ==========');
       let storedToken = await AsyncStorage.getItem('expo_push_token');
       if (!storedToken) {
         // Wait a bit and try again (token may be generated soon)
         console.log('⏳ No push token found, retrying in 2 seconds...');
         await new Promise(res => setTimeout(res, 2000));
         storedToken = await AsyncStorage.getItem('expo_push_token');
-        console.log('🔑 Stored token:', storedToken);
       }
       if (storedToken) {
+        console.log('✅ ========== AUTH: TOKEN FOUND FOR REGISTRATION ==========');
+        console.log('🔑 FULL EXPO PUSH TOKEN:', storedToken);
+        console.log('📏 Token length:', storedToken.length);
+        console.log('👤 User ID:', userId);
+        console.log('✅ =====================================================');
         setExpoPushToken(storedToken);
         await sendTokenToBackend(userId, accessToken, storedToken);
       } else {
-        console.log('📱 No push token available for registration (after retry)');
+        console.log('⚠️ No push token available for registration (after retry)');
       }
+      console.log('🔄 ======================================================');
     } catch (error) {
       console.error('❌ Error handling token registration:', error);
     }
@@ -634,17 +640,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Function to manually send token to backend (for testing)
-  const sendTokenToBackendManually = useCallback(async () => {
-    if (user?.id && expoPushToken) {
-      const accessToken = await getAccessToken();
-      if (accessToken) {
-        return await sendTokenToBackend(user.id, accessToken, expoPushToken);
-      }
-    }
-    return false;
-  }, [user?.id, expoPushToken, getAccessToken]);
-
   const value = {
     user,
     loading,
@@ -660,7 +655,6 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     fetchUserRole,
     getAccessToken,
-    sendTokenToBackendManually,
   };
 
   return (

@@ -144,14 +144,5 @@ export const adminNotifications = {
       'ملخص اليوم',
       `تم إنجاز ${ordersCount} طلب بإجمالي ربح ${totalProfit} دينار`
     );
-  },
-
-  // Test notification
-  sendTestNotification: (expoPushToken) => {
-    return sendPushNotification(
-      expoPushToken,
-      'اختبار الإشعارات',
-      'هذا إشعار تجريبي من لوحة الإدارة'
-    );
   }
 }; 

@@ -341,23 +341,6 @@ const Orders = () => {
           </LinearGradient>
         </View>
 
-        {/* Notification Test Section */}
-        {/* <View style={styles.notificationSection}>
-          <CustomText type="bold" style={styles.notificationTitle}>Push Notification Test</CustomText>
-          <Text style={styles.notificationText}>Your Expo push token: {expoPushToken}</Text>
-          <View style={styles.notificationInfo}>
-            <Text style={styles.notificationText}>Title: {notification && notification.request.content.title} </Text>
-            <Text style={styles.notificationText}>Body: {notification && notification.request.content.body}</Text>
-            <Text style={styles.notificationText}>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
-          </View>
-          <Button
-            title="Send Test Notification"
-            onPress={async () => {
-              await adminNotifications.sendTestNotification(expoPushToken);
-            }}
-          />
-        </View> */}
-
         {/* Order Type Tabs */}
         <View style={styles.tabContainer}>
           {orderTypes.map((type) => (

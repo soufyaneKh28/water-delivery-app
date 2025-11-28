@@ -3,9 +3,10 @@ import '../gesture-handler';
 
 import * as Font from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast, { BaseToast } from 'react-native-toast-message';
 import { FONTS } from './constants/fonts';
@@ -14,6 +15,22 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
 import AppNavigator from './navigation/AppNavigator';
+
+// Initialize Android notification channel as early as possible
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF231F7C',
+    sound: 'default',
+    showBadge: true,
+    enableVibrate: true,
+    enableLights: true,
+  }).catch((error) => {
+    console.error('Failed to create Android notification channel:', error);
+  });
+}
 
 // Custom toast config with marginTop for top toasts
 const toastConfig = {

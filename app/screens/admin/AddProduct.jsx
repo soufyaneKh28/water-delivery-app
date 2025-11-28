@@ -508,8 +508,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+    paddingTop: 20,
     paddingHorizontal: 16,
-    direction: 'rtl',
+    // direction: 'rtl',
   },
   backButton: {
     alignSelf: 'flex-end',
