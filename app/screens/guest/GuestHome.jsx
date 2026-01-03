@@ -88,7 +88,7 @@ export default function GuestHome() {
   // Adding to cart is allowed for guests via ProductCard default handler
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false} 

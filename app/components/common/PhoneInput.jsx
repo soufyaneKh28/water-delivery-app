@@ -69,6 +69,7 @@ export default function PhoneInput({
             keyboardType="phone-pad"
             maxLength={15}
             textAlign="left"
+            allowFontScaling={false}
           />
           <TouchableOpacity 
             style={styles.countryCodeContainer}

@@ -6,6 +6,7 @@ export default function CustomText({
   children, 
   style, 
   type = 'regular',
+  allowFontScaling = false,
   ...props 
 }) {
   return (
@@ -15,6 +16,7 @@ export default function CustomText({
         { fontFamily: FONTS[type] },
         style
       ]} 
+      allowFontScaling={allowFontScaling}
       {...props}
     >
       {children}

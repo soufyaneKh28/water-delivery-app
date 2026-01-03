@@ -66,7 +66,7 @@ export function CustomInput({
           errorMessage && styles.inputContainerError,
         ]}
       >
-        <Animated.Text style={[styles.label, labelStyle]}>
+        <Animated.Text allowFontScaling={false} style={[styles.label, labelStyle]}>
           {label}
         </Animated.Text>
         
@@ -78,6 +78,7 @@ export function CustomInput({
             onFocus={handleFocus}
             onBlur={handleBlur}
             placeholderTextColor={colors.textPlaceholder}
+            allowFontScaling={false}
             {...rest}
           />
           {rightIcon}
@@ -85,7 +86,7 @@ export function CustomInput({
       </View>
       
       {errorMessage ? (
-        <Text style={styles.errorMessage}>{errorMessage}</Text>
+        <Text allowFontScaling={false} style={styles.errorMessage}>{errorMessage}</Text>
       ) : null}
     </View>
   );

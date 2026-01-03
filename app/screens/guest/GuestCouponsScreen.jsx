@@ -52,7 +52,7 @@ export default function GuestCouponsScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <CustomText type="bold" style={styles.sectionTitle}>رصيدي</CustomText>
         <View style={styles.balanceCard}>

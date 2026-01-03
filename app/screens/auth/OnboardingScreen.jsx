@@ -1,6 +1,7 @@
 "use client"
 
 import Constants from "expo-constants"
+import { StatusBar } from "expo-status-bar"
 import { useRef, useState } from "react"
 import {
   Animated,
@@ -202,7 +203,7 @@ export default function OnboardingScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {/* <StatusBar style="dark" translucent /> */}
+      <StatusBar style="light" translucent />
       <View style={styles.safeArea}>
         <Animated.View
           {...panResponder.panHandlers}
@@ -299,7 +300,9 @@ const styles = StyleSheet.create({
     marginTop: -20,
     paddingHorizontal: 30,
     paddingTop: 20,
+    paddingBottom: 50,
     alignItems: "center",
+    justifyContent: "flex-start",
   },
   title: {
     fontSize: 24,

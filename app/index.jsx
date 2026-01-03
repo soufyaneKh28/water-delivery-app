@@ -112,10 +112,10 @@ export default function App() {
   if (error) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
+        <Text allowFontScaling={false} style={{ fontSize: 18, textAlign: 'center', marginBottom: 20 }}>
           {error}
         </Text>
-        <Text style={{ fontSize: 14, textAlign: 'center', color: '#666' }}>
+        <Text allowFontScaling={false} style={{ fontSize: 14, textAlign: 'center', color: '#666' }}>
           Please restart the app
         </Text>
       </View>
