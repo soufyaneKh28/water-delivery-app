@@ -1,4 +1,4 @@
-package com.miaahaljunaidi.app
+package com.miaahaljunaidiapp.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

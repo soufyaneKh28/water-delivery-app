@@ -1,4 +1,4 @@
-package com.miaahaljunaidi.app
+package com.miaahaljunaidiapp.app
 
 import android.app.Application
 import android.content.res.Configuration
