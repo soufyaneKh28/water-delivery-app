@@ -40,3 +40,8 @@ yarn-error.*
 *service-account*.json
 
 app-example
+node_modules/
+android/
+ios/
+.expo/
+*.md
