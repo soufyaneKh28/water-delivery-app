@@ -45,3 +45,8 @@ android/
 ios/
 .expo/
 *.md
+
+google-services.json
+*.keystore
+*.jks
+build/
